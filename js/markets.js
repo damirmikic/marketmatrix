@@ -85,6 +85,7 @@ export function renderAllMarkets(model, marketTables, onComplete) {
 }
 
 function renderMarket1x2(model, tableElement) {
+    if (!tableElement) return;
     const probH = calculateMarket(model, { ft_result: '1' });
     const probX = calculateMarket(model, { ft_result: 'X' });
     const probA = calculateMarket(model, { ft_result: '2' });
@@ -112,6 +113,7 @@ function renderMarket1x2(model, tableElement) {
 }
 
 function renderMarketDoubleChance(model, tableElement) {
+    if (!tableElement) return;
     const prob1X = calculateMarket(model, { ft_result: '1X' });
     const prob12 = calculateMarket(model, { ft_result: '12' });
     const probX2 = calculateMarket(model, { ft_result: 'X2' });
@@ -139,6 +141,7 @@ function renderMarketDoubleChance(model, tableElement) {
 }
 
 function renderMarketDNB(model, tableElement) {
+    if (!tableElement) return;
     const probH = calculateMarket(model, { ft_result: '1' });
     const probA = calculateMarket(model, { ft_result: '2' });
     const probX = clampProbability(1 - probH - probA);
@@ -177,6 +180,7 @@ function renderMarketDNB(model, tableElement) {
 }
 
 function renderMarketBTTS(model, tableElement) {
+    if (!tableElement) return;
     const probYes = calculateMarket(model, { ft_btts: true });
     const probNo = calculateMarket(model, { ft_btts: false });
 
@@ -197,6 +201,7 @@ function renderMarketBTTS(model, tableElement) {
 }
 
 function renderMarketTotals(model, tableElement) {
+    if (!tableElement) return;
     let html = '';
     for (const line of FULL_TIME_TOTAL_LINES) {
         const probOver = calculateMarket(model, { ft_total: { type: 'o', value: line } });
@@ -218,6 +223,7 @@ function renderMarketTotals(model, tableElement) {
 }
 
 function renderMarketGoals(model, tableElement) {
+    if (!tableElement) return;
     const stats = computeGoalAggregates(model);
     const maxHomeIndex = stats.homeGoals.length - 1;
     const maxAwayIndex = stats.awayGoals.length - 1;
@@ -287,6 +293,7 @@ function renderMarketGoals(model, tableElement) {
 }
 
 function renderMarketHalf(model, tableElement, halfKey) {
+    if (!tableElement) return;
     const isFirstHalf = halfKey === 'h1';
     const matrix = isFirstHalf ? model.matrix1H : model.matrix2H;
     const stats = computeHalfAggregates(matrix);
@@ -391,6 +398,7 @@ function renderMarketHalf(model, tableElement, halfKey) {
 }
 
 function renderMarketHTFT(model, tableElement) {
+    if (!tableElement) return;
     const markets = [
         { name: '1 / 1', cond: { h1_result: '1', ft_result: '1' } },
         { name: '1 / X', cond: { h1_result: '1', ft_result: 'X' } },
@@ -419,6 +427,7 @@ function renderMarketHTFT(model, tableElement) {
 }
 
 function renderMarketAsianHandicap(model, tableElement) {
+    if (!tableElement) return;
     let html = '';
 
     for (const line of ASIAN_HANDICAP_LINES) {
