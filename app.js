@@ -1,14 +1,20 @@
 // --- CONSTANTS AND STATE ---
 const MAX_GOALS_DISPLAY = 5; // Display 0-5 goals in tables
 const MAX_GOALS_CALC = 8;    // Calculate 0-8 goals for accuracy
+const MAX_GOALS_SOLVER = 12; // Use a deeper range when reconciling market inputs
 const RATIO_1H = 0.45;
 const RATIO_2H = 0.55;
+const INPUT_MODES = {
+    SUPREMACY: 'supremacy',
+    MARKET: 'market'
+};
 
 // Global state for calculations
 let lambdas = {};
 let matrix1H = [];
 let matrix2H = [];
 let isModelReady = false;
+let inputMode = INPUT_MODES.SUPREMACY;
 
 // Pre-calculate factorials for performance
 const FACTORIALS = (function(n) {
@@ -17,12 +23,21 @@ const FACTORIALS = (function(n) {
         cache[i] = cache[i - 1] * i;
     }
     return cache;
-})(MAX_GOALS_CALC + 5); // Cache a few extra
+})(Math.max(MAX_GOALS_CALC, MAX_GOALS_SOLVER) + 5); // Cache a few extra
 
 // --- DOM ELEMENTS ---
 const supremacyInput = document.getElementById('supremacy');
 const expectancyInput = document.getElementById('expectancy');
+const homeProbInput = document.getElementById('prob-home');
+const drawProbInput = document.getElementById('prob-draw');
+const awayProbInput = document.getElementById('prob-away');
+const totalGoalsInput = document.getElementById('total-goals');
 const calcButton = document.getElementById('calc-button');
+const inputModeToggle = document.getElementById('input-mode-toggle');
+const inputSupremacyContainer = document.getElementById('input-supremacy');
+const inputMarketContainer = document.getElementById('input-market');
+const inputInfoSup = document.getElementById('input-info-sup');
+const inputInfoMarket = document.getElementById('input-info-market');
 const errorMessage = document.getElementById('error-message');
 const outputSection = document.getElementById('output-section');
 
@@ -88,6 +103,71 @@ function createCSMatrix(lambdaH, lambdaA, maxGoals) {
     return matrix;
 }
 
+function estimateOutcomeProbabilities(lambdaH, lambdaA, limit = MAX_GOALS_SOLVER) {
+    const matrix = createCSMatrix(lambdaH, lambdaA, limit);
+    let probHome = 0;
+    let probDraw = 0;
+    let probAway = 0;
+
+    for (let h = 0; h <= limit; h++) {
+        for (let a = 0; a <= limit; a++) {
+            const prob = matrix[h][a];
+            if (!prob) continue;
+            if (h > a) {
+                probHome += prob;
+            } else if (h === a) {
+                probDraw += prob;
+            } else {
+                probAway += prob;
+            }
+        }
+    }
+
+    const total = probHome + probDraw + probAway;
+    if (total > 0) {
+        probHome /= total;
+        probDraw /= total;
+        probAway /= total;
+    }
+
+    return { probHome, probDraw, probAway };
+}
+
+function deriveLambdasFrom1X2(totalGoals, targetProbs) {
+    const steps = 400;
+    const tolerance = 0.0015;
+    let best = null;
+
+    if (totalGoals <= 0) {
+        return null;
+    }
+
+    for (let i = 0; i <= steps; i++) {
+        const lambdaH = (totalGoals * i) / steps;
+        const lambdaA = totalGoals - lambdaH;
+
+        const { probHome, probDraw, probAway } = estimateOutcomeProbabilities(lambdaH, lambdaA);
+        const error =
+            Math.pow(probHome - targetProbs.home, 2) +
+            Math.pow(probDraw - targetProbs.draw, 2) +
+            Math.pow(probAway - targetProbs.away, 2);
+
+        if (!best || error < best.error) {
+            best = {
+                lambdaH,
+                lambdaA,
+                error
+            };
+        }
+    }
+
+    if (!best || best.error > tolerance) {
+        return null;
+    }
+
+    return best;
+}
+
 /**
  * Renders a CS matrix into a <table> element.
  */
@@ -150,28 +230,73 @@ function getLoadingRow(cols) {
  * Main function to calculate all values from inputs.
  */
 function handleCalculate() {
-    const S = parseFloat(supremacyInput.value);
-    const E = parseFloat(expectancyInput.value);
-
-    // Validation
-    if (isNaN(S) || isNaN(E)) {
-        showError("Please enter valid numbers for Supremacy and Expectancy.");
-        return;
-    }
-    if (E <= 0) {
-        showError("Expectancy (E) must be a positive number.");
-        return;
-    }
-    if (Math.abs(S) > E) {
-        showError("Absolute value of Supremacy (|S|) cannot be greater than Expectancy (E).");
-        return;
-    }
-
     hideError();
 
-    // Step 1: Calculate FT Lambdas
-    const HxG_FT = (E - S) / 2; // User requested: Negative S = Home favorite
-    const AxG_FT = (E + S) / 2; // User requested: Negative S = Home favorite
+    let HxG_FT;
+    let AxG_FT;
+
+    if (inputMode === INPUT_MODES.SUPREMACY) {
+        const S = parseFloat(supremacyInput.value);
+        const E = parseFloat(expectancyInput.value);
+
+        if (isNaN(S) || isNaN(E)) {
+            showError("Please enter valid numbers for Supremacy and Expectancy.");
+            return;
+        }
+        if (E <= 0) {
+            showError("Expectancy (E) must be a positive number.");
+            return;
+        }
+        if (Math.abs(S) > E) {
+            showError("Absolute value of Supremacy (|S|) cannot be greater than Expectancy (E).");
+            return;
+        }
+
+        HxG_FT = (E - S) / 2; // User requested: Negative S = Home favorite
+        AxG_FT = (E + S) / 2; // User requested: Negative S = Home favorite
+    } else {
+        const probHome = parseFloat(homeProbInput.value);
+        const probDraw = parseFloat(drawProbInput.value);
+        const probAway = parseFloat(awayProbInput.value);
+        const totalGoals = parseFloat(totalGoalsInput.value);
+
+        if ([probHome, probDraw, probAway, totalGoals].some(v => isNaN(v))) {
+            showError("Please enter valid 1X2 probabilities and a total goals expectancy.");
+            return;
+        }
+        if (totalGoals <= 0) {
+            showError("Total goals expectancy must be a positive number.");
+            return;
+        }
+
+        const sumProb = probHome + probDraw + probAway;
+        if (sumProb <= 0) {
+            showError("1X2 probabilities must be greater than zero.");
+            return;
+        }
+        if (Math.abs(sumProb - 100) > 1) {
+            showError("1X2 probabilities should sum to approximately 100%.");
+            return;
+        }
+
+        const normalized = {
+            home: probHome / sumProb,
+            draw: probDraw / sumProb,
+            away: probAway / sumProb
+        };
+
+        const solved = deriveLambdasFrom1X2(totalGoals, normalized);
+        if (!solved) {
+            showError("Unable to reconcile the 1X2 probabilities with the total goals input.");
+            return;
+        }
+
+        HxG_FT = solved.lambdaH;
+        AxG_FT = solved.lambdaA;
+
+        supremacyInput.value = (AxG_FT - HxG_FT).toFixed(2);
+        expectancyInput.value = (HxG_FT + AxG_FT).toFixed(2);
+    }
 
     // Step 2: Calculate Half-Time Lambdas
     const HxG_1H = HxG_FT * RATIO_1H;
@@ -213,6 +338,24 @@ function showError(message) {
 
 function hideError() {
     errorMessage.classList.add('hidden');
+}
+
+function setInputMode(mode) {
+    inputMode = mode;
+    if (mode === INPUT_MODES.SUPREMACY) {
+        inputSupremacyContainer.classList.remove('hidden');
+        inputMarketContainer.classList.add('hidden');
+        inputInfoSup.classList.remove('hidden');
+        inputInfoMarket.classList.add('hidden');
+        inputModeToggle.textContent = 'Use 1X2 Inputs';
+    } else {
+        inputSupremacyContainer.classList.add('hidden');
+        inputMarketContainer.classList.remove('hidden');
+        inputInfoSup.classList.add('hidden');
+        inputInfoMarket.classList.remove('hidden');
+        inputModeToggle.textContent = 'Use Supremacy Inputs';
+    }
+    hideError();
 }
 
 // --- TABBING LOGIC ---
@@ -823,6 +966,11 @@ function displayMarket_AH() {
 
 
 // --- EVENT LISTENERS ---
+inputModeToggle.addEventListener('click', () => {
+    const nextMode = inputMode === INPUT_MODES.SUPREMACY ? INPUT_MODES.MARKET : INPUT_MODES.SUPREMACY;
+    setInputMode(nextMode);
+});
+
 calcButton.addEventListener('click', handleCalculate);
 chatSend.addEventListener('click', handleChatSubmit);
 chatInput.addEventListener('keypress', (e) => {
@@ -839,6 +987,7 @@ tabBtnMarkets.addEventListener('click', () => switchTab(tabBtnMarkets, tabConten
 calcMarketsButton.addEventListener('click', handleCalculateAllMarkets);
 
 // --- INITIAL WELCOME ---
+setInputMode(INPUT_MODES.SUPREMACY);
 addChatMessage("Welcome! Please enter your model inputs and click 'Calculate Model'.", 'bot');
 addChatMessage("Once calculated, you can ask for market odds here, or check the 'All Markets' tab for a full list.", 'bot');
 
