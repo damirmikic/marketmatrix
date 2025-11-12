@@ -145,3 +145,52 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
+
+/* Market group accordion */
+.market-group {
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.market-group-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.25rem;
+    background: transparent;
+    border: none;
+    color: #f3f4f6;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.market-group-toggle:hover,
+.market-group-toggle:focus {
+    background-color: rgba(59, 130, 246, 0.12);
+    outline: none;
+}
+
+.market-group-toggle:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+.market-group-panel {
+    border-top: 1px solid #374151;
+    padding: 1.25rem;
+}
+
+.market-group-panel.hidden {
+    display: none;
+}
+
+.market-group .toggle-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #93c5fd;
+}

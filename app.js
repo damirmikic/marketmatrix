@@ -62,6 +62,7 @@ const marketTables = {
     'dnb': document.getElementById('market-dnb'),
     'btts': document.getElementById('market-btts'),
     'goals': document.getElementById('market-goals'),
+    'firstHalf': document.getElementById('market-first-half'),
     'totals': document.getElementById('market-totals'),
     'htft': document.getElementById('market-htft'),
     'ah': document.getElementById('market-ah'),
@@ -323,6 +324,49 @@ function createMarketRow(label, prob) {
                 <td class="market-prob">${result.probPercent}%</td>
                 <td class="market-odds">${result.odds}</td>
             </tr>`;
+}
+
+function createUnavailableRow(label) {
+    return `<tr>
+                <td class="market-name">${label}</td>
+                <td class="market-prob">N/A</td>
+                <td class="market-odds">N/A</td>
+            </tr>`;
+}
+
+function createPushRow(label) {
+    return `<tr>
+                <td class="market-name">${label}</td>
+                <td class="market-prob">N/A</td>
+                <td class="market-odds">Push</td>
+            </tr>`;
+}
+
+function computeHalfAggregates(matrix) {
+    const limit = MAX_GOALS_CALC;
+    const teamGoals = new Array(limit + 1).fill(0);
+    const opponentGoals = new Array(limit + 1).fill(0);
+    const totals = new Array(limit * 2 + 1).fill(0);
+    let btts = 0;
+
+    for (let h = 0; h <= limit; h++) {
+        for (let a = 0; a <= limit; a++) {
+            const prob = matrix[h][a];
+            if (!prob) continue;
+
+            if (teamGoals[h] !== undefined) teamGoals[h] += prob;
+            if (opponentGoals[a] !== undefined) opponentGoals[a] += prob;
+            if (totals[h + a] !== undefined) totals[h + a] += prob;
+            if (h > 0 && a > 0) btts += prob;
+        }
+    }
+
+    return {
+        homeGoals: teamGoals,
+        awayGoals: opponentGoals,
+        totalGoals: totals,
+        btts: clampProbability(btts)
+    };
 }
 
 function computeGoalAggregates() {
@@ -625,6 +669,32 @@ function calculateAsianHandicap(homeHandicap) {
     return { homeWin, push, awayWin };
 }
 
+function calculateHalfHandicap(homeHandicap) {
+    let homeWin = 0;
+    let push = 0;
+    let awayWin = 0;
+    const limit = MAX_GOALS_CALC;
+
+    for (let h = 0; h <= limit; h++) {
+        for (let a = 0; a <= limit; a++) {
+            const prob = matrix1H[h][a];
+            if (!prob) continue;
+
+            const margin = h + homeHandicap - a;
+
+            if (margin > 0.01) {
+                homeWin += prob;
+            } else if (margin < -0.01) {
+                awayWin += prob;
+            } else {
+                push += prob;
+            }
+        }
+    }
+
+    return { homeWin, push, awayWin };
+}
+
 
 /**
  * Checks if a specific scoreline combination matches the parsed query.
@@ -872,38 +942,43 @@ function handleCalculateAllMarkets() {
     marketTables['dnb'].innerHTML = getLoadingRow(3);
     marketTables['btts'].innerHTML = getLoadingRow(3);
     marketTables['goals'].innerHTML = getLoadingRow(3);
+    marketTables['firstHalf'].innerHTML = getLoadingRow(3);
     marketTables['totals'].innerHTML = getLoadingRow(5);
     marketTables['htft'].innerHTML = getLoadingRow(3);
     marketTables['ah'].innerHTML = getLoadingRow(6);
 
+    const tasks = [
+        () => displayMarket_1x2(),
+        () => displayMarket_DC(),
+        () => displayMarket_DNB(),
+        () => displayMarket_BTTS(),
+        () => displayMarket_Goals(),
+        () => displayMarket_Totals(),
+        () => displayMarket_FirstHalf(),
+        () => displayMarket_HTFT(),
+        () => displayMarket_AH()
+    ];
 
-    // Run calculations sequentially with setTimeout to prevent UI freezing
-    setTimeout(() => {
-        displayMarket_1x2();
+    let taskIndex = 0;
+    const runNext = () => {
+        if (taskIndex >= tasks.length) {
+            calcMarketsButton.disabled = false;
+            calcMarketsButton.textContent = "Calculate All Markets";
+            return;
+        }
+
         setTimeout(() => {
-            displayMarket_DC();
-            setTimeout(() => {
-                displayMarket_DNB();
-                setTimeout(() => {
-                    displayMarket_BTTS();
-                    setTimeout(() => {
-                        displayMarket_Totals();
-                        setTimeout(() => {
-                            displayMarket_Goals();
-                            setTimeout(() => {
-                                displayMarket_HTFT();
-                                setTimeout(() => {
-                                    displayMarket_AH();
-                                    calcMarketsButton.disabled = false;
-                                    calcMarketsButton.textContent = "Calculate All Markets";
-                                }, 50);
-                            }, 50);
-                        }, 50);
-                    }, 50);
-                }, 50);
-            }, 50);
-        }, 50);
-    }, 50);
+            try {
+                tasks[taskIndex++]();
+            } catch (err) {
+                console.error('Error rendering market table:', err);
+            } finally {
+                runNext();
+            }
+        }, 40);
+    };
+
+    runNext();
 }
 
 function displayMarket_1x2() {
@@ -1119,6 +1194,107 @@ function displayMarket_Goals() {
     marketTables['goals'].innerHTML = html;
 }
 
+function displayMarket_FirstHalf() {
+    const stats = computeHalfAggregates(matrix1H);
+    const totalLines = [0.5, 1.5, 2.5];
+    const teamLines = [0.5, 1.5, 2.5];
+    const handicapLines = [-1.0, -0.5, 0, 0.5, 1.0];
+    const maxHomeIndex = stats.homeGoals.length - 1;
+    const maxAwayIndex = stats.awayGoals.length - 1;
+    const maxTotalIndex = stats.totalGoals.length - 1;
+
+    const probHome = calculateMarket({ h1_result: '1' });
+    const probDraw = calculateMarket({ h1_result: 'X' });
+    const probAway = calculateMarket({ h1_result: '2' });
+
+    let html = '';
+
+    html += createGroupRow('1st Half 1X2');
+    html += createMarketRow('Home (1)', probHome);
+    html += createMarketRow('Draw (X)', probDraw);
+    html += createMarketRow('Away (2)', probAway);
+
+    html += createGroupRow('1st Half Double Chance');
+    html += createMarketRow('1X', calculateMarket({ h1_result: '1X' }));
+    html += createMarketRow('12', calculateMarket({ h1_result: '12' }));
+    html += createMarketRow('X2', calculateMarket({ h1_result: 'X2' }));
+
+    html += createGroupRow('1st Half Draw No Bet');
+    const dnbDenom = probHome + probAway;
+    if (dnbDenom <= 1e-9) {
+        html += createUnavailableRow('Home (1)');
+        html += createUnavailableRow('Away (2)');
+    } else {
+        html += createMarketRow('Home (1)', probHome / dnbDenom);
+        html += createMarketRow('Away (2)', probAway / dnbDenom);
+    }
+
+    html += createGroupRow('1st Half Both Teams To Score');
+    html += createMarketRow('Yes', stats.btts);
+    html += createMarketRow('No', clampProbability(1 - stats.btts));
+
+    html += createGroupRow('1st Half Total Goals');
+    for (const line of totalLines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.totalGoals, overStart, maxTotalIndex);
+        const probUnder = sumRange(stats.totalGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    html += createGroupRow('1st Half Handicap');
+    for (const line of handicapLines) {
+        const res = calculateHalfHandicap(line);
+        const lineTextH = line <= 0 ? `${line}` : `+${line}`;
+        const lineTextA = line <= 0 ? `+${-line}` : `${-line}`;
+        if (res.push > 0.99999) {
+            html += createPushRow(`Home ${lineTextH}`);
+            html += createPushRow(`Away ${lineTextA}`);
+            continue;
+        }
+
+        const denom = 1 - res.push;
+        if (denom <= 1e-9) {
+            html += createUnavailableRow(`Home ${lineTextH}`);
+            html += createUnavailableRow(`Away ${lineTextA}`);
+            continue;
+        }
+
+        const probH = clampProbability(res.homeWin / denom);
+        const probA = clampProbability(res.awayWin / denom);
+        html += createMarketRow(`Home ${lineTextH}`, probH);
+        html += createMarketRow(`Away ${lineTextA}`, probA);
+    }
+
+    html += createGroupRow('1st Half Exact Goals');
+    for (let goals = 0; goals <= MAX_GOALS_DISPLAY; goals++) {
+        html += createMarketRow(`${goals}`, stats.totalGoals[goals] || 0);
+    }
+
+    html += createGroupRow('1st Half Home Team Total Goals');
+    for (const line of teamLines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.homeGoals, overStart, maxHomeIndex);
+        const probUnder = sumRange(stats.homeGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    html += createGroupRow('1st Half Away Team Total Goals');
+    for (const line of teamLines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.awayGoals, overStart, maxAwayIndex);
+        const probUnder = sumRange(stats.awayGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    marketTables['firstHalf'].innerHTML = html;
+}
+
 function displayMarket_HTFT() {
      const markets = [
         { name: '1 / 1', cond: { h1_result: '1', ft_result: '1' } },
@@ -1248,6 +1424,24 @@ tabBtnMarkets.addEventListener('click', () => switchTab(tabBtnMarkets, tabConten
 
 // All Markets Listener
 calcMarketsButton.addEventListener('click', handleCalculateAllMarkets);
+
+// Market group accordions
+document.querySelectorAll('.market-group-toggle').forEach((button) => {
+    const targetId = button.getAttribute('data-target');
+    if (!targetId) return;
+    const panel = document.getElementById(targetId);
+    if (!panel) return;
+
+    button.addEventListener('click', () => {
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', String(!isExpanded));
+        panel.classList.toggle('hidden', isExpanded);
+        const icon = button.querySelector('.toggle-icon');
+        if (icon) {
+            icon.textContent = isExpanded ? '+' : '−';
+        }
+    });
+});
 
 // --- INITIAL WELCOME ---
 setInputMode(INPUT_MODES.SUPREMACY);
