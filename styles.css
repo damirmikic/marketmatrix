@@ -1,0 +1,196 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #111827; /* bg-gray-900 */
+    color: #d1d5db; /* text-gray-300 */
+}
+/* Custom styles for chat bubbles */
+.chat-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+    max-width: 80%;
+    line-height: 1.5;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+.chat-user {
+    background-color: #374151; /* bg-gray-700 */
+    color: #f3f4f6; /* text-gray-100 */
+    align-self: flex-end;
+    border-bottom-right-radius: 0.25rem;
+}
+.chat-bot {
+    background-color: #1f2937; /* bg-gray-800 */
+    color: #d1d5db; /* text-gray-300 */
+    align-self: flex-start;
+    border-bottom-left-radius: 0.25rem;
+}
+
+/* Style for the matrix table */
+.matrix-table th, .matrix-table td {
+    border: 1px solid #374151; /* border-gray-700 */
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    min-width: 50px;
+}
+.matrix-table th {
+    background-color: #1f2937; /* bg-gray-800 */
+}
+.matrix-table th.corner {
+    background-color: transparent;
+    border: none;
+}
+.matrix-table th.header-col {
+    background-color: #374151; /* bg-gray-700 */
+    font-weight: 600;
+}
+.matrix-table td {
+    background-color: #111827; /* bg-gray-900 */
+}
+.matrix-table td:hover {
+    background-color: #1f2937;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    border: 4px solid #374151; /* border-gray-700 */
+    border-top: 4px solid #3b82f6; /* border-blue-500 */
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    animation: spin 1s linear infinite;
+}
+.loading-spinner-small {
+    border: 2px solid #374151;
+    border-top: 2px solid #3b82f6;
+    width: 16px;
+    height: 16px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* New Tab Styles */
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    color: #9ca3af; /* text-gray-400 */
+    transition: all 0.2s ease;
+}
+.tab-button:hover {
+    color: #d1d5db; /* text-gray-300 */
+}
+.tab-button.active {
+    color: #3b82f6; /* text-blue-500 */
+    border-bottom-color: #3b82f6;
+}
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+
+/* New Market Table Styles */
+.market-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #1f2937; /* bg-gray-800 */
+    border-radius: 0.5rem;
+    overflow: hidden;
+    font-size: 0.9rem;
+}
+.market-table th, .market-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #374151; /* border-gray-700 */
+}
+.market-table th {
+    background-color: #374151; /* bg-gray-700 */
+    font-weight: 600;
+    color: #f3f4f6; /* text-gray-100 */
+}
+.market-table td {
+    color: #d1d5db; /* text-gray-300 */
+}
+.market-table tr:last-child td {
+    border-bottom: none;
+}
+.market-table tr:hover td {
+    background-color: #2b3546;
+}
+.market-table .market-name {
+    font-weight: 500;
+    color: #e5e7eb; /* text-gray-200 */
+}
+.market-table .market-prob {
+    text-align: right;
+    color: #9ca3af; /* text-gray-400 */
+    width: 100px;
+}
+.market-table .market-odds {
+    text-align: right;
+    font-weight: 700;
+    color: #60a5fa; /* text-blue-400 */
+    width: 100px;
+}
+.market-table .group-row td {
+    background-color: #111827;
+    font-weight: 600;
+    color: #93c5fd;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Market group accordion */
+.market-group {
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.market-group-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.25rem;
+    background: transparent;
+    border: none;
+    color: #f3f4f6;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.market-group-toggle:hover,
+.market-group-toggle:focus {
+    background-color: rgba(59, 130, 246, 0.12);
+    outline: none;
+}
+
+.market-group-toggle:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+.market-group-panel {
+    border-top: 1px solid #374151;
+    padding: 1.25rem;
+}
+
+.market-group-panel.hidden {
+    display: none;
+}
+
+.market-group .toggle-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #93c5fd;
+}
