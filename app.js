@@ -61,6 +61,7 @@ const marketTables = {
     'dc': document.getElementById('market-dc'),
     'dnb': document.getElementById('market-dnb'),
     'btts': document.getElementById('market-btts'),
+    'goals': document.getElementById('market-goals'),
     'totals': document.getElementById('market-totals'),
     'htft': document.getElementById('market-htft'),
     'ah': document.getElementById('market-ah'),
@@ -291,6 +292,109 @@ function formatResult(prob) {
     const probPercent = (prob * 100).toFixed(2);
     const odds = (1 / prob).toFixed(2);
     return { prob, probPercent, odds };
+}
+
+function clampProbability(prob) {
+    if (!isFinite(prob)) return 0;
+    if (prob < 0) return 0;
+    if (prob > 1) return 1;
+    return prob;
+}
+
+function sumRange(arr, start, end) {
+    const s = Math.max(0, start);
+    const e = Math.min(arr.length - 1, end);
+    if (s > e) return 0;
+    let total = 0;
+    for (let i = s; i <= e; i++) {
+        total += arr[i];
+    }
+    return total;
+}
+
+function createGroupRow(label, cols = 3) {
+    return `<tr class="group-row"><td colspan="${cols}">${label}</td></tr>`;
+}
+
+function createMarketRow(label, prob) {
+    const result = formatResult(clampProbability(prob));
+    return `<tr>
+                <td class="market-name">${label}</td>
+                <td class="market-prob">${result.probPercent}%</td>
+                <td class="market-odds">${result.odds}</td>
+            </tr>`;
+}
+
+function computeGoalAggregates() {
+    const limit = MAX_GOALS_CALC;
+    const maxFtGoals = limit * 2;
+    const maxTotalGoals = limit * 4;
+
+    const homeGoals = new Array(maxFtGoals + 1).fill(0);
+    const awayGoals = new Array(maxFtGoals + 1).fill(0);
+    const totalGoals = new Array(maxTotalGoals + 1).fill(0);
+
+    let homeBothHalves = 0;
+    let awayBothHalves = 0;
+    let bothHalvesOver15 = 0;
+    let bothHalvesUnder15 = 0;
+    let half1Higher = 0;
+    let half2Higher = 0;
+    let halvesEqual = 0;
+
+    for (let h1 = 0; h1 <= limit; h1++) {
+        for (let a1 = 0; a1 <= limit; a1++) {
+            const prob1 = matrix1H[h1][a1];
+            if (!prob1) continue;
+
+            for (let h2 = 0; h2 <= limit; h2++) {
+                for (let a2 = 0; a2 <= limit; a2++) {
+                    const prob2 = matrix2H[h2][a2];
+                    if (!prob2) continue;
+
+                    const prob = prob1 * prob2;
+                    if (prob === 0) continue;
+
+                    const ftH = h1 + h2;
+                    const ftA = a1 + a2;
+                    const total = ftH + ftA;
+                    const half1Total = h1 + a1;
+                    const half2Total = h2 + a2;
+
+                    if (homeGoals[ftH] !== undefined) homeGoals[ftH] += prob;
+                    if (awayGoals[ftA] !== undefined) awayGoals[ftA] += prob;
+                    if (totalGoals[total] !== undefined) totalGoals[total] += prob;
+
+                    if (h1 > 0 && h2 > 0) homeBothHalves += prob;
+                    if (a1 > 0 && a2 > 0) awayBothHalves += prob;
+
+                    if (half1Total >= 2 && half2Total >= 2) bothHalvesOver15 += prob;
+                    if (half1Total <= 1 && half2Total <= 1) bothHalvesUnder15 += prob;
+
+                    if (half1Total > half2Total) {
+                        half1Higher += prob;
+                    } else if (half2Total > half1Total) {
+                        half2Higher += prob;
+                    } else {
+                        halvesEqual += prob;
+                    }
+                }
+            }
+        }
+    }
+
+    return {
+        homeGoals,
+        awayGoals,
+        totalGoals,
+        homeBothHalves: clampProbability(homeBothHalves),
+        awayBothHalves: clampProbability(awayBothHalves),
+        bothHalvesOver15: clampProbability(bothHalvesOver15),
+        bothHalvesUnder15: clampProbability(bothHalvesUnder15),
+        half1Higher: clampProbability(half1Higher),
+        half2Higher: clampProbability(half2Higher),
+        halvesEqual: clampProbability(halvesEqual)
+    };
 }
 
 /**
@@ -767,6 +871,7 @@ function handleCalculateAllMarkets() {
     marketTables['dc'].innerHTML = getLoadingRow(3);
     marketTables['dnb'].innerHTML = getLoadingRow(3);
     marketTables['btts'].innerHTML = getLoadingRow(3);
+    marketTables['goals'].innerHTML = getLoadingRow(3);
     marketTables['totals'].innerHTML = getLoadingRow(5);
     marketTables['htft'].innerHTML = getLoadingRow(3);
     marketTables['ah'].innerHTML = getLoadingRow(6);
@@ -784,11 +889,14 @@ function handleCalculateAllMarkets() {
                     setTimeout(() => {
                         displayMarket_Totals();
                         setTimeout(() => {
-                            displayMarket_HTFT();
+                            displayMarket_Goals();
                             setTimeout(() => {
-                                displayMarket_AH();
-                                calcMarketsButton.disabled = false;
-                                calcMarketsButton.textContent = "Calculate All Markets";
+                                displayMarket_HTFT();
+                                setTimeout(() => {
+                                    displayMarket_AH();
+                                    calcMarketsButton.disabled = false;
+                                    calcMarketsButton.textContent = "Calculate All Markets";
+                                }, 50);
                             }, 50);
                         }, 50);
                     }, 50);
@@ -926,6 +1034,89 @@ function displayMarket_Totals() {
             </tr>`;
     }
     marketTables['totals'].innerHTML = html;
+}
+
+function displayMarket_Goals() {
+    const stats = computeGoalAggregates();
+    const lines = [0.5, 1.5, 2.5];
+    const maxHomeIndex = stats.homeGoals.length - 1;
+    const maxAwayIndex = stats.awayGoals.length - 1;
+
+    let html = '';
+
+    html += createGroupRow('Home Team Total Goals');
+    for (const line of lines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.homeGoals, overStart, maxHomeIndex);
+        const probUnder = sumRange(stats.homeGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    html += createGroupRow('Away Team Total Goals');
+    for (const line of lines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.awayGoals, overStart, maxAwayIndex);
+        const probUnder = sumRange(stats.awayGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    html += createGroupRow('Home Exact Goals');
+    for (let goals = 0; goals <= MAX_GOALS_DISPLAY; goals++) {
+        html += createMarketRow(`${goals}`, stats.homeGoals[goals] || 0);
+    }
+
+    html += createGroupRow('Away Exact Goals');
+    for (let goals = 0; goals <= MAX_GOALS_DISPLAY; goals++) {
+        html += createMarketRow(`${goals}`, stats.awayGoals[goals] || 0);
+    }
+
+    const spreads = ['1-2', '1-3', '1-4', '1-5', '2-3', '2-4', '2-5', '3-4', '3-5', '4-5', '4-6'];
+    html += createGroupRow('Goals Spread');
+    for (const label of spreads) {
+        const [min, max] = label.split('-').map(Number);
+        const prob = sumRange(stats.totalGoals, min, max);
+        html += createMarketRow(`${label}`, prob);
+    }
+
+    let half1 = clampProbability(stats.half1Higher);
+    let half2 = clampProbability(stats.half2Higher);
+    let equal = clampProbability(stats.halvesEqual);
+    const halfSum = half1 + half2 + equal;
+    if (halfSum > 0) {
+        half1 = clampProbability(half1 / halfSum);
+        half2 = clampProbability(half2 / halfSum);
+        equal = clampProbability(equal / halfSum);
+    }
+    html += createGroupRow('Highest Scoring Half');
+    html += createMarketRow('1st Half', half1);
+    html += createMarketRow('2nd Half', half2);
+    html += createMarketRow('Equal', equal);
+
+    const homeBoth = stats.homeBothHalves;
+    html += createGroupRow('Home To Score In Both Halves');
+    html += createMarketRow('Yes', homeBoth);
+    html += createMarketRow('No', clampProbability(1 - homeBoth));
+
+    const awayBoth = stats.awayBothHalves;
+    html += createGroupRow('Away To Score In Both Halves');
+    html += createMarketRow('Yes', awayBoth);
+    html += createMarketRow('No', clampProbability(1 - awayBoth));
+
+    const bothHalvesOver = stats.bothHalvesOver15;
+    html += createGroupRow('Both Halves Over 1.5');
+    html += createMarketRow('Yes', bothHalvesOver);
+    html += createMarketRow('No', clampProbability(1 - bothHalvesOver));
+
+    const bothHalvesUnder = stats.bothHalvesUnder15;
+    html += createGroupRow('Both Halves Under 1.5');
+    html += createMarketRow('Yes', bothHalvesUnder);
+    html += createMarketRow('No', clampProbability(1 - bothHalvesUnder));
+
+    marketTables['goals'].innerHTML = html;
 }
 
 function displayMarket_HTFT() {
