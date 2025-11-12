@@ -33,7 +33,13 @@ const awayOddsInput = document.getElementById('odds-away');
 const totalLineInput = document.getElementById('total-line');
 const overOddsInput = document.getElementById('odds-over');
 const underOddsInput = document.getElementById('odds-under');
-const calcButton = document.getElementById('calc-button');
+const calcButtons = Array.from(document.querySelectorAll('#calc-button'));
+if (calcButtons.length === 0) {
+    throw new Error('Calculate Model button is missing from the page.');
+}
+// Guard against duplicate buttons introduced by markup merges
+calcButtons.slice(1).forEach((btn) => btn.remove());
+const calcButton = calcButtons[0];
 const inputModeToggle = document.getElementById('input-mode-toggle');
 const inputSupremacyContainer = document.getElementById('input-supremacy');
 const inputMarketContainer = document.getElementById('input-market');
@@ -63,6 +69,7 @@ const marketTables = {
     'btts': document.getElementById('market-btts'),
     'goals': document.getElementById('market-goals'),
     'firstHalf': document.getElementById('market-first-half'),
+    'secondHalf': document.getElementById('market-second-half'),
     'totals': document.getElementById('market-totals'),
     'htft': document.getElementById('market-htft'),
     'ah': document.getElementById('market-ah'),
@@ -669,7 +676,7 @@ function calculateAsianHandicap(homeHandicap) {
     return { homeWin, push, awayWin };
 }
 
-function calculateHalfHandicap(homeHandicap) {
+function calculateHalfHandicap(homeHandicap, matrix = matrix1H) {
     let homeWin = 0;
     let push = 0;
     let awayWin = 0;
@@ -677,7 +684,7 @@ function calculateHalfHandicap(homeHandicap) {
 
     for (let h = 0; h <= limit; h++) {
         for (let a = 0; a <= limit; a++) {
-            const prob = matrix1H[h][a];
+            const prob = matrix[h][a];
             if (!prob) continue;
 
             const margin = h + homeHandicap - a;
@@ -943,6 +950,7 @@ function handleCalculateAllMarkets() {
     marketTables['btts'].innerHTML = getLoadingRow(3);
     marketTables['goals'].innerHTML = getLoadingRow(3);
     marketTables['firstHalf'].innerHTML = getLoadingRow(3);
+    marketTables['secondHalf'].innerHTML = getLoadingRow(3);
     marketTables['totals'].innerHTML = getLoadingRow(5);
     marketTables['htft'].innerHTML = getLoadingRow(3);
     marketTables['ah'].innerHTML = getLoadingRow(6);
@@ -955,6 +963,7 @@ function handleCalculateAllMarkets() {
         () => displayMarket_Goals(),
         () => displayMarket_Totals(),
         () => displayMarket_FirstHalf(),
+        () => displayMarket_SecondHalf(),
         () => displayMarket_HTFT(),
         () => displayMarket_AH()
     ];
@@ -1293,6 +1302,107 @@ function displayMarket_FirstHalf() {
     }
 
     marketTables['firstHalf'].innerHTML = html;
+}
+
+function displayMarket_SecondHalf() {
+    const stats = computeHalfAggregates(matrix2H);
+    const totalLines = [0.5, 1.5, 2.5];
+    const teamLines = [0.5, 1.5, 2.5];
+    const handicapLines = [-1.0, -0.5, 0, 0.5, 1.0];
+    const maxHomeIndex = stats.homeGoals.length - 1;
+    const maxAwayIndex = stats.awayGoals.length - 1;
+    const maxTotalIndex = stats.totalGoals.length - 1;
+
+    const probHome = calculateMarket({ h2_result: '1' });
+    const probDraw = calculateMarket({ h2_result: 'X' });
+    const probAway = calculateMarket({ h2_result: '2' });
+
+    let html = '';
+
+    html += createGroupRow('2nd Half 1X2');
+    html += createMarketRow('Home (1)', probHome);
+    html += createMarketRow('Draw (X)', probDraw);
+    html += createMarketRow('Away (2)', probAway);
+
+    html += createGroupRow('2nd Half Double Chance');
+    html += createMarketRow('1X', calculateMarket({ h2_result: '1X' }));
+    html += createMarketRow('12', calculateMarket({ h2_result: '12' }));
+    html += createMarketRow('X2', calculateMarket({ h2_result: 'X2' }));
+
+    html += createGroupRow('2nd Half Draw No Bet');
+    const dnbDenom = probHome + probAway;
+    if (dnbDenom <= 1e-9) {
+        html += createUnavailableRow('Home (1)');
+        html += createUnavailableRow('Away (2)');
+    } else {
+        html += createMarketRow('Home (1)', probHome / dnbDenom);
+        html += createMarketRow('Away (2)', probAway / dnbDenom);
+    }
+
+    html += createGroupRow('2nd Half Both Teams To Score');
+    html += createMarketRow('Yes', stats.btts);
+    html += createMarketRow('No', clampProbability(1 - stats.btts));
+
+    html += createGroupRow('2nd Half Total Goals');
+    for (const line of totalLines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.totalGoals, overStart, maxTotalIndex);
+        const probUnder = sumRange(stats.totalGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    html += createGroupRow('2nd Half Handicap');
+    for (const line of handicapLines) {
+        const res = calculateHalfHandicap(line, matrix2H);
+        const lineTextH = line <= 0 ? `${line}` : `+${line}`;
+        const lineTextA = line <= 0 ? `+${-line}` : `${-line}`;
+        if (res.push > 0.99999) {
+            html += createPushRow(`Home ${lineTextH}`);
+            html += createPushRow(`Away ${lineTextA}`);
+            continue;
+        }
+
+        const denom = 1 - res.push;
+        if (denom <= 1e-9) {
+            html += createUnavailableRow(`Home ${lineTextH}`);
+            html += createUnavailableRow(`Away ${lineTextA}`);
+            continue;
+        }
+
+        const probH = clampProbability(res.homeWin / denom);
+        const probA = clampProbability(res.awayWin / denom);
+        html += createMarketRow(`Home ${lineTextH}`, probH);
+        html += createMarketRow(`Away ${lineTextA}`, probA);
+    }
+
+    html += createGroupRow('2nd Half Exact Goals');
+    for (let goals = 0; goals <= MAX_GOALS_DISPLAY; goals++) {
+        html += createMarketRow(`${goals}`, stats.totalGoals[goals] || 0);
+    }
+
+    html += createGroupRow('2nd Half Home Team Total Goals');
+    for (const line of teamLines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.homeGoals, overStart, maxHomeIndex);
+        const probUnder = sumRange(stats.homeGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    html += createGroupRow('2nd Half Away Team Total Goals');
+    for (const line of teamLines) {
+        const overStart = Math.floor(line) + 1;
+        const underEnd = overStart - 1;
+        const probOver = sumRange(stats.awayGoals, overStart, maxAwayIndex);
+        const probUnder = sumRange(stats.awayGoals, 0, underEnd);
+        html += createMarketRow(`Over ${line}`, probOver);
+        html += createMarketRow(`Under ${line}`, probUnder);
+    }
+
+    marketTables['secondHalf'].innerHTML = html;
 }
 
 function displayMarket_HTFT() {
