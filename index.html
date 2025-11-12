@@ -21,7 +21,7 @@
             <h2 class="text-xl font-semibold text-white mb-4">1. Model Inputs</h2>
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                 <p id="input-info-sup" class="text-sm text-gray-400">Enter Supremacy (Home Advantage) and Expectancy (Total Goals).</p>
-                <p id="input-info-market" class="text-sm text-gray-400 hidden">Enter 1X2 win probabilities (%) and the expected total goals.</p>
+                <p id="input-info-market" class="text-sm text-gray-400 hidden">Enter 1X2 match odds and over/under odds (decimal format).</p>
                 <button id="input-mode-toggle" class="self-start md:self-auto bg-gray-700 hover:bg-gray-600 text-sm font-semibold text-white py-2 px-4 rounded-lg transition duration-200">
                     Use 1X2 Inputs
                 </button>
@@ -38,22 +38,30 @@
                 </div>
             </div>
 
-            <div id="input-market" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 hidden">
-                <div>
-                    <label for="prob-home" class="block text-sm font-medium text-gray-300 mb-1">Home Win (%)</label>
-                    <input type="number" id="prob-home" step="0.1" value="45" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 45">
+            <div id="input-market" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 hidden">
+                <div class="lg:col-span-2">
+                    <label for="odds-home" class="block text-sm font-medium text-gray-300 mb-1">Home Win Odds</label>
+                    <input type="number" id="odds-home" step="0.01" value="2.10" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 2.10">
+                </div>
+                <div class="lg:col-span-2">
+                    <label for="odds-draw" class="block text-sm font-medium text-gray-300 mb-1">Draw Odds</label>
+                    <input type="number" id="odds-draw" step="0.01" value="3.40" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 3.40">
+                </div>
+                <div class="lg:col-span-2">
+                    <label for="odds-away" class="block text-sm font-medium text-gray-300 mb-1">Away Win Odds</label>
+                    <input type="number" id="odds-away" step="0.01" value="3.60" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 3.60">
                 </div>
                 <div>
-                    <label for="prob-draw" class="block text-sm font-medium text-gray-300 mb-1">Draw (%)</label>
-                    <input type="number" id="prob-draw" step="0.1" value="27" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 27">
+                    <label for="total-line" class="block text-sm font-medium text-gray-300 mb-1">Total Goals Line</label>
+                    <input type="number" id="total-line" step="0.01" value="2.50" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 2.50">
                 </div>
                 <div>
-                    <label for="prob-away" class="block text-sm font-medium text-gray-300 mb-1">Away Win (%)</label>
-                    <input type="number" id="prob-away" step="0.1" value="28" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 28">
+                    <label for="odds-over" class="block text-sm font-medium text-gray-300 mb-1">Over Odds</label>
+                    <input type="number" id="odds-over" step="0.01" value="1.95" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 1.95">
                 </div>
                 <div>
-                    <label for="total-goals" class="block text-sm font-medium text-gray-300 mb-1">Total Goals (Exp)</label>
-                    <input type="number" id="total-goals" step="0.01" value="2.75" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 2.75">
+                    <label for="odds-under" class="block text-sm font-medium text-gray-300 mb-1">Under Odds</label>
+                    <input type="number" id="odds-under" step="0.01" value="1.95" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 1.95">
                 </div>
             </div>
 
