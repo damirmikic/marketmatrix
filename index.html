@@ -581,6 +581,13 @@
          * @returns {number} The calculated probability (0.0 to 1.0).
          */
         function calculateMarket(conditions) {
+            const normalizedConditions = {
+                ft_result: null,    ft_total: null,     ft_btts: null,      ft_cs: null,
+                h1_result: null,    h1_total: null,     h1_btts: null,      h1_cs: null,
+                h2_result: null,    h2_total: null,     h2_btts: null,      h2_cs: null,
+                ...conditions
+            };
+
             let totalProbability = 0;
             const limit = MAX_GOALS_CALC;
 
@@ -597,7 +604,7 @@
                             const eventProbability = prob1H * prob2H;
                             if (eventProbability === 0) continue;
                             
-                            if (checkConditions(h1, a1, h2, a2, conditions)) {
+                            if (checkConditions(h1, a1, h2, a2, normalizedConditions)) {
                                 totalProbability += eventProbability;
                             }
                         }
@@ -979,7 +986,7 @@
         }
 
         function displayMarket_DNB() {
-            const probH = calculateMarket({ ft_result: '1T' });
+            const probH = calculateMarket({ ft_result: '1' });
             const probA = calculateMarket({ ft_result: '2' });
             // More stable way to calculate draw prob
             const probX = 1.0 - probH - probA; 
