@@ -20,6 +20,7 @@ const ALLOWED_BOOKMAKERS_BY_REGION = {
   eu: ["pinnacle"],
   us: ["betonlineag", "betmgm", "draftkings", "espnbet"],
   uk: ["paddypower", "skybet", "smarkets"],
+  au: ["bet365_au"]
 };
 
 init();
