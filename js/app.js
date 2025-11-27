@@ -70,6 +70,10 @@ async function attemptBootstrap() {
   }
 
   await runFullFetch(true);
+
+  if (state.leagues.length) {
+    lastApiKeyUsed = apiKey;
+  }
 }
 
 async function runFullFetch(refreshLeagues = false) {
@@ -204,6 +208,9 @@ async function runOddsFetch(apiKey, leagueKeys) {
       );
     }
     setUsage(usageUsed, usageRemaining);
+    if (refreshLeagues && state.leagues.length) {
+      lastApiKeyUsed = apiKey;
+    }
   } finally {
     toggleButtons({ disableFetchLeagues: false, disableFetchOdds: false });
   }
@@ -217,6 +224,11 @@ async function runOddsFetch(apiKey, leagueKeys) {
 
 function buildMarketsParamForSport() {
   return "h2h,totals";
+}
+
+function shouldStopOddsFetch(error) {
+  const message = error?.message || "";
+  return message.includes("OUT_OF_USAGE_CREDITS") || /HTTP 401/.test(message);
 }
 
 function shouldStopOddsFetch(error) {
