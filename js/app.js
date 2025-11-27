@@ -91,6 +91,9 @@ async function runFullFetch(refreshLeagues) {
 
     if (refreshLeagues) {
       await loadLeagues(apiKey);
+      if (state.leagues.length) {
+        lastApiKeyUsed = apiKey;
+      }
     }
 
     const leagueKeys = state.leagues.map((league) => league.key);
@@ -170,6 +173,9 @@ async function runOddsFetch(apiKey, leagueKeys) {
         console.error(error);
         errors.push(error.message);
         eventsByLeague.set(sportKey, []);
+        if (shouldStopOddsFetch(error)) {
+          break;
+        }
       }
     }
 
@@ -178,8 +184,9 @@ async function runOddsFetch(apiKey, leagueKeys) {
     renderNavigation();
     renderSelectedLeagueEvents();
 
+    const processedLeagues = eventsByLeague.size;
     setStatus(
-      `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${leagueKeys.length} league(s).`
+      `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${processedLeagues} league(s).`
     );
     setUsage(usageUsed, usageRemaining);
     if (refreshLeagues && state.leagues.length) {
@@ -203,6 +210,11 @@ function buildMarketsParamForSport(sportKey, selectedMarkets) {
 
   const sanitized = markets.filter((m) => m && m !== "h2h_3_way");
   return sanitized.length ? sanitized.join(",") : "h2h";
+}
+
+function shouldStopOddsFetch(error) {
+  const message = error?.message || "";
+  return message.includes("OUT_OF_USAGE_CREDITS") || /HTTP 401/.test(message);
 }
 
 function isOutrightSport(sportKey) {
