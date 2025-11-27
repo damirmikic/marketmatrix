@@ -77,7 +77,7 @@ async function attemptBootstrap() {
   }
 }
 
-async function runFullFetch(refreshLeagues) {
+async function runFullFetch(refreshLeagues = false) {
   if (isFetching) return;
   isFetching = true;
   resetMessages();
@@ -102,8 +102,15 @@ async function runFullFetch(refreshLeagues) {
       return;
     }
 
-    await runOddsFetch(apiKey, leagueKeys);
-    scheduleAutoRefresh();
+    const { stoppedEarly } = await runOddsFetch(apiKey, leagueKeys);
+    if (stoppedEarly) {
+      stopAutoRefresh();
+      setStatus(
+        "Automatic refresh paused after a critical odds error. You can retry manually once the issue is resolved."
+      );
+    } else {
+      scheduleAutoRefresh();
+    }
   } catch (error) {
     console.error(error);
     setError(error.message);
@@ -146,6 +153,8 @@ async function runOddsFetch(apiKey, leagueKeys) {
 
   const eventsByLeague = new Map();
 
+  let stoppedEarly = false;
+
   try {
     for (const sportKey of leagueKeys) {
       setStatus(`Fetching odds for ${sportKey} ...`);
@@ -174,6 +183,7 @@ async function runOddsFetch(apiKey, leagueKeys) {
         errors.push(error.message);
         eventsByLeague.set(sportKey, []);
         if (shouldStopOddsFetch(error)) {
+          stoppedEarly = true;
           break;
         }
       }
@@ -185,9 +195,15 @@ async function runOddsFetch(apiKey, leagueKeys) {
     renderSelectedLeagueEvents();
 
     const processedLeagues = eventsByLeague.size;
-    setStatus(
-      `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${processedLeagues} league(s).`
-    );
+    if (!stoppedEarly) {
+      setStatus(
+        `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${processedLeagues} league(s).`
+      );
+    } else {
+      setStatus(
+        `Stopped after ${processedLeagues} league(s) due to an authorization or quota error. Manual retry required.`
+      );
+    }
     setUsage(usageUsed, usageRemaining);
     if (refreshLeagues && state.leagues.length) {
       lastApiKeyUsed = apiKey;
@@ -199,6 +215,8 @@ async function runOddsFetch(apiKey, leagueKeys) {
   if (errors.length) {
     setError(errors.join(" | "));
   }
+
+  return { stoppedEarly };
 }
 
 function buildMarketsParamForSport(sportKey, selectedMarkets) {
