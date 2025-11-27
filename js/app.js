@@ -1,7 +1,6 @@
 import { fetchSoccerLeagues, fetchOdds } from "./api.js";
 import {
   refs,
-  getSelectedValues,
   setStatus,
   setError,
   setUsage,
@@ -21,6 +20,7 @@ const ALLOWED_BOOKMAKERS_BY_REGION = {
 
 let refreshTimer = null;
 let isFetching = false;
+let lastApiKeyUsed = null;
 const state = {
   leagues: [],
   eventsByLeague: new Map(),
@@ -64,10 +64,15 @@ async function attemptBootstrap() {
     setStatus("Enter your API key to start automatic fetching.");
     return;
   }
+  if (apiKey === lastApiKeyUsed && state.leagues.length) {
+    setStatus("Leagues already loaded. Use refresh buttons to update.");
+    return;
+  }
+
   await runFullFetch(true);
 }
 
-async function runFullFetch(refreshLeagues) {
+async function runFullFetch(refreshLeagues = false) {
   if (isFetching) return;
   isFetching = true;
   resetMessages();
@@ -81,6 +86,9 @@ async function runFullFetch(refreshLeagues) {
 
     if (refreshLeagues) {
       await loadLeagues(apiKey);
+      if (state.leagues.length) {
+        lastApiKeyUsed = apiKey;
+      }
     }
 
     const leagueKeys = state.leagues.map((league) => league.key);
@@ -89,8 +97,15 @@ async function runFullFetch(refreshLeagues) {
       return;
     }
 
-    await runOddsFetch(apiKey, leagueKeys);
-    scheduleAutoRefresh();
+    const { stoppedEarly } = await runOddsFetch(apiKey, leagueKeys);
+    if (stoppedEarly) {
+      stopAutoRefresh();
+      setStatus(
+        "Automatic refresh paused after a critical odds error. You can retry manually once the issue is resolved."
+      );
+    } else {
+      scheduleAutoRefresh();
+    }
   } catch (error) {
     console.error(error);
     setError(error.message);
@@ -105,11 +120,12 @@ async function loadLeagues(apiKey) {
 
   try {
     const leagues = await fetchSoccerLeagues(apiKey);
-    state.leagues = leagues;
+    const filteredLeagues = leagues.filter((league) => !isOutrightSport(league.key));
+    state.leagues = filteredLeagues;
     renderNavigation();
     setStatus(
-      leagues.length
-        ? `Loaded ${leagues.length} soccer leagues. Fetching odds automatically...`
+      filteredLeagues.length
+        ? `Loaded ${filteredLeagues.length} soccer leagues (outrights excluded). Fetching odds automatically...`
         : "No soccer sports found."
     );
   } finally {
@@ -120,7 +136,6 @@ async function loadLeagues(apiKey) {
 async function runOddsFetch(apiKey, leagueKeys) {
   toggleButtons({ disableFetchLeagues: true, disableFetchOdds: true });
 
-  const selectedMarkets = getSelectedValues(refs.marketsSelect);
   const oddsFormat = refs.oddsFormatSelect.value;
   const regionsParam = AUTO_REGIONS.join(",");
   const allowedBookmakers = buildAllowedBookmakerKeys(AUTO_REGIONS);
@@ -133,11 +148,17 @@ async function runOddsFetch(apiKey, leagueKeys) {
 
   const eventsByLeague = new Map();
 
+  let stoppedEarly = false;
+
   try {
     for (const sportKey of leagueKeys) {
+      if (isOutrightSport(sportKey)) {
+        eventsByLeague.set(sportKey, []);
+        continue;
+      }
       setStatus(`Fetching odds for ${sportKey} ...`);
 
-      const marketsParam = buildMarketsParamForSport(sportKey, selectedMarkets);
+      const marketsParam = buildMarketsParamForSport();
 
       try {
         const { events, usage } = await fetchOdds({
@@ -149,16 +170,21 @@ async function runOddsFetch(apiKey, leagueKeys) {
         });
 
         const filteredEvents = applyBookmakerFilter(events, allowedBookmakers);
-        eventsByLeague.set(sportKey, filteredEvents);
+        const eventsWithOdds = filteredEvents.filter(eventHasOdds);
+        eventsByLeague.set(sportKey, eventsWithOdds);
 
         if (usage.used !== null) usageUsed = usage.used;
         if (usage.remaining !== null) usageRemaining = usage.remaining;
 
-        totalEvents += filteredEvents.length;
+        totalEvents += eventsWithOdds.length;
       } catch (error) {
         console.error(error);
         errors.push(error.message);
         eventsByLeague.set(sportKey, []);
+        if (isCriticalOddsError(error)) {
+          stoppedEarly = true;
+          break;
+        }
       }
     }
 
@@ -167,9 +193,16 @@ async function runOddsFetch(apiKey, leagueKeys) {
     renderNavigation();
     renderSelectedLeagueEvents();
 
-    setStatus(
-      `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${leagueKeys.length} league(s).`
-    );
+    const processedLeagues = eventsByLeague.size;
+    if (!stoppedEarly) {
+      setStatus(
+        `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${processedLeagues} league(s).`
+      );
+    } else {
+      setStatus(
+        `Stopped after ${processedLeagues} league(s) due to an authorization or quota error. Manual retry required.`
+      );
+    }
     setUsage(usageUsed, usageRemaining);
   } finally {
     toggleButtons({ disableFetchLeagues: false, disableFetchOdds: false });
@@ -178,17 +211,17 @@ async function runOddsFetch(apiKey, leagueKeys) {
   if (errors.length) {
     setError(errors.join(" | "));
   }
+
+  return { stoppedEarly };
 }
 
-function buildMarketsParamForSport(sportKey, selectedMarkets) {
-  const markets = selectedMarkets.length ? selectedMarkets : ["h2h"];
+function buildMarketsParamForSport() {
+  return "h2h,totals";
+}
 
-  if (isOutrightSport(sportKey)) {
-    return "h2h";
-  }
-
-  const sanitized = markets.filter((m) => m && m !== "h2h_3_way");
-  return sanitized.length ? sanitized.join(",") : "h2h";
+function isCriticalOddsError(error) {
+  const message = error?.message || "";
+  return message.includes("OUT_OF_USAGE_CREDITS") || /HTTP 401/.test(message);
 }
 
 function isOutrightSport(sportKey) {
@@ -231,16 +264,56 @@ function buildAllowedBookmakerKeys(regions) {
 }
 
 function applyBookmakerFilter(events, allowedBookmakers) {
-  if (!allowedBookmakers.size) {
-    return events;
-  }
-
   return events.map((event) => ({
     ...event,
-    bookmakers: (event.bookmakers || []).filter((book) =>
-      allowedBookmakers.has(book.key)
-    ),
+    bookmakers: sanitizeBookmakers(event.bookmakers || [], allowedBookmakers),
   }));
+}
+
+function sanitizeBookmakers(bookmakers, allowedBookmakers) {
+  const onlyAllowed = allowedBookmakers.size
+    ? bookmakers.filter((book) => allowedBookmakers.has(book.key))
+    : bookmakers;
+
+  return onlyAllowed
+    .map((book) => ({
+      ...book,
+      markets: sanitizeMarkets(book.markets || []),
+    }))
+    .filter((book) => (book.markets || []).length);
+}
+
+function sanitizeMarkets(markets) {
+  const allowedMarkets = new Set(["h2h", "totals"]);
+  return markets
+    .filter((market) => allowedMarkets.has(market.key))
+    .map((market) => {
+      const outcomes = filterOutcomesForMarket(market);
+      return {
+        ...market,
+        outcomes,
+      };
+    })
+    .filter((market) => (market.outcomes || []).length);
+}
+
+function filterOutcomesForMarket(market) {
+  if (market.key !== "totals") {
+    return market.outcomes || [];
+  }
+
+  return (market.outcomes || []).filter((outcome) => Number(outcome.point) === 2.5);
+}
+
+function eventHasOdds(event) {
+  return (event.bookmakers || []).some((book) =>
+    (book.markets || []).some((market) =>
+      (market.outcomes || []).some((outcome) => {
+        const price = Number(outcome.price);
+        return Number.isFinite(price);
+      })
+    )
+  );
 }
 
 function scheduleAutoRefresh() {
