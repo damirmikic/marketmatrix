@@ -2,6 +2,7 @@ import { fetchSoccerLeagues, fetchOdds } from "./api.js";
 import {
   refs,
   setStatus,
+  setRefreshStatus,
   setError,
   setUsage,
   toggleButtons,
@@ -19,6 +20,8 @@ const ALLOWED_BOOKMAKERS_BY_REGION = {
 };
 
 let refreshTimer = null;
+let refreshCountdownTimer = null;
+let nextRefreshAt = null;
 let isFetching = false;
 let lastApiKeyUsed = null;
 const state = {
@@ -62,10 +65,12 @@ async function attemptBootstrap() {
   if (!apiKey) {
     stopAutoRefresh();
     setStatus("Enter your API key to start automatic fetching.");
+    setRefreshStatus("Auto-refresh stopped.");
     return;
   }
   if (apiKey === lastApiKeyUsed && state.leagues.length) {
     setStatus("Leagues already loaded. Use refresh buttons to update.");
+    setRefreshStatus(refreshTimer ? formatCountdownMessage() : "Auto-refresh paused.");
     return;
   }
 
@@ -80,6 +85,7 @@ async function runFullFetch(refreshLeagues = false) {
   if (isFetching) return;
   isFetching = true;
   resetMessages();
+  setRefreshStatus("Refreshing now...");
 
   try {
     const apiKey = refs.apiKeyInput.value.trim();
@@ -107,6 +113,7 @@ async function runFullFetch(refreshLeagues = false) {
       setStatus(
         "Automatic refresh paused after a critical odds error. You can retry manually once the issue is resolved."
       );
+      setRefreshStatus("Auto-refresh paused due to an error.");
     } else {
       scheduleAutoRefresh();
     }
@@ -121,6 +128,7 @@ async function runFullFetch(refreshLeagues = false) {
 async function loadLeagues(apiKey) {
   toggleButtons({ disableFetchLeagues: true, disableFetchOdds: true });
   setStatus("Fetching sports from /v4/sports ...");
+  setRefreshStatus("Refreshing leagues now...");
 
   try {
     const leagues = await fetchSoccerLeagues(apiKey);
@@ -139,6 +147,7 @@ async function loadLeagues(apiKey) {
 
 async function runOddsFetch(apiKey, leagueKeys) {
   toggleButtons({ disableFetchLeagues: true, disableFetchOdds: true });
+  setRefreshStatus("Refreshing odds now...");
 
   const oddsFormat = refs.oddsFormatSelect.value;
   const regionsParam = AUTO_REGIONS.join(",");
@@ -202,10 +211,12 @@ async function runOddsFetch(apiKey, leagueKeys) {
       setStatus(
         `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${processedLeagues} league(s).`
       );
+      setRefreshStatus("Scheduling next auto-refresh...");
     } else {
       setStatus(
         `Stopped after ${processedLeagues} league(s) due to an authorization or quota error. Manual retry required.`
       );
+      setRefreshStatus("Auto-refresh paused due to an error.");
     }
     setUsage(usageUsed, usageRemaining);
     if (refreshLeagues && state.leagues.length) {
@@ -325,7 +336,11 @@ function eventHasOdds(event) {
 
 function scheduleAutoRefresh() {
   stopAutoRefresh();
+  nextRefreshAt = Date.now() + REFRESH_MS;
+  startRefreshCountdown();
   refreshTimer = setInterval(() => {
+    nextRefreshAt = Date.now() + REFRESH_MS;
+    setRefreshStatus("Refreshing now...");
     runFullFetch(false);
   }, REFRESH_MS);
 }
@@ -340,6 +355,37 @@ function stopAutoRefresh() {
     clearInterval(refreshTimer);
     refreshTimer = null;
   }
+  if (refreshCountdownTimer) {
+    clearInterval(refreshCountdownTimer);
+    refreshCountdownTimer = null;
+  }
+  nextRefreshAt = null;
+  setRefreshStatus("");
+}
+
+function startRefreshCountdown() {
+  if (!nextRefreshAt) {
+    setRefreshStatus("Auto-refresh idle.");
+    return;
+  }
+
+  if (refreshCountdownTimer) {
+    clearInterval(refreshCountdownTimer);
+  }
+
+  setRefreshStatus(formatCountdownMessage());
+  refreshCountdownTimer = setInterval(() => {
+    setRefreshStatus(formatCountdownMessage());
+  }, 1000);
+}
+
+function formatCountdownMessage() {
+  if (!nextRefreshAt) return "Auto-refresh idle.";
+  const remainingMs = nextRefreshAt - Date.now();
+  if (remainingMs <= 0) return "Refreshing now...";
+
+  const seconds = Math.ceil(remainingMs / 1000);
+  return `Next auto-refresh in ${seconds}s`;
 }
 
 function renderNavigation() {
@@ -357,6 +403,7 @@ function renderSelectedLeagueEvents() {
 
 function resetMessages() {
   setStatus("");
+  setRefreshStatus("");
   setError("");
   setUsage();
 }

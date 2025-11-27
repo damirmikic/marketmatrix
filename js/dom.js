@@ -5,6 +5,7 @@ const refs = {
   btnFetchSoccer: document.getElementById("btnFetchSoccer"),
   btnFetchOdds: document.getElementById("btnFetchOdds"),
   statusDiv: document.getElementById("status"),
+  refreshStatusDiv: document.getElementById("refreshStatus"),
   errorDiv: document.getElementById("error"),
   usageDiv: document.getElementById("usage"),
   eventsDiv: document.getElementById("events"),
@@ -22,6 +23,10 @@ function getSelectedValues(selectEl) {
 
 function setStatus(message = "") {
   refs.statusDiv.textContent = message;
+}
+
+function setRefreshStatus(message = "") {
+  refs.refreshStatusDiv.textContent = message;
 }
 
 function setError(message = "") {
@@ -443,6 +448,7 @@ export {
   refs,
   getSelectedValues,
   setStatus,
+  setRefreshStatus,
   setError,
   setUsage,
   toggleButtons,
