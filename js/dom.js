@@ -128,11 +128,15 @@ function renderSelectedEvent(events, leagueTitle, oddsFormat, openEventId) {
     meta.textContent = `Kickoff: ${formatKickoff(event.commence_time)}`;
 
     const average = buildAverageOddsTable(event);
+    const totalsPreview = buildTotalsPreview(event);
 
     summary.appendChild(title);
     summary.appendChild(meta);
     if (average) {
       summary.appendChild(average);
+    }
+    if (totalsPreview) {
+      summary.appendChild(totalsPreview);
     }
     details.appendChild(summary);
 
@@ -176,7 +180,12 @@ function buildMarketTables(event, oddsFormat) {
           marketEntry.columns.push(o.name);
         }
       });
-      marketEntry.columns = orderOutcomeColumns(market.key, marketEntry.columns);
+      marketEntry.columns = orderOutcomeColumns(
+        market.key,
+        marketEntry.columns,
+        event.home_team,
+        event.away_team
+      );
 
       marketEntry.rows.push({
         bookmaker: book.title || book.key,
@@ -239,12 +248,14 @@ function buildMarketTables(event, oddsFormat) {
   return blocks;
 }
 
-function orderOutcomeColumns(marketKey, columns) {
+function orderOutcomeColumns(marketKey, columns, homeName, awayName) {
   if (marketKey !== "h2h") return columns;
   const priority = { home: 0, draw: 1, away: 2 };
   return [...columns].sort((a, b) => {
-    const pa = priority[a?.toLowerCase()] ?? 99;
-    const pb = priority[b?.toLowerCase()] ?? 99;
+    const normalizedA = normalizeOutcomeName(a, homeName, awayName);
+    const normalizedB = normalizeOutcomeName(b, homeName, awayName);
+    const pa = priority[normalizedA] ?? 99;
+    const pb = priority[normalizedB] ?? 99;
     return pa - pb || (a || "").localeCompare(b || "");
   });
 }
@@ -275,6 +286,36 @@ function buildAverageOddsTable(event) {
   [averages.home, averages.draw, averages.away].forEach((val) => {
     const td = document.createElement("td");
     td.textContent = val ?? "-";
+    row.appendChild(td);
+  });
+  tbody.appendChild(row);
+  table.appendChild(tbody);
+
+  return table;
+}
+
+function buildTotalsPreview(event) {
+  const totals = computeAverageTotals(event.bookmakers || []);
+  if (!totals) return null;
+
+  const table = document.createElement("table");
+  table.className = "average-table";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  ["Over", "Under"].forEach((label) => {
+    const th = document.createElement("th");
+    th.textContent = label;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  const row = document.createElement("tr");
+  [totals.over, totals.under].forEach((entry) => {
+    const td = document.createElement("td");
+    td.innerHTML = formatTotalsCell(entry);
     row.appendChild(td);
   });
   tbody.appendChild(row);
@@ -321,6 +362,63 @@ function normalizeOutcomeName(name, homeName, awayName) {
   if (lower === "away" || lower === awayName?.toLowerCase()) return "away";
   if (lower === "draw" || lower === "tie") return "draw";
   return null;
+}
+
+function computeAverageTotals(bookmakers) {
+  const totals = {
+    over: { prices: [], points: [] },
+    under: { prices: [], points: [] },
+  };
+
+  bookmakers.forEach((book) => {
+    (book.markets || []).forEach((market) => {
+      if (market.key !== "totals") return;
+      (market.outcomes || []).forEach((outcome) => {
+        const lower = (outcome.name || "").toLowerCase();
+        const bucket = lower === "over" ? totals.over : lower === "under" ? totals.under : null;
+        if (!bucket) return;
+
+        const price = Number(outcome.price);
+        const point = Number(outcome.point);
+        if (Number.isFinite(price)) bucket.prices.push(price);
+        if (Number.isFinite(point)) bucket.points.push(point);
+      });
+    });
+  });
+
+  const result = {};
+  let hasTotals = false;
+  ["over", "under"].forEach((key) => {
+    const entry = totals[key];
+    const priceAvg = average(entry.prices);
+    const pointAvg = average(entry.points);
+    result[key] = {
+      price: priceAvg !== null ? priceAvg.toFixed(2) : null,
+      point: pointAvg !== null ? pointAvg.toFixed(2) : null,
+    };
+    if (priceAvg !== null || pointAvg !== null) {
+      hasTotals = true;
+    }
+  });
+
+  return hasTotals ? result : null;
+}
+
+function average(values) {
+  if (!values.length) return null;
+  const sum = values.reduce((acc, val) => acc + val, 0);
+  return sum / values.length;
+}
+
+function formatTotalsCell(entry) {
+  if (!entry || (entry.price === null && entry.point === null)) {
+    return "-";
+  }
+
+  const parts = [];
+  if (entry.point !== null) parts.push(`<div class="small muted">pt ${entry.point}</div>`);
+  if (entry.price !== null) parts.push(`<div class="price">${entry.price}</div>`);
+  return parts.join(" ");
 }
 
 function formatPoint(point) {

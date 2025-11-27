@@ -21,6 +21,7 @@ const ALLOWED_BOOKMAKERS_BY_REGION = {
 
 let refreshTimer = null;
 let isFetching = false;
+let lastApiKeyUsed = null;
 const state = {
   leagues: [],
   eventsByLeague: new Map(),
@@ -64,7 +65,16 @@ async function attemptBootstrap() {
     setStatus("Enter your API key to start automatic fetching.");
     return;
   }
+  if (apiKey === lastApiKeyUsed && state.leagues.length) {
+    setStatus("Leagues already loaded. Use refresh buttons to update.");
+    return;
+  }
+
   await runFullFetch(true);
+
+  if (state.leagues.length) {
+    lastApiKeyUsed = apiKey;
+  }
 }
 
 async function runFullFetch(refreshLeagues) {
@@ -149,12 +159,13 @@ async function runOddsFetch(apiKey, leagueKeys) {
         });
 
         const filteredEvents = applyBookmakerFilter(events, allowedBookmakers);
-        eventsByLeague.set(sportKey, filteredEvents);
+        const eventsWithOdds = filteredEvents.filter(eventHasOdds);
+        eventsByLeague.set(sportKey, eventsWithOdds);
 
         if (usage.used !== null) usageUsed = usage.used;
         if (usage.remaining !== null) usageRemaining = usage.remaining;
 
-        totalEvents += filteredEvents.length;
+        totalEvents += eventsWithOdds.length;
       } catch (error) {
         console.error(error);
         errors.push(error.message);
@@ -171,6 +182,9 @@ async function runOddsFetch(apiKey, leagueKeys) {
       `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${leagueKeys.length} league(s).`
     );
     setUsage(usageUsed, usageRemaining);
+    if (refreshLeagues && state.leagues.length) {
+      lastApiKeyUsed = apiKey;
+    }
   } finally {
     toggleButtons({ disableFetchLeagues: false, disableFetchOdds: false });
   }
@@ -241,6 +255,17 @@ function applyBookmakerFilter(events, allowedBookmakers) {
       allowedBookmakers.has(book.key)
     ),
   }));
+}
+
+function eventHasOdds(event) {
+  return (event.bookmakers || []).some((book) =>
+    (book.markets || []).some((market) =>
+      (market.outcomes || []).some((outcome) => {
+        const price = Number(outcome.price);
+        return Number.isFinite(price);
+      })
+    )
+  );
 }
 
 function scheduleAutoRefresh() {
