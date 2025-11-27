@@ -1,295 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poisson Football Calculator</title>
-    <!-- Load Inter font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;550;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
-    
+  <meta charset="UTF-8" />
+  <title>Soccer Odds Fetcher – The Odds API</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="p-4 md:p-8">
-
-    <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-bold text-center text-white mb-6">Poisson Football Model</h1>
-        
-        <!-- Input Section -->
-        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-xl font-semibold text-white mb-4">1. Model Inputs</h2>
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                <p id="input-info-sup" class="text-sm text-gray-400">Enter Supremacy (Home Advantage) and Expectancy (Total Goals).</p>
-                <p id="input-info-market" class="text-sm text-gray-400 hidden">Enter 1X2 match odds and over/under odds (decimal format).</p>
-                <button id="input-mode-toggle" class="self-start md:self-auto bg-gray-700 hover:bg-gray-600 text-sm font-semibold text-white py-2 px-4 rounded-lg transition duration-200">
-                    Use 1X2 Inputs
-                </button>
-            </div>
-
-            <div id="input-supremacy" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                    <label for="supremacy" class="block text-sm font-medium text-gray-300 mb-1">Supremacy (S)</label>
-                    <input type="number" id="supremacy" step="0.01" value="-0.25" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., -0.25">
-                </div>
-                <div>
-                    <label for="expectancy" class="block text-sm font-medium text-gray-300 mb-1">Expectancy (E)</label>
-                    <input type="number" id="expectancy" step="0.01" value="2.75" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 2.75">
-                </div>
-            </div>
-
-            <div id="input-market" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 hidden">
-                <div class="lg:col-span-2">
-                    <label for="odds-home" class="block text-sm font-medium text-gray-300 mb-1">Home Win Odds</label>
-                    <input type="number" id="odds-home" step="0.01" value="2.10" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 2.10">
-                </div>
-                <div class="lg:col-span-2">
-                    <label for="odds-draw" class="block text-sm font-medium text-gray-300 mb-1">Draw Odds</label>
-                    <input type="number" id="odds-draw" step="0.01" value="3.40" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 3.40">
-                </div>
-                <div class="lg:col-span-2">
-                    <label for="odds-away" class="block text-sm font-medium text-gray-300 mb-1">Away Win Odds</label>
-                    <input type="number" id="odds-away" step="0.01" value="3.60" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 3.60">
-                </div>
-                <div>
-                    <label for="total-line" class="block text-sm font-medium text-gray-300 mb-1">Total Goals Line</label>
-                    <input type="number" id="total-line" step="0.01" value="2.50" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 2.50">
-                </div>
-                <div>
-                    <label for="odds-over" class="block text-sm font-medium text-gray-300 mb-1">Over Odds</label>
-                    <input type="number" id="odds-over" step="0.01" value="1.95" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 1.95">
-                </div>
-                <div>
-                    <label for="odds-under" class="block text-sm font-medium text-gray-300 mb-1">Under Odds</label>
-                    <input type="number" id="odds-under" step="0.01" value="1.95" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 1.95">
-                </div>
-            </div>
-
-            <div class="mt-4 md:flex md:justify-end">
-                <button id="calc-button" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow transition duration-200">
-                    Calculate Model
-                </button>
-            </div>
-            <div id="error-message" class="text-red-400 text-sm mt-4 hidden"></div>
-        </div>
-
-        <!-- Output Section (hidden by default) -->
-        <div id="output-section" class="hidden">
-            
-            <!-- Lambda Outputs -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-                <h2 class="text-xl font-semibold text-white mb-4">2. Calculated Lambdas (Expected Goals)</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-white text-center mb-2">Full Time</h3>
-                        <p class="text-center text-gray-300">Home (HxG): <span id="ft-hxg" class="font-bold text-blue-400">0.00</span></p>
-                        <p class="text-center text-gray-300">Away (AxG): <span id="ft-axg" class="font-bold text-blue-400">0.00</span></p>
-                    </div>
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-white text-center mb-2">1st Half (45%)</h3>
-                        <p class="text-center text-gray-300">Home (HxG): <span id="h1-hxg" class="font-bold text-blue-400">0.00</span></p>
-                        <p class="text-center text-gray-300">Away (AxG): <span id="h1-axg" class="font-bold text-blue-400">0.00</span></p>
-                    </div>
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-white text-center mb-2">2nd Half (55%)</h3>
-                        <p class="text-center text-gray-300">Home (HxG): <span id="h2-hxg" class="font-bold text-blue-400">0.00</span></p>
-                        <p class="text-center text-gray-300">Away (AxG): <span id="h2-axg" class="font-bold text-blue-400">0.00</span></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Matrix Displays -->
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 class="text-xl font-semibold text-white mb-4 text-center">1st Half Correct Score Matrix (%)</h2>
-                    <div class="overflow-x-auto">
-                        <table id="matrix-1h" class="matrix-table w-full">
-                            <!-- JS will generate this -->
-                        </table>
-                    </div>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 class="text-xl font-semibold text-white mb-4 text-center">2nd Half Correct Score Matrix (%)</h2>
-                    <div class="overflow-x-auto">
-                        <table id="matrix-2h" class="matrix-table w-full">
-                            <!-- JS will generate this -->
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Markets Section -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-white">3. All Markets</h2>
-                    <button id="calc-markets-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-lg shadow transition duration-200">
-                        Calculate All Markets
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Left Column -->
-                    <div class="space-y-6">
-                        <div class="market-group">
-                            <button class="market-group-toggle" data-target="group-main-markets" aria-expanded="true">
-                                <span>Main Markets</span>
-                                <span class="toggle-icon">−</span>
-                            </button>
-                            <div id="group-main-markets" class="market-group-panel">
-                                <div class="space-y-6">
-                                    <table class="market-table">
-                                        <thead><tr><th colspan="3">1X2</th></tr></thead>
-                                        <tbody id="market-1x2"></tbody>
-                                    </table>
-                                    <table class="market-table">
-                                        <thead><tr><th colspan="3">Double Chance</th></tr></thead>
-                                        <tbody id="market-dc"></tbody>
-                                    </table>
-                                    <table class="market-table">
-                                        <thead><tr><th colspan="3">Draw No Bet</th></tr></thead>
-                                        <tbody id="market-dnb"></tbody>
-                                    </table>
-                                    <table class="market-table">
-                                        <thead><tr><th colspan="3">Both Teams To Score</th></tr></thead>
-                                        <tbody id="market-btts"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="market-group">
-                            <button class="market-group-toggle" data-target="group-first-half" aria-expanded="true">
-                                <span>1st Half Markets</span>
-                                <span class="toggle-icon">−</span>
-                            </button>
-                            <div id="group-first-half" class="market-group-panel">
-                                <table class="market-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Selection</th>
-                                            <th class="text-right">Prob (%)</th>
-                                            <th class="text-right">Odds</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="market-first-half"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column -->
-                    <div class="space-y-6">
-                        <div class="market-group">
-                            <button class="market-group-toggle" data-target="group-goal-markets" aria-expanded="true">
-                                <span>Goals Markets</span>
-                                <span class="toggle-icon">−</span>
-                            </button>
-                            <div id="group-goal-markets" class="market-group-panel">
-                                <div class="max-h-96 overflow-y-auto pr-2">
-                                    <table class="market-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Selection</th>
-                                                <th class="text-right">Prob (%)</th>
-                                                <th class="text-right">Odds</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="market-goals"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="market-group">
-                            <button class="market-group-toggle" data-target="group-total-goals" aria-expanded="true">
-                                <span>Total Goals (Over/Under)</span>
-                                <span class="toggle-icon">−</span>
-                            </button>
-                            <div id="group-total-goals" class="market-group-panel">
-                                <div class="max-h-96 overflow-y-auto pr-2">
-                                    <table class="market-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Line</th>
-                                                <th class="text-right">Over Prob (%)</th>
-                                                <th class="text-right">Over Odds</th>
-                                                <th class="text-right">Under Prob (%)</th>
-                                                <th class="text-right">Under Odds</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="market-totals"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="market-group">
-                            <button class="market-group-toggle" data-target="group-ah" aria-expanded="true">
-                                <span>Asian Handicap</span>
-                                <span class="toggle-icon">−</span>
-                            </button>
-                            <div id="group-ah" class="market-group-panel">
-                                <div class="max-h-96 overflow-y-auto pr-2">
-                                    <table class="market-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Home Team</th>
-                                                <th class="text-right">Prob (%)</th>
-                                                <th class="text-right">Odds</th>
-                                                <th>Away Team</th>
-                                                <th class="text-right">Prob (%)</th>
-                                                <th class="text-right">Odds</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="market-ah"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="market-group">
-                            <button class="market-group-toggle" data-target="group-second-half" aria-expanded="true">
-                                <span>2nd Half Markets</span>
-                                <span class="toggle-icon">−</span>
-                            </button>
-                            <div id="group-second-half" class="market-group-panel">
-                                <table class="market-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Selection</th>
-                                            <th class="text-right">Prob (%)</th>
-                                            <th class="text-right">Odds</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="market-second-half"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="market-group">
-                            <button class="market-group-toggle" data-target="group-htft" aria-expanded="true">
-                                <span>Half Time / Full Time</span>
-                                <span class="toggle-icon">−</span>
-                            </button>
-                            <div id="group-htft" class="market-group-panel">
-                                <table class="market-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Selection</th>
-                                            <th class="text-right">Prob (%)</th>
-                                            <th class="text-right">Odds</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="market-htft"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<body>
+  <header>
+    <div>
+      <h1>Soccer Odds Fetcher – The Odds API</h1>
+      <p>Enter your key and the app will auto-fetch soccer leagues, events, and odds with a 3-minute refresh.</p>
     </div>
+  </header>
 
-    <script type="module" src="js/main.js"></script>
-    
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>Connection & Parameters</h2>
+
+        <div>
+          <label for="apiKey">The Odds API Key</label>
+          <input type="password" id="apiKey" placeholder="Paste your API key here" />
+          <p class="small">Key is used only in your browser. Do not share it.</p>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="field">
+          <label for="markets">Markets</label>
+          <select id="markets" multiple>
+            <option value="h2h" selected>h2h (2-way)</option>
+            <option value="spreads">spreads</option>
+            <option value="totals" selected>totals</option>
+            <option value="btts">btts</option>
+            <option value="draw_no_bet">draw_no_bet</option>
+            <option value="team_totals">team_totals</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="oddsFormat">Odds format</label>
+          <select id="oddsFormat">
+            <option value="decimal" selected>decimal</option>
+            <option value="american">american</option>
+          </select>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="actions-row">
+          <button id="btnFetchSoccer">Refresh soccer leagues</button>
+          <button id="btnFetchOdds" class="secondary" disabled>Refresh events & odds</button>
+        </div>
+
+        <div id="status" class="small" aria-live="polite"></div>
+        <div id="error" class="error" aria-live="polite"></div>
+      </section>
+
+      <section class="card nav-card">
+        <div class="card-header">
+          <h2>Leagues</h2>
+          <div class="small" id="leagueCount"></div>
+        </div>
+        <div id="leagueNav" class="nav-list" aria-label="Leagues"></div>
+      </section>
+
+      <section class="card nav-card">
+        <div class="card-header">
+          <h2>Events</h2>
+          <div class="small" id="eventCount"></div>
+        </div>
+        <div id="eventList" class="nav-list" aria-label="Events"></div>
+      </section>
+    </aside>
+
+    <section class="card content">
+      <div class="content-header">
+        <div>
+          <div id="selectedEventTitle" class="selected-title">No event selected</div>
+          <div id="selectedEventMeta" class="small muted"></div>
+        </div>
+        <div id="usage" class="small"></div>
+      </div>
+      <div id="events"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
