@@ -1,15 +1,19 @@
 const refs = {
   apiKeyInput: document.getElementById("apiKey"),
-  regionsSelect: document.getElementById("regions"),
   marketsSelect: document.getElementById("markets"),
   oddsFormatSelect: document.getElementById("oddsFormat"),
-  leagueSelect: document.getElementById("leagueSelect"),
   btnFetchSoccer: document.getElementById("btnFetchSoccer"),
   btnFetchOdds: document.getElementById("btnFetchOdds"),
   statusDiv: document.getElementById("status"),
   errorDiv: document.getElementById("error"),
   usageDiv: document.getElementById("usage"),
   eventsDiv: document.getElementById("events"),
+  leagueNav: document.getElementById("leagueNav"),
+  eventList: document.getElementById("eventList"),
+  selectedEventTitle: document.getElementById("selectedEventTitle"),
+  selectedEventMeta: document.getElementById("selectedEventMeta"),
+  leagueCount: document.getElementById("leagueCount"),
+  eventCount: document.getElementById("eventCount"),
 };
 
 function getSelectedValues(selectEl) {
@@ -41,78 +45,88 @@ function toggleButtons({ disableFetchLeagues, disableFetchOdds }) {
   }
 }
 
-function clearLeagues() {
-  refs.leagueSelect.innerHTML = "";
-}
+function renderLeagueNav(leagues, selectedKey) {
+  refs.leagueNav.innerHTML = "";
+  refs.leagueCount.textContent = leagues.length ? `${leagues.length} leagues` : "";
 
-function populateLeagueOptions(leagues) {
-  clearLeagues();
-  const fragment = document.createDocumentFragment();
-
-  leagues.forEach((league) => {
-    const option = document.createElement("option");
-    option.value = league.key;
-    option.textContent = `${league.title} (${league.key})`;
-    fragment.appendChild(option);
-  });
-
-  refs.leagueSelect.appendChild(fragment);
-}
-
-function selectAllLeagues() {
-  Array.from(refs.leagueSelect.options).forEach((option) => {
-    option.selected = true;
-  });
-}
-
-function clearEvents() {
-  refs.eventsDiv.innerHTML = "";
-}
-
-function renderEventsForLeague(sportKey, events, oddsFormat) {
-  const leagueHeader = document.createElement("h3");
-  leagueHeader.textContent = sportKey;
-  leagueHeader.className = "small league-heading";
-  refs.eventsDiv.appendChild(leagueHeader);
-
-  if (!events.length) {
-    const noEvents = document.createElement("p");
-    noEvents.className = "small";
-    noEvents.textContent = "No events returned for this league.";
-    refs.eventsDiv.appendChild(noEvents);
+  if (!leagues.length) {
+    refs.leagueNav.innerHTML = '<div class="empty-state">No leagues loaded yet.</div>';
     return;
   }
 
-  events.forEach((event) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "event-card";
-
-    const header = document.createElement("div");
-    header.className = "event-header";
-    header.innerHTML = `<div class="event-title">${event.home_team} vs ${event.away_team}</div>`;
-
-    const meta = document.createElement("div");
-    meta.className = "event-meta";
-    meta.textContent = `ID: ${event.id} | Kickoff: ${formatKickoff(event.commence_time)}`;
-    header.appendChild(meta);
-    wrapper.appendChild(header);
-
-    const marketsContainer = document.createElement("div");
-    marketsContainer.className = "markets-grid";
-
-    const marketTables = buildMarketTables(event, oddsFormat);
-    if (!marketTables.length) {
-      const noMarkets = document.createElement("p");
-      noMarkets.className = "small";
-      noMarkets.textContent = "No bookmakers or markets available.";
-      marketsContainer.appendChild(noMarkets);
-    } else {
-      marketTables.forEach((tableBlock) => marketsContainer.appendChild(tableBlock));
-    }
-
-    wrapper.appendChild(marketsContainer);
-    refs.eventsDiv.appendChild(wrapper);
+  const fragment = document.createDocumentFragment();
+  leagues.forEach((league) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `nav-item${league.key === selectedKey ? " active" : ""}`;
+    button.dataset.league = league.key;
+    button.innerHTML = `
+      <div class="nav-title">${league.title || league.key}</div>
+      <div class="nav-meta">${league.key}</div>
+    `;
+    fragment.appendChild(button);
   });
+
+  refs.leagueNav.appendChild(fragment);
+}
+
+function renderEventList(events, selectedEventId) {
+  refs.eventList.innerHTML = "";
+  refs.eventCount.textContent = events.length ? `${events.length} events` : "";
+
+  if (!events.length) {
+    refs.eventList.innerHTML = '<div class="empty-state">No events available.</div>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  events.forEach((event) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `nav-item${event.id === selectedEventId ? " active" : ""}`;
+    button.dataset.event = event.id;
+    button.innerHTML = `
+      <div class="nav-title">${event.home_team} vs ${event.away_team}</div>
+      <div class="nav-meta">Kickoff: ${formatKickoff(event.commence_time)}</div>
+    `;
+    fragment.appendChild(button);
+  });
+
+  refs.eventList.appendChild(fragment);
+}
+
+function renderSelectedEvent(event, oddsFormat) {
+  refs.eventsDiv.innerHTML = "";
+
+  if (!event) {
+    refs.selectedEventTitle.textContent = "No event selected";
+    refs.selectedEventMeta.textContent = "";
+    refs.eventsDiv.innerHTML = '<div class="empty-state">Select a league and event to view odds.</div>';
+    return;
+  }
+
+  refs.selectedEventTitle.textContent = `${event.home_team} vs ${event.away_team}`;
+  refs.selectedEventMeta.textContent = `Kickoff: ${formatKickoff(event.commence_time)}`;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "events-container";
+
+  const card = document.createElement("div");
+  card.className = "event-card";
+
+  const marketsContainer = document.createElement("div");
+  marketsContainer.className = "markets-grid";
+
+  const marketTables = buildMarketTables(event, oddsFormat);
+  if (!marketTables.length) {
+    marketsContainer.innerHTML = '<p class="empty-state">No bookmakers or markets available for this event.</p>';
+  } else {
+    marketTables.forEach((tableBlock) => marketsContainer.appendChild(tableBlock));
+  }
+
+  card.appendChild(marketsContainer);
+  wrapper.appendChild(card);
+  refs.eventsDiv.appendChild(wrapper);
 }
 
 function buildMarketTables(event, oddsFormat) {
@@ -128,7 +142,7 @@ function buildMarketTables(event, oddsFormat) {
 
       if (!marketMap.has(market.key)) {
         marketMap.set(market.key, {
-          columns: normalizedOutcomes.map((o) => o.name),
+          columns: [],
           rows: [],
         });
       }
@@ -139,6 +153,7 @@ function buildMarketTables(event, oddsFormat) {
           marketEntry.columns.push(o.name);
         }
       });
+      marketEntry.columns = orderOutcomeColumns(market.key, marketEntry.columns);
 
       marketEntry.rows.push({
         bookmaker: book.title || book.key,
@@ -201,6 +216,16 @@ function buildMarketTables(event, oddsFormat) {
   return blocks;
 }
 
+function orderOutcomeColumns(marketKey, columns) {
+  if (marketKey !== "h2h") return columns;
+  const priority = { home: 0, draw: 1, away: 2 };
+  return [...columns].sort((a, b) => {
+    const pa = priority[a?.toLowerCase()] ?? 99;
+    const pb = priority[b?.toLowerCase()] ?? 99;
+    return pa - pb || (a || "").localeCompare(b || "");
+  });
+}
+
 function formatPoint(point) {
   if (point === undefined || point === null) return "";
   return `<div class="small muted">pt ${point}</div>`;
@@ -210,7 +235,9 @@ function formatKickoff(commence) {
   try {
     if (!commence) return "";
     const parsed = new Date(commence);
-    return `${parsed.toLocaleString()} (${parsed.toISOString().replace(".000Z", "Z")})`;
+    return `${parsed.toLocaleString()} (${parsed
+      .toISOString()
+      .replace(".000Z", "Z")})`;
   } catch (error) {
     return commence || "";
   }
@@ -223,8 +250,7 @@ export {
   setError,
   setUsage,
   toggleButtons,
-  populateLeagueOptions,
-  selectAllLeagues,
-  clearEvents,
-  renderEventsForLeague,
+  renderLeagueNav,
+  renderEventList,
+  renderSelectedEvent,
 };

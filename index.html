@@ -8,78 +8,82 @@
 </head>
 <body>
   <header>
-    <h1>Soccer Odds Fetcher – The Odds API</h1>
-    <p>Enter your key and the app will auto-fetch soccer leagues, events, and odds with a 3-minute refresh.</p>
+    <div>
+      <h1>Soccer Odds Fetcher – The Odds API</h1>
+      <p>Enter your key and the app will auto-fetch soccer leagues, events, and odds with a 3-minute refresh.</p>
+    </div>
   </header>
 
-  <main>
-    <section class="card">
-      <h2>Connection & Parameters</h2>
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>Connection & Parameters</h2>
 
-      <div>
-        <label for="apiKey">The Odds API Key</label>
-        <input type="password" id="apiKey" placeholder="Paste your API key here" />
-        <p class="small">Key is used only in your browser. Do not share it.</p>
+        <div>
+          <label for="apiKey">The Odds API Key</label>
+          <input type="password" id="apiKey" placeholder="Paste your API key here" />
+          <p class="small">Key is used only in your browser. Do not share it.</p>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="field">
+          <label for="markets">Markets</label>
+          <select id="markets" multiple>
+            <option value="h2h" selected>h2h (2-way)</option>
+            <option value="spreads">spreads</option>
+            <option value="totals" selected>totals</option>
+            <option value="btts">btts</option>
+            <option value="draw_no_bet">draw_no_bet</option>
+            <option value="team_totals">team_totals</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="oddsFormat">Odds format</label>
+          <select id="oddsFormat">
+            <option value="decimal" selected>decimal</option>
+            <option value="american">american</option>
+          </select>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="actions-row">
+          <button id="btnFetchSoccer">Refresh soccer leagues</button>
+          <button id="btnFetchOdds" class="secondary" disabled>Refresh events & odds</button>
+        </div>
+
+        <div id="status" class="small" aria-live="polite"></div>
+        <div id="error" class="error" aria-live="polite"></div>
+      </section>
+
+      <section class="card nav-card">
+        <div class="card-header">
+          <h2>Leagues</h2>
+          <div class="small" id="leagueCount"></div>
+        </div>
+        <div id="leagueNav" class="nav-list" aria-label="Leagues"></div>
+      </section>
+
+      <section class="card nav-card">
+        <div class="card-header">
+          <h2>Events</h2>
+          <div class="small" id="eventCount"></div>
+        </div>
+        <div id="eventList" class="nav-list" aria-label="Events"></div>
+      </section>
+    </aside>
+
+    <section class="card content">
+      <div class="content-header">
+        <div>
+          <div id="selectedEventTitle" class="selected-title">No event selected</div>
+          <div id="selectedEventMeta" class="small muted"></div>
+        </div>
+        <div id="usage" class="small"></div>
       </div>
-
-      <hr class="divider" />
-
-      <div>
-        <label for="regions">Regions (bookmaker origin)</label>
-        <select id="regions" multiple>
-          <option value="eu" selected>EU</option>
-          <option value="uk">UK</option>
-          <option value="us">US</option>
-          <option value="au">AU</option>
-        </select>
-        <p class="small">Hold Ctrl/Cmd to select multiple.</p>
-      </div>
-
-      <div class="field">
-        <label for="markets">Markets</label>
-        <select id="markets" multiple>
-          <option value="h2h" selected>h2h (2-way)</option>
-          <option value="spreads">spreads</option>
-          <option value="totals" selected>totals</option>
-          <option value="btts">btts</option>
-          <option value="draw_no_bet">draw_no_bet</option>
-          <option value="team_totals">team_totals</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="oddsFormat">Odds format</label>
-        <select id="oddsFormat">
-          <option value="decimal" selected>decimal</option>
-          <option value="american">american</option>
-        </select>
-      </div>
-
-      <hr class="divider" />
-
-      <div>
-        <button id="btnFetchSoccer">Refresh soccer leagues</button>
-        <button id="btnFetchOdds" class="secondary" disabled>Refresh events & odds</button>
-      </div>
-
-      <div id="status" class="small" aria-live="polite"></div>
-      <div id="error" class="error" aria-live="polite"></div>
-    </section>
-
-    <section class="card">
-      <h2>Leagues & Events</h2>
-
-      <div>
-        <label for="leagueSelect">Soccer leagues (sport keys)</label>
-        <select id="leagueSelect" multiple aria-label="Available soccer leagues"></select>
-        <p class="small">
-          Leagues are loaded from <code>/v4/sports</code> and auto-selected. Odds refresh every 3 minutes.
-        </p>
-      </div>
-
-      <div id="usage" class="small"></div>
-
-      <div class="events-container" id="events"></div>
+      <div id="events"></div>
     </section>
   </main>
 

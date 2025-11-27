@@ -6,35 +6,56 @@ import {
   setError,
   setUsage,
   toggleButtons,
-  populateLeagueOptions,
-  clearEvents,
-  renderEventsForLeague,
-  selectAllLeagues,
+  renderLeagueNav,
+  renderEventList,
+  renderSelectedEvent,
 } from "./dom.js";
 
 const REFRESH_MS = 3 * 60 * 1000;
-let refreshTimer = null;
-let isFetching = false;
-
+const AUTO_REGIONS = ["eu", "us", "uk"];
 const ALLOWED_BOOKMAKERS_BY_REGION = {
   eu: ["pinnacle"],
   us: ["betonlineag", "betmgm", "draftkings", "espnbet"],
   uk: ["paddypower", "skybet", "smarkets"],
-  au: ["bet365_au"]
+};
+
+let refreshTimer = null;
+let isFetching = false;
+const state = {
+  leagues: [],
+  eventsByLeague: new Map(),
+  selectedLeague: null,
+  selectedEventId: null,
 };
 
 init();
 
 function init() {
   refs.btnFetchSoccer.addEventListener("click", () => runFullFetch(true));
-  refs.btnFetchOdds.addEventListener("click", () => runOddsOnly());
+  refs.btnFetchOdds.addEventListener("click", () => runFullFetch(false));
   refs.apiKeyInput.addEventListener("input", attemptBootstrap);
   refs.apiKeyInput.addEventListener("change", attemptBootstrap);
   refs.apiKeyInput.addEventListener("blur", attemptBootstrap);
-  refs.leagueSelect.addEventListener("change", restartAutoRefresh);
-  refs.regionsSelect.addEventListener("change", restartAutoRefresh);
   refs.marketsSelect.addEventListener("change", restartAutoRefresh);
   refs.oddsFormatSelect.addEventListener("change", restartAutoRefresh);
+
+  refs.leagueNav.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-league]");
+    if (!target) return;
+    state.selectedLeague = target.dataset.league;
+    const events = state.eventsByLeague.get(state.selectedLeague) || [];
+    state.selectedEventId = events[0]?.id || null;
+    renderNavigation();
+    renderSelectedEventDisplay();
+  });
+
+  refs.eventList.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-event]");
+    if (!target) return;
+    state.selectedEventId = target.dataset.event;
+    renderNavigation();
+    renderSelectedEventDisplay();
+  });
 
   attemptBootstrap();
 }
@@ -53,7 +74,6 @@ async function runFullFetch(refreshLeagues) {
   if (isFetching) return;
   isFetching = true;
   resetMessages();
-  clearEvents();
 
   try {
     const apiKey = refs.apiKeyInput.value.trim();
@@ -66,13 +86,13 @@ async function runFullFetch(refreshLeagues) {
       await loadLeagues(apiKey);
     }
 
-    const leagues = ensureLeaguesSelected();
-    if (!leagues.length) {
-      setError("Select at least one soccer league.");
+    const leagueKeys = state.leagues.map((league) => league.key);
+    if (!leagueKeys.length) {
+      setError("No soccer leagues available.");
       return;
     }
 
-    await runOddsFetch(apiKey, leagues);
+    await runOddsFetch(apiKey, leagueKeys);
     scheduleAutoRefresh();
   } catch (error) {
     console.error(error);
@@ -85,37 +105,29 @@ async function runFullFetch(refreshLeagues) {
 async function loadLeagues(apiKey) {
   toggleButtons({ disableFetchLeagues: true, disableFetchOdds: true });
   setStatus("Fetching sports from /v4/sports ...");
-  populateLeagueOptions([]);
 
   try {
     const leagues = await fetchSoccerLeagues(apiKey);
-    if (!leagues.length) {
-      setStatus("No soccer sports found.");
-      return;
-    }
-
-    populateLeagueOptions(leagues);
-    selectAllLeagues();
-    setStatus(`Loaded ${leagues.length} soccer leagues. Fetching odds automatically...`);
+    state.leagues = leagues;
+    renderNavigation();
+    setStatus(
+      leagues.length
+        ? `Loaded ${leagues.length} soccer leagues. Fetching odds automatically...`
+        : "No soccer sports found."
+    );
   } finally {
     toggleButtons({ disableFetchLeagues: false, disableFetchOdds: false });
   }
 }
 
-async function runOddsOnly() {
-  await runFullFetch(false);
-}
-
 async function runOddsFetch(apiKey, leagueKeys) {
   toggleButtons({ disableFetchLeagues: true, disableFetchOdds: true });
-  const regions = getSelectedValues(refs.regionsSelect);
-  const selectedRegions = regions.length ? regions : ["eu"];
+
   const markets = getSelectedValues(refs.marketsSelect);
   const oddsFormat = refs.oddsFormatSelect.value;
-
-  const regionsParam = selectedRegions.join(",");
   const marketsParam = markets.length ? markets.join(",") : "h2h";
-  const allowedBookmakers = buildAllowedBookmakerKeys(selectedRegions);
+  const regionsParam = AUTO_REGIONS.join(",");
+  const allowedBookmakers = buildAllowedBookmakerKeys(AUTO_REGIONS);
 
   setStatus(`Fetching odds for ${leagueKeys.length} league(s)...`);
   let totalEvents = 0;
@@ -123,6 +135,8 @@ async function runOddsFetch(apiKey, leagueKeys) {
   let usageRemaining = null;
 
   try {
+    const eventsByLeague = new Map();
+
     for (const sportKey of leagueKeys) {
       setStatus(`Fetching odds for ${sportKey} ...`);
 
@@ -135,32 +149,64 @@ async function runOddsFetch(apiKey, leagueKeys) {
       });
 
       const filteredEvents = applyBookmakerFilter(events, allowedBookmakers);
+      eventsByLeague.set(sportKey, filteredEvents);
 
       if (usage.used !== null) usageUsed = usage.used;
       if (usage.remaining !== null) usageRemaining = usage.remaining;
 
       totalEvents += filteredEvents.length;
-      renderEventsForLeague(sportKey, filteredEvents, oddsFormat);
     }
 
-    setStatus(`Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${leagueKeys.length} league(s).`);
+    state.eventsByLeague = eventsByLeague;
+    syncSelection();
+    renderNavigation();
+    renderSelectedEventDisplay();
+
+    setStatus(
+      `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${leagueKeys.length} league(s).`
+    );
     setUsage(usageUsed, usageRemaining);
   } finally {
     toggleButtons({ disableFetchLeagues: false, disableFetchOdds: false });
   }
 }
 
-function ensureLeaguesSelected() {
-  const leagues = getSelectedValues(refs.leagueSelect);
-  if (leagues.length) return leagues;
+function syncSelection() {
+  const selectedLeagueStillExists = state.leagues.some(
+    (league) => league.key === state.selectedLeague
+  );
 
-  selectAllLeagues();
-  return getSelectedValues(refs.leagueSelect);
+  if (!selectedLeagueStillExists) {
+    state.selectedLeague = null;
+  }
+
+  if (!state.selectedLeague) {
+    state.selectedLeague = findFirstLeagueWithEvents();
+  }
+
+  const eventsForLeague = state.eventsByLeague.get(state.selectedLeague) || [];
+  const hasSelectedEvent = eventsForLeague.some(
+    (event) => event.id === state.selectedEventId
+  );
+
+  if (!hasSelectedEvent) {
+    state.selectedEventId = eventsForLeague[0]?.id || null;
+  }
 }
 
-function buildAllowedBookmakerKeys(selectedRegions) {
+function findFirstLeagueWithEvents() {
+  for (const league of state.leagues) {
+    const events = state.eventsByLeague.get(league.key) || [];
+    if (events.length) {
+      return league.key;
+    }
+  }
+  return state.leagues[0]?.key || null;
+}
+
+function buildAllowedBookmakerKeys(regions) {
   const allowed = new Set();
-  selectedRegions.forEach((region) => {
+  regions.forEach((region) => {
     const regionKeys = ALLOWED_BOOKMAKERS_BY_REGION[region];
     if (regionKeys) {
       regionKeys.forEach((key) => allowed.add(key));
@@ -199,6 +245,18 @@ function stopAutoRefresh() {
     clearInterval(refreshTimer);
     refreshTimer = null;
   }
+}
+
+function renderNavigation() {
+  renderLeagueNav(state.leagues, state.selectedLeague);
+  const events = state.eventsByLeague.get(state.selectedLeague) || [];
+  renderEventList(events, state.selectedEventId);
+}
+
+function renderSelectedEventDisplay() {
+  const events = state.eventsByLeague.get(state.selectedLeague) || [];
+  const event = events.find((ev) => ev.id === state.selectedEventId);
+  renderSelectedEvent(event, refs.oddsFormatSelect.value);
 }
 
 function resetMessages() {
