@@ -208,11 +208,20 @@ button:disabled {
   padding: 10px 12px 14px;
 }
 
-.event-header {
+
+.event-summary {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.event-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.event-card summary {
+  list-style: none;
 }
 
 .event-title {
@@ -238,6 +247,27 @@ button:disabled {
   margin: 4px 0 8px;
   font-weight: 700;
   color: #e5e7eb;
+}
+
+.average-table {
+  width: auto;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
+.average-table th,
+.average-table td {
+  border: 1px solid #1f2937;
+  padding: 4px 6px;
+  text-align: center;
+  background: #0b1729;
+}
+
+.average-table th {
+  color: #9ca3af;
+  background: #07101f;
 }
 
 table {

@@ -60,10 +60,7 @@ function renderLeagueNav(leagues, selectedKey) {
     button.type = "button";
     button.className = `nav-item${league.key === selectedKey ? " active" : ""}`;
     button.dataset.league = league.key;
-    button.innerHTML = `
-      <div class="nav-title">${league.title || league.key}</div>
-      <div class="nav-meta">${league.key}</div>
-    `;
+    button.innerHTML = `<div class="nav-title">${league.title || league.key}</div>`;
     fragment.appendChild(button);
   });
 
@@ -95,37 +92,63 @@ function renderEventList(events, selectedEventId) {
   refs.eventList.appendChild(fragment);
 }
 
-function renderSelectedEvent(event, oddsFormat) {
+function renderSelectedEvent(events, leagueTitle, oddsFormat, openEventId) {
   refs.eventsDiv.innerHTML = "";
 
-  if (!event) {
-    refs.selectedEventTitle.textContent = "No event selected";
-    refs.selectedEventMeta.textContent = "";
-    refs.eventsDiv.innerHTML = '<div class="empty-state">Select a league and event to view odds.</div>';
+  refs.selectedEventTitle.textContent = leagueTitle || "Select a league";
+  refs.selectedEventMeta.textContent = events.length
+    ? `${events.length} event${events.length === 1 ? "" : "s"}`
+    : "No events available";
+
+  if (!events.length) {
+    refs.eventsDiv.innerHTML = '<div class="empty-state">No events to show for this league.</div>';
     return;
   }
-
-  refs.selectedEventTitle.textContent = `${event.home_team} vs ${event.away_team}`;
-  refs.selectedEventMeta.textContent = `Kickoff: ${formatKickoff(event.commence_time)}`;
 
   const wrapper = document.createElement("div");
   wrapper.className = "events-container";
 
-  const card = document.createElement("div");
-  card.className = "event-card";
+  events.forEach((event) => {
+    const details = document.createElement("details");
+    details.className = "event-card";
+    details.dataset.eventDetail = event.id;
+    if (event.id === openEventId) {
+      details.open = true;
+    }
 
-  const marketsContainer = document.createElement("div");
-  marketsContainer.className = "markets-grid";
+    const summary = document.createElement("summary");
+    summary.className = "event-summary";
 
-  const marketTables = buildMarketTables(event, oddsFormat);
-  if (!marketTables.length) {
-    marketsContainer.innerHTML = '<p class="empty-state">No bookmakers or markets available for this event.</p>';
-  } else {
-    marketTables.forEach((tableBlock) => marketsContainer.appendChild(tableBlock));
-  }
+    const title = document.createElement("div");
+    title.className = "event-title";
+    title.textContent = `${event.home_team} vs ${event.away_team}`;
 
-  card.appendChild(marketsContainer);
-  wrapper.appendChild(card);
+    const meta = document.createElement("div");
+    meta.className = "small muted";
+    meta.textContent = `Kickoff: ${formatKickoff(event.commence_time)}`;
+
+    const average = buildAverageOddsTable(event);
+
+    summary.appendChild(title);
+    summary.appendChild(meta);
+    if (average) {
+      summary.appendChild(average);
+    }
+    details.appendChild(summary);
+
+    const marketsContainer = document.createElement("div");
+    marketsContainer.className = "markets-grid";
+    const marketTables = buildMarketTables(event, oddsFormat);
+    if (!marketTables.length) {
+      marketsContainer.innerHTML = '<p class="empty-state">No bookmakers or markets available for this event.</p>';
+    } else {
+      marketTables.forEach((tableBlock) => marketsContainer.appendChild(tableBlock));
+    }
+
+    details.appendChild(marketsContainer);
+    wrapper.appendChild(details);
+  });
+
   refs.eventsDiv.appendChild(wrapper);
 }
 
@@ -191,7 +214,7 @@ function buildMarketTables(event, oddsFormat) {
     marketEntry.rows.forEach((row) => {
       const tr = document.createElement("tr");
       const bookmakerCell = document.createElement("td");
-      bookmakerCell.innerHTML = `<strong>${row.bookmaker}</strong><div class="small muted">${row.bookmakerKey}</div><div class="small muted">${row.lastUpdate || ""}</div>`;
+      bookmakerCell.innerHTML = `<strong>${row.bookmaker}</strong><div class="small muted">${row.lastUpdate || ""}</div>`;
       tr.appendChild(bookmakerCell);
 
       marketEntry.columns.forEach((colName) => {
@@ -224,6 +247,80 @@ function orderOutcomeColumns(marketKey, columns) {
     const pb = priority[b?.toLowerCase()] ?? 99;
     return pa - pb || (a || "").localeCompare(b || "");
   });
+}
+
+function buildAverageOddsTable(event) {
+  const averages = computeAverageOdds(
+    event.bookmakers || [],
+    event.home_team,
+    event.away_team
+  );
+  if (!averages) return null;
+
+  const table = document.createElement("table");
+  table.className = "average-table";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  ["Home", "Draw", "Away"].forEach((label) => {
+    const th = document.createElement("th");
+    th.textContent = label;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  const row = document.createElement("tr");
+  [averages.home, averages.draw, averages.away].forEach((val) => {
+    const td = document.createElement("td");
+    td.textContent = val ?? "-";
+    row.appendChild(td);
+  });
+  tbody.appendChild(row);
+  table.appendChild(tbody);
+
+  return table;
+}
+
+function computeAverageOdds(bookmakers, homeName, awayName) {
+  const h2hPrices = { home: [], draw: [], away: [] };
+
+  bookmakers.forEach((book) => {
+    (book.markets || []).forEach((market) => {
+      if (market.key !== "h2h") return;
+      (market.outcomes || []).forEach((outcome) => {
+        const normalized = normalizeOutcomeName(outcome.name, homeName, awayName);
+        const priceNumber = Number(outcome.price);
+        if (normalized && h2hPrices[normalized] && Number.isFinite(priceNumber)) {
+          h2hPrices[normalized].push(priceNumber);
+        }
+      });
+    });
+  });
+
+  const averages = {};
+  let hasValue = false;
+  ["home", "draw", "away"].forEach((key) => {
+    const values = h2hPrices[key];
+    if (values.length) {
+      const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+      averages[key] = avg.toFixed(2);
+      hasValue = true;
+    } else {
+      averages[key] = null;
+    }
+  });
+
+  return hasValue ? averages : null;
+}
+
+function normalizeOutcomeName(name, homeName, awayName) {
+  const lower = (name || "").toLowerCase();
+  if (lower === "home" || lower === homeName?.toLowerCase()) return "home";
+  if (lower === "away" || lower === awayName?.toLowerCase()) return "away";
+  if (lower === "draw" || lower === "tie") return "draw";
+  return null;
 }
 
 function formatPoint(point) {

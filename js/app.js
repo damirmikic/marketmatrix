@@ -25,7 +25,7 @@ const state = {
   leagues: [],
   eventsByLeague: new Map(),
   selectedLeague: null,
-  selectedEventId: null,
+  focusedEventId: null,
 };
 
 init();
@@ -43,18 +43,15 @@ function init() {
     const target = event.target.closest("[data-league]");
     if (!target) return;
     state.selectedLeague = target.dataset.league;
-    const events = state.eventsByLeague.get(state.selectedLeague) || [];
-    state.selectedEventId = events[0]?.id || null;
     renderNavigation();
-    renderSelectedEventDisplay();
+    renderSelectedLeagueEvents();
   });
 
   refs.eventList.addEventListener("click", (event) => {
     const target = event.target.closest("[data-event]");
     if (!target) return;
-    state.selectedEventId = target.dataset.event;
-    renderNavigation();
-    renderSelectedEventDisplay();
+    state.focusedEventId = target.dataset.event;
+    renderSelectedLeagueEvents();
   });
 
   attemptBootstrap();
@@ -160,7 +157,7 @@ async function runOddsFetch(apiKey, leagueKeys) {
     state.eventsByLeague = eventsByLeague;
     syncSelection();
     renderNavigation();
-    renderSelectedEventDisplay();
+    renderSelectedLeagueEvents();
 
     setStatus(
       `Auto-refresh every 3 minutes. Loaded ${totalEvents} event(s) across ${leagueKeys.length} league(s).`
@@ -182,15 +179,6 @@ function syncSelection() {
 
   if (!state.selectedLeague) {
     state.selectedLeague = findFirstLeagueWithEvents();
-  }
-
-  const eventsForLeague = state.eventsByLeague.get(state.selectedLeague) || [];
-  const hasSelectedEvent = eventsForLeague.some(
-    (event) => event.id === state.selectedEventId
-  );
-
-  if (!hasSelectedEvent) {
-    state.selectedEventId = eventsForLeague[0]?.id || null;
   }
 }
 
@@ -250,17 +238,30 @@ function stopAutoRefresh() {
 function renderNavigation() {
   renderLeagueNav(state.leagues, state.selectedLeague);
   const events = state.eventsByLeague.get(state.selectedLeague) || [];
-  renderEventList(events, state.selectedEventId);
+  renderEventList(events, state.focusedEventId);
 }
 
-function renderSelectedEventDisplay() {
+function renderSelectedLeagueEvents() {
   const events = state.eventsByLeague.get(state.selectedLeague) || [];
-  const event = events.find((ev) => ev.id === state.selectedEventId);
-  renderSelectedEvent(event, refs.oddsFormatSelect.value);
+  const leagueTitle = state.leagues.find((l) => l.key === state.selectedLeague)?.title;
+  renderSelectedEvent(events, leagueTitle, refs.oddsFormatSelect.value, state.focusedEventId);
+  focusEventIfNeeded();
 }
 
 function resetMessages() {
   setStatus("");
   setError("");
   setUsage();
+}
+
+function focusEventIfNeeded() {
+  if (!state.focusedEventId) return;
+  const details = document.querySelector(
+    `[data-event-detail="${state.focusedEventId}"]`
+  );
+  if (details) {
+    details.open = true;
+    details.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  state.focusedEventId = null;
 }
