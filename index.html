@@ -1,93 +1,583 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Soccer Odds Fetcher – The Odds API</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Football Derivatives Model</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #e2e8f0;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --border: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: 280px 320px 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2,
+        h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Inputs */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            color: #94a3b8;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Results */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            color: #94a3b8;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .num-col {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Collapsible Cards */
+        .card {
+            padding: 0;
+            /* Control padding in children */
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .card-header:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .card-content {
+            padding: 20px;
+            transition: max-height 0.3s ease-out, opacity 0.2s;
+            max-height: 2000px;
+            opacity: 1;
+        }
+
+        .collapsed .card-content {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .card-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+            color: var(--accent);
+            transition: transform 0.3s;
+        }
+
+        .collapsed .card-header::after {
+            transform: rotate(-90deg);
+        }
+
+        .collapsed .card-header {
+            border-bottom: none;
+        }
+    </style>
 </head>
+
 <body>
-  <header>
-    <div>
-      <h1>Soccer Odds Fetcher – The Odds API</h1>
-      <p>Enter your key and the app will auto-fetch soccer leagues, events, and odds with a 3-minute refresh.</p>
+    <div class="container">
+        <!-- SIDEBAR: INPUTS & PARAMETERS -->
+        <div class="sidebar">
+            <div class="card" id="inputCard">
+                <div class="card-header" onclick="toggleCard('inputCard')">
+                    <h2>1. Input Odds</h2>
+                </div>
+                <div class="card-content">
+                    <h3>1x2 Market</h3>
+                    <div class="input-group">
+                        <label>Home Odds</label>
+                        <input type="number" id="homeOdds" step="0.01" value="2.10" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Draw Odds</label>
+                        <input type="number" id="drawOdds" step="0.01" value="3.40" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Away Odds</label>
+                        <input type="number" id="awayOdds" step="0.01" value="3.50" oninput="runModel()">
+                    </div>
+
+                    <h3>Total Goals Market</h3>
+                    <div class="input-group">
+                        <label>Goal Line</label>
+                        <input type="number" id="goalLine" step="0.5" value="2.5" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label id="overLabel">Over Odds</label>
+                        <input type="number" id="overOdds" step="0.01" value="1.95" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label id="underLabel">Under Odds</label>
+                        <input type="number" id="underOdds" step="0.01" value="1.90" oninput="runModel()">
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 10px;">
+                        Uses Dixon-Coles with Newton-Raphson Solver
+                    </p>
+
+                    <h3 style="margin-top: 20px;">Reverse Parameters</h3>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-val" id="xgHome">-</div>
+                            <div class="stat-label">Home λ</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="xgAway">-</div>
+                            <div class="stat-label">Away μ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: FULL TIME MARKETS -->
+        <div class="main-content">
+            <div class="card hidden" id="ftArea">
+                <div class="card-header" onclick="toggleCard('ftArea')">
+                    <h2>2. Full Time Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3>1X2 Probs (Shin)</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val" id="shinHome">-</div>
+                            <div class="stat-label">Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="shinDraw">-</div>
+                            <div class="stat-label">Draw</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="shinAway">-</div>
+                            <div class="stat-label">Away</div>
+                        </div>
+                    </div>
+
+                    <h3>BTTS (Yes/No)</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="bttsTable"></tbody>
+                    </table>
+
+                    <h3>Total Goals (FT)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="totalGoalsTable"></tbody>
+                    </table>
+
+                    <h3 style="margin-top: 20px;">HT / FT</h3>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>HT/FT</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="htftTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HOME TEAM BLOCK -->
+            <div class="card hidden" id="homeTeamArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('homeTeamArea')">
+                    <h2>5. Home Team Markets</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="font-size: 0.9rem;">Team Goals (FT)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="homeFtTable"></tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 0.9rem;">Team Goals (1H)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="home1hTable"></tbody>
+                            </table>
+                            <h3 style="font-size: 0.9rem; margin-top: 15px;">Team Goals (2H)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="home2hTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 0.9rem;">Exact Goals (FT)</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="homeExactTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Goal Spreads (FT)</h3>
+                    <table>
+                        <tbody id="homeSpreadTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: INTERVAL MARKETS -->
+        <div class="markets-content">
+            <!-- 1ST HALF BLOCK -->
+            <div class="card hidden" id="fhArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('fhArea')">
+                    <h2>3. 1st Half Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3>1H 1X2</h3>
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fh1x2Table"></tbody>
+                    </table>
+
+                    <h3>1H Goals</h3>
+                    <table style="margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fhGoalsTable"></tbody>
+                    </table>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="font-size: 0.9rem;">1H BTTS</h3>
+                            <table>
+                                <tbody id="fhBttsTable"></tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 0.9rem;">1H DC</h3>
+                            <table>
+                                <tbody id="fhDcTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 0.9rem;">1H Exact Goals</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="fhExactTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">1H Goal Spreads</h3>
+                    <table>
+                        <tbody id="fhSpreadTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2ND HALF BLOCK -->
+            <div class="card hidden" id="shArea">
+                <div class="card-header" onclick="toggleCard('shArea')">
+                    <h2>4. 2nd Half Markets</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">Independent
+                        2H goals</p>
+
+                    <h3>2H 1X2</h3>
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sh1x2Table"></tbody>
+                    </table>
+
+                    <h3>2H Goals</h3>
+                    <table style="margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shGoalsTable"></tbody>
+                    </table>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="font-size: 0.9rem;">2H BTTS</h3>
+                            <table>
+                                <tbody id="shBttsTable"></tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 0.9rem;">2H DC</h3>
+                            <table>
+                                <tbody id="shDcTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 0.9rem;">2H Exact Goals</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="shExactTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">2H Goal Spreads</h3>
+                    <table>
+                        <tbody id="shSpreadTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AWAY TEAM BLOCK -->
+            <div class="card hidden" id="awayTeamArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('awayTeamArea')">
+                    <h2>6. Away Team Markets</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="font-size: 0.9rem;">Team Goals (FT)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="awayFtTable"></tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 0.9rem;">Team Goals (1H)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="away1hTable"></tbody>
+                            </table>
+                            <h3 style="font-size: 0.9rem; margin-top: 15px;">Team Goals (2H)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="away2hTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 0.9rem;">Exact Goals (FT)</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="awayExactTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Goal Spreads (FT)</h3>
+                    <table>
+                        <tbody id="awaySpreadTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-  </header>
 
-  <main class="layout">
-    <aside class="sidebar">
-      <section class="card">
-        <h2>Connection & Parameters</h2>
-
-        <div>
-          <label for="apiKey">The Odds API Key</label>
-          <input type="password" id="apiKey" placeholder="Paste your API key here" />
-          <p class="small">Key is used only in your browser. Do not share it.</p>
-        </div>
-
-        <hr class="divider" />
-
-        <div class="field">
-          <label for="markets">Markets</label>
-          <select id="markets" multiple>
-            <option value="h2h" selected>h2h (2-way)</option>
-            <option value="spreads">spreads</option>
-            <option value="totals" selected>totals</option>
-            <option value="btts">btts</option>
-            <option value="draw_no_bet">draw_no_bet</option>
-            <option value="team_totals">team_totals</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="oddsFormat">Odds format</label>
-          <select id="oddsFormat">
-            <option value="decimal" selected>decimal</option>
-            <option value="american">american</option>
-          </select>
-        </div>
-
-        <hr class="divider" />
-
-        <div class="actions-row">
-          <button id="btnFetchSoccer">Refresh soccer leagues</button>
-          <button id="btnFetchOdds" class="secondary" disabled>Refresh events & odds</button>
-        </div>
-
-        <div id="status" class="small" aria-live="polite"></div>
-        <div id="refreshStatus" class="small muted" aria-live="polite"></div>
-        <div id="error" class="error" aria-live="polite"></div>
-      </section>
-
-      <section class="card nav-card">
-        <div class="card-header">
-          <h2>Leagues</h2>
-          <div class="small" id="leagueCount"></div>
-        </div>
-        <div id="leagueNav" class="nav-list" aria-label="Leagues"></div>
-      </section>
-
-      <section class="card nav-card">
-        <div class="card-header">
-          <h2>Events</h2>
-          <div class="small" id="eventCount"></div>
-        </div>
-        <div id="eventList" class="nav-list" aria-label="Events"></div>
-      </section>
-    </aside>
-
-    <section class="card content">
-      <div class="content-header">
-        <div>
-          <div id="selectedEventTitle" class="selected-title">No event selected</div>
-          <div id="selectedEventMeta" class="small muted"></div>
-        </div>
-        <div id="usage" class="small"></div>
-      </div>
-      <div id="events"></div>
-    </section>
-  </main>
-
-  <script type="module" src="js/app.js"></script>
+    <script>
+        function toggleCard(id) {
+            document.getElementById(id).classList.toggle('collapsed');
+        }
+    </script>
+    <script src="model.js"></script>
 </body>
+
 </html>
