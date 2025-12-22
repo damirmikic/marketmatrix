@@ -5,223 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Football Derivatives Model</title>
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #e2e8f0;
-            --accent: #38bdf8;
-            --success: #22c55e;
-            --border: #334155;
-        }
+    <link rel="stylesheet" href="style.css">
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                grid-template-columns: 280px 320px 1fr;
-            }
-        }
-
-        /* Cards */
-        .card {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        h2,
-        h3 {
-            margin-top: 0;
-            color: var(--accent);
-        }
-
-        h3 {
-            font-size: 1.1rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        /* Inputs */
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            color: #94a3b8;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            background: #0f172a;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: white;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--accent);
-            color: #0f172a;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        /* Results */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .stat-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .stat-val {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--success);
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: #94a3b8;
-        }
-
-        /* Tables */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        th {
-            text-align: left;
-            color: #94a3b8;
-            padding: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .num-col {
-            text-align: right;
-            font-family: 'Courier New', monospace;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        /* Collapsible Cards */
-        .card {
-            padding: 0;
-            /* Control padding in children */
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.03);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            transition: background 0.2s;
-        }
-
-        .card-header:hover {
-            background: rgba(255, 255, 255, 0.07);
-        }
-
-        .card-header h2 {
-            margin: 0;
-            font-size: 1.1rem;
-        }
-
-        .card-content {
-            padding: 20px;
-            transition: max-height 0.3s ease-out, opacity 0.2s;
-            max-height: 2000px;
-            opacity: 1;
-        }
-
-        .collapsed .card-content {
-            max-height: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .card-header::after {
-            content: '▼';
-            font-size: 0.8rem;
-            color: var(--accent);
-            transition: transform 0.3s;
-        }
-
-        .collapsed .card-header::after {
-            transform: rotate(-90deg);
-        }
-
-        .collapsed .card-header {
-            border-bottom: none;
-        }
-    </style>
 </head>
 
 <body>
@@ -287,23 +72,26 @@
                     <h2>2. Full Time Markets</h2>
                 </div>
                 <div class="card-content">
-                    <h3>1X2 Probs (Shin)</h3>
+                    <h3 style="font-size: 0.9rem;">Match Result / Double Chance</h3>
                     <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
                         <div class="stat-box">
-                            <div class="stat-val" id="shinHome">-</div>
+                            <div class="stat-val prob-val" id="shinHome">-</div>
                             <div class="stat-label">Home</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-val" id="shinDraw">-</div>
+                            <div class="stat-val prob-val" id="shinDraw">-</div>
                             <div class="stat-label">Draw</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-val" id="shinAway">-</div>
+                            <div class="stat-val prob-val" id="shinAway">-</div>
                             <div class="stat-label">Away</div>
                         </div>
                     </div>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="ftDcTable"></tbody>
+                    </table>
 
-                    <h3>BTTS (Yes/No)</h3>
+                    <h3 style="margin-top: 20px;">BTTS (Yes/No)</h3>
                     <table style="margin-bottom: 20px;">
                         <tbody id="bttsTable"></tbody>
                     </table>
@@ -320,8 +108,25 @@
                         <tbody id="totalGoalsTable"></tbody>
                     </table>
 
-                    <h3 style="margin-top: 20px;">HT / FT</h3>
+                    <h3 style="margin-top: 20px;">Total Goals Range (FT)</h3>
                     <table style="font-size: 0.85rem;">
+                        <tbody id="totalSpreadTable"></tbody>
+                    </table>
+
+                    <h3 style="margin-top: 20px;">Result & Totals (2.5)</h3>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comboTable"></tbody>
+                    </table>
+
+                    <h3 style="margin-top: 20px;">HT / FT</h3>
+                    <table style="font-size: 0.85rem; margin-bottom: 20px;">
                         <thead>
                             <tr>
                                 <th>HT/FT</th>
@@ -330,6 +135,120 @@
                             </tr>
                         </thead>
                         <tbody id="htftTable"></tbody>
+                    </table>
+
+
+
+
+                </div>
+            </div>
+
+            <!-- DRAW COMBINATIONS BLOCK -->
+            <div class="card hidden" id="drawComboArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('drawComboArea')">
+                    <h2>8. Draw Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        Interval Draw correlations
+                    </p>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drawComboTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DOUBLE CHANCE COMBINATIONS BLOCK -->
+            <div class="card hidden" id="dcComboArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('dcComboArea')">
+                    <h2>9. Double Chance Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        Join Interval Double Chance outcomes
+                    </p>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dcComboTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HT/FT COMBINATIONS BLOCK -->
+            <div class="card hidden" id="htftComboArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('htftComboArea')">
+                    <h2>10. HT/FT Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        HT/FT joint outcome correlations
+                    </p>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="htftComboTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HOME TEAM GOALS COMBINATIONS BLOCK -->
+            <div class="card hidden" id="homeGoalComboArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('homeGoalComboArea')">
+                    <h2>11. Home Team Goals Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        T1 = Home Team
+                    </p>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="homeGoalComboTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AWAY TEAM GOALS COMBINATIONS BLOCK -->
+            <div class="card hidden" id="awayGoalComboArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('awayGoalComboArea')">
+                    <h2>12. Away Team Goals Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        T2 = Away Team
+                    </p>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="awayGoalComboTable"></tbody>
                     </table>
                 </div>
             </div>
@@ -340,7 +259,7 @@
                     <h2>5. Home Team Markets</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="two-col-grid">
                         <div>
                             <h3 style="font-size: 0.9rem;">Team Goals (FT)</h3>
                             <table>
@@ -386,8 +305,20 @@
                     </table>
 
                     <h3 style="font-size: 0.9rem;">Goal Spreads (FT)</h3>
-                    <table>
+                    <table style="margin-bottom: 20px;">
                         <tbody id="homeSpreadTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Win Combinations</h3>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="homeWinComboTable"></tbody>
                     </table>
                 </div>
             </div>
@@ -425,7 +356,7 @@
                         <tbody id="fhGoalsTable"></tbody>
                     </table>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="two-col-grid">
                         <div>
                             <h3 style="font-size: 0.9rem;">1H BTTS</h3>
                             <table>
@@ -485,7 +416,7 @@
                         <tbody id="shGoalsTable"></tbody>
                     </table>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="two-col-grid">
                         <div>
                             <h3 style="font-size: 0.9rem;">2H BTTS</h3>
                             <table>
@@ -513,12 +444,12 @@
             </div>
 
             <!-- AWAY TEAM BLOCK -->
-            <div class="card hidden" id="awayTeamArea" style="margin-top: 20px;">
+            <div class="card hidden" id="awayTeamArea" style="margin-top: 20px; margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('awayTeamArea')">
                     <h2>6. Away Team Markets</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="two-col-grid">
                         <div>
                             <h3 style="font-size: 0.9rem;">Team Goals (FT)</h3>
                             <table>
@@ -564,8 +495,42 @@
                     </table>
 
                     <h3 style="font-size: 0.9rem;">Goal Spreads (FT)</h3>
-                    <table>
+                    <table style="margin-bottom: 20px;">
                         <tbody id="awaySpreadTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Win Combinations</h3>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="awayWinComboTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- GOALS COMBINATIONS BLOCK -->
+            <div class="card hidden" id="goalComboArea">
+                <div class="card-header" onclick="toggleCard('goalComboArea')">
+                    <h2>7. Goals Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        I = 1st Half, II = 2nd Half
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="intervalComboTable"></tbody>
                     </table>
                 </div>
             </div>
