@@ -121,8 +121,8 @@ function runModel() {
     let tgHtml = "";
     lines.forEach(line => {
         let pOver = 0;
-        for (let x = 0; x <= 10; x++) {
-            for (let y = 0; y <= 10; y++) {
+        for (let x = 0; x <= 20; x++) {
+            for (let y = 0; y <= 20; y++) {
                 if (x + y > line) pOver += matrixFT[x][y];
             }
         }
@@ -136,8 +136,8 @@ function runModel() {
 
     // BTTS Market (FT)
     let bttsYes = 0;
-    for (let x = 1; x <= 10; x++) {
-        for (let y = 1; y <= 10; y++) {
+    for (let x = 1; x <= 20; x++) {
+        for (let y = 1; y <= 20; y++) {
             bttsYes += matrixFT[x][y];
         }
     }
@@ -156,8 +156,8 @@ function runModel() {
     let tsHtml = "";
     totalSpreads.forEach(s => {
         let ps = 0;
-        for (let x = 0; x <= 10; x++) {
-            for (let y = 0; y <= 10; y++) {
+        for (let x = 0; x <= 20; x++) {
+            for (let y = 0; y <= 20; y++) {
                 let total = x + y;
                 if (total >= s[0] && total <= s[1]) ps += matrixFT[x][y];
             }
@@ -173,8 +173,8 @@ function runModel() {
         "A & Over": 0, "A & Under": 0
     };
 
-    for (let x = 0; x <= 10; x++) {
-        for (let y = 0; y <= 10; y++) {
+    for (let x = 0; x <= 20; x++) {
+        for (let y = 0; y <= 20; y++) {
             let p = matrixFT[x][y];
             let total = x + y;
             if (x > y) {
@@ -203,8 +203,8 @@ function runModel() {
         let html = "";
         fhLines.forEach(line => {
             let pOver = 0;
-            for (let x = 0; x <= 10; x++) {
-                for (let y = 0; y <= 10; y++) {
+            for (let x = 0; x <= 20; x++) {
+                for (let y = 0; y <= 20; y++) {
                     if (x + y > line) pOver += m[x][y];
                 }
             }
@@ -238,8 +238,8 @@ function runModel() {
     // Asian Handicap
     function getAhProb(line, matrix) {
         let pHome = 0, pPush = 0, pAway = 0;
-        for (let x = 0; x <= 10; x++) {
-            for (let y = 0; y <= 10; y++) {
+        for (let x = 0; x <= 20; x++) {
+            for (let y = 0; y <= 20; y++) {
                 let p = matrix[x][y];
                 if (x + line > y) pHome += p;
                 else if (Math.abs((x + line) - y) < 0.01) pPush += p;
@@ -284,8 +284,8 @@ function runModel() {
     populateHalfDetailed(matrixFH, "fh");
     populateHalfDetailed(matrixSH, "sh");
 
-    populateTeamMarkets(params.lambda, params.lambda * 0.45, params.lambda * 0.55, "home");
-    populateTeamMarkets(params.mu, params.mu * 0.45, params.mu * 0.55, "away");
+    populateTeamMarkets(matrixFT, matrixFH, matrixSH, true, "home");
+    populateTeamMarkets(matrixFT, matrixFH, matrixSH, false, "away");
 
     // HT/FT
     function getOutcome(h, a) {
@@ -295,12 +295,12 @@ function runModel() {
     }
 
     let htftProbs = { "11": 0, "1X": 0, "12": 0, "X1": 0, "XX": 0, "X2": 0, "21": 0, "2X": 0, "22": 0 };
-    for (let h1 = 0; h1 <= 10; h1++) {
-        for (let a1 = 0; a1 <= 10; a1++) {
+    for (let h1 = 0; h1 <= 7; h1++) { // Optimize nesting limit, 7 is usually safe for HT
+        for (let a1 = 0; a1 <= 7; a1++) {
             let p1 = matrixFH[h1][a1];
             let outcome1 = getOutcome(h1, a1);
-            for (let h2 = 0; h2 <= 10; h2++) {
-                for (let a2 = 0; a2 <= 10; a2++) {
+            for (let h2 = 0; h2 <= 7; h2++) {
+                for (let a2 = 0; a2 <= 7; a2++) {
                     let p2 = matrixSH[h2][a2];
                     let outcome2 = getOutcome(h1 + h2, a1 + a2);
                     htftProbs[outcome1 + outcome2] += (p1 * p2);
@@ -324,8 +324,8 @@ function runModel() {
 
     function getRangeProb(matrix, min, max) {
         let p = 0;
-        for (let x = 0; x <= 10; x++) {
-            for (let y = 0; y <= 10; y++) {
+        for (let x = 0; x <= 20; x++) {
+            for (let y = 0; y <= 20; y++) {
                 let tot = x + y;
                 if (tot >= min && tot <= max) p += matrix[x][y];
             }
@@ -445,7 +445,7 @@ function runModel() {
         params.lambda, params.mu,
         params.lambda * 0.45, params.mu * 0.45,
         params.lambda * 0.55, params.mu * 0.55,
-        matrixFT
+        matrixFT, matrixFH, matrixSH
     );
 
     // Multi-calc tables

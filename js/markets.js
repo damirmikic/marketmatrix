@@ -2,8 +2,8 @@ import { probToOdds, zipPoisson } from './math.js';
 
 export function get1X2Probs(matrix) {
     let p1 = 0, pX = 0, p2 = 0;
-    for (let x = 0; x <= 10; x++) {
-        for (let y = 0; y <= 10; y++) {
+    for (let x = 0; x <= 20; x++) {
+        for (let y = 0; y <= 20; y++) {
             if (x > y) p1 += matrix[x][y];
             else if (x === y) pX += matrix[x][y];
             else p2 += matrix[x][y];
@@ -15,8 +15,8 @@ export function get1X2Probs(matrix) {
 export function populateHalfDetailed(matrix, prefix) {
     // BTTS
     let bttsYes = 0;
-    for (let x = 1; x <= 10; x++) {
-        for (let y = 1; y <= 10; y++) {
+    for (let x = 1; x <= 20; x++) {
+        for (let y = 1; y <= 20; y++) {
             bttsYes += matrix[x][y];
         }
     }
@@ -71,18 +71,43 @@ export function populateHalfDetailed(matrix, prefix) {
     if (spreadEl) spreadEl.innerHTML = spreadHtml;
 }
 
-export function populateTeamMarkets(lamFT, lamFH, lamSH, prefix) {
-    function pK(k, l) { return zipPoisson(k, l, 0); }
-    function pOver(target, l) {
+export function populateTeamMarkets(matrixFT, matrixFH, matrixSH, isHome, prefix) {
+    function getMarginal(matrix, target) {
         let p = 0;
-        for (let i = 0; i <= 10; i++) if (i > target) p += pK(i, l);
-        return p;
+        // matrix size is 21 (0..20)
+        for (let i = 0; i <= 20; i++) {
+            if (isHome) {
+                // Sum row i: P(Home = i)
+                for (let j = 0; j <= 20; j++) p += matrix[i][j];
+            } else {
+                // Sum col i: P(Away = i)
+                for (let j = 0; j <= 20; j++) p += matrix[j][i];
+            }
+            if (i === target) return p;
+        }
+        return 0; // Should not happen if target in range
+    }
+
+    function getMarginalOver(matrix, line) {
+        let pOver = 0;
+        for (let k = 0; k <= 20; k++) {
+            // Determine prob of exactly k goals
+            let pk = 0;
+            if (isHome) {
+                for (let j = 0; j <= 20; j++) pk += matrix[k][j];
+            } else {
+                for (let j = 0; j <= 20; j++) pk += matrix[j][k];
+            }
+
+            if (k > line) pOver += pk;
+        }
+        return pOver;
     }
 
     // FT Over/Under
     let ftHtml = "";
     [0.5, 1.5, 2.5].forEach(line => {
-        const po = pOver(line, lamFT);
+        const po = getMarginalOver(matrixFT, line);
         ftHtml += `<tr>
             <td class="line-col">${line}</td>
             <td class="num-col">${probToOdds(po)}</td>
@@ -93,27 +118,41 @@ export function populateTeamMarkets(lamFT, lamFH, lamSH, prefix) {
     if (ftEl) ftEl.innerHTML = ftHtml;
 
     // Half Overs
-    function getHalfHtml(l) {
+    function getHalfHtml(matrix) {
         let html = "";
         [0.5, 1.5, 2.5].forEach(line => {
-            const po = pOver(line, l);
+            const po = getMarginalOver(matrix, line);
             html += `<tr><td class="line-col">${line}</td><td class="num-col">${probToOdds(po)}</td><td class="num-col">${probToOdds(1 - po)}</td></tr>`;
         });
         return html;
     }
     const h1El = document.getElementById(`${prefix}1hTable`);
     const h2El = document.getElementById(`${prefix}2hTable`);
-    if (h1El) h1El.innerHTML = getHalfHtml(lamFH);
-    if (h2El) h2El.innerHTML = getHalfHtml(lamSH);
+    if (h1El) h1El.innerHTML = getHalfHtml(matrixFH);
+    if (h2El) h2El.innerHTML = getHalfHtml(matrixSH);
 
     // Exact Goals FT
     let exHtml = "";
+    // Note: getMarginal reconstructs sum every time, slightly inefficient but safest and fast enough for 20x20
     for (let k = 0; k <= 3; k++) {
-        exHtml += `<tr><td>${k} Goals</td><td class="num-col">${probToOdds(pK(k, lamFT))}</td></tr>`;
+        let pk = 0;
+        if (isHome) {
+            for (let j = 0; j <= 20; j++) pk += matrixFT[k][j];
+        } else {
+            for (let j = 0; j <= 20; j++) pk += matrixFT[j][k];
+        }
+        exHtml += `<tr><td>${k} Goals</td><td class="num-col">${probToOdds(pk)}</td></tr>`;
     }
-    let p4plus = 1;
-    for (let k = 0; k <= 3; k++) p4plus -= pK(k, lamFT);
+
+    // 4+ Goals
+    let p4plus = 0;
+    if (isHome) {
+        for (let k = 4; k <= 20; k++) for (let j = 0; j <= 20; j++) p4plus += matrixFT[k][j];
+    } else {
+        for (let k = 4; k <= 20; k++) for (let j = 0; j <= 20; j++) p4plus += matrixFT[j][k];
+    }
     exHtml += `<tr><td>4+ Goals</td><td class="num-col">${probToOdds(p4plus)}</td></tr>`;
+
     const exactEl = document.getElementById(`${prefix}ExactTable`);
     if (exactEl) exactEl.innerHTML = exHtml;
 
@@ -122,7 +161,15 @@ export function populateTeamMarkets(lamFT, lamFH, lamSH, prefix) {
     let spHtml = "";
     spreads.forEach(s => {
         let ps = 0;
-        for (let k = s[0]; k <= s[1]; k++) ps += pK(k, lamFT);
+        for (let k = s[0]; k <= s[1]; k++) {
+            let pk = 0;
+            if (isHome) {
+                for (let j = 0; j <= 20; j++) pk += matrixFT[k][j];
+            } else {
+                for (let j = 0; j <= 20; j++) pk += matrixFT[j][k];
+            }
+            ps += pk;
+        }
         spHtml += `<tr><td>${s[0]}-${s[1]} Goals</td><td class="num-col">${probToOdds(ps)}</td></tr>`;
     });
     const spreadEl = document.getElementById(`${prefix}SpreadTable`);
@@ -431,7 +478,7 @@ export function calculateJointCombos(matrix1H, matrix2H, type) {
     return html;
 }
 
-export function calculateFtsCombos(lamFT, muFT, lamFH, muFH, lamSH, muSH, matrixFT) {
+export function calculateFtsCombos(lamFT, muFT, lamFH, muFH, lamSH, muSH, matrixFT, matrixFH, matrixSH) {
     const ratioFT_H = lamFT / (lamFT + muFT);
     const ratioFT_A = muFT / (lamFT + muFT);
 
@@ -445,10 +492,18 @@ export function calculateFtsCombos(lamFT, muFT, lamFH, muFH, lamSH, muSH, matrix
     const pFT_0_0 = matrixFT[0][0];
     const pFT_AnyGoal = 1 - pFT_0_0;
 
+    // Basic FH
+    const pFH_0_0 = matrixFH[0][0];
+    const pFH_AnyGoal = 1 - pFH_0_0;
+
+    // Basic SH
+    const pSH_0_0 = matrixSH[0][0];
+    const pSH_AnyGoal = 1 - pSH_0_0;
+
     // Result and Total helpers
     let p1 = 0, pX = 0, p2 = 0, p2plus = 0, p3plus = 0;
-    for (let x = 0; x <= 7; x++) {
-        for (let y = 0; y <= 7; y++) {
+    for (let x = 0; x <= 20; x++) {
+        for (let y = 0; y <= 20; y++) {
             let p = matrixFT[x][y];
             if (x > y) p1 += p;
             else if (x === y) pX += p;
@@ -467,13 +522,13 @@ export function calculateFtsCombos(lamFT, muFT, lamFH, muFH, lamSH, muSH, matrix
         { label: "no", p: pFT_0_0 },
         { label: "T2", p: pFT_AnyGoal * ratioFT_A },
         // 1H
-        { label: "T1 I", p: (1 - Math.exp(-(lamFH + muFH))) * ratioFH_H },
-        { label: "no I", p: Math.exp(-(lamFH + muFH)) },
-        { label: "T2 I", p: (1 - Math.exp(-(lamFH + muFH))) * ratioFH_A },
+        { label: "T1 I", p: pFH_AnyGoal * ratioFH_H },
+        { label: "no I", p: pFH_0_0 },
+        { label: "T2 I", p: pFH_AnyGoal * ratioFH_A },
         // 2H
-        { label: "T1 II", p: (1 - Math.exp(-(lamSH + muSH))) * ratioSH_H },
-        { label: "no II", p: Math.exp(-(lamSH + muSH)) },
-        { label: "T2 II", p: (1 - Math.exp(-(lamSH + muSH))) * ratioSH_A },
+        { label: "T1 II", p: pSH_AnyGoal * ratioSH_H },
+        { label: "no II", p: pSH_0_0 },
+        { label: "T2 II", p: pSH_AnyGoal * ratioSH_A },
         // Result & FTS
         { label: "1 & T1", p: p1 * ratioFT_H },
         { label: "1 & T2", p: p1 * ratioFT_A },

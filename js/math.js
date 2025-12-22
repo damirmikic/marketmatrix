@@ -68,10 +68,25 @@ export function solveShin(oddsArr) {
 // Matrix Calculation
 export function calculateMatrix(lambda, mu, omega = 0) {
     let matrix = [];
-    for (let x = 0; x <= 10; x++) {
+    let sum = 0;
+    // Increase check range to 20 to capture tails
+    const limit = 20;
+
+    for (let x = 0; x <= limit; x++) {
         matrix[x] = [];
-        for (let y = 0; y <= 10; y++) {
-            matrix[x][y] = getScoreProb(x, y, lambda, mu, omega);
+        for (let y = 0; y <= limit; y++) {
+            let p = getScoreProb(x, y, lambda, mu, omega);
+            matrix[x][y] = p;
+            sum += p;
+        }
+    }
+
+    // Normalize
+    if (sum > 0) {
+        for (let x = 0; x <= limit; x++) {
+            for (let y = 0; y <= limit; y++) {
+                matrix[x][y] /= sum;
+            }
         }
     }
     return matrix;
@@ -103,8 +118,8 @@ export function solveParameters(targetHomeWin, targetOverProb, targetLine, targe
         let currHome = 0;
         let currOver = 0;
 
-        for (let x = 0; x <= 10; x++) {
-            for (let y = 0; y <= 10; y++) {
+        for (let x = 0; x <= 20; x++) {
+            for (let y = 0; y <= 20; y++) {
                 let p = probs[x][y];
                 if (x > y) currHome += p;
                 if (x + y > targetLine) currOver += p;
