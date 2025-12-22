@@ -125,6 +125,11 @@
                         <tbody id="ftDcTable"></tbody>
                     </table>
 
+                    <h3 style="margin-top: 20px;">Draw No Bet</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="ftDnbTable"></tbody>
+                    </table>
+
                     <h3 style="margin-top: 20px;">BTTS (Yes/No)</h3>
                     <table style="margin-bottom: 20px;">
                         <tbody id="bttsTable"></tbody>
@@ -174,6 +179,25 @@
 
 
 
+                </div>
+            </div>
+
+            <!-- ASIAN HANDICAP BLOCK -->
+            <div class="card hidden" id="ahArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('ahArea')">
+                    <h2>Asian Handicap</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Home</th>
+                                <th class="num-col">Away</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ahTable"></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -565,6 +589,49 @@
                             </tr>
                         </thead>
                         <tbody id="intervalComboTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- BTTS COMBINATIONS BLOCK -->
+            <div class="card hidden" id="bttsComboArea">
+                <div class="card-header" onclick="toggleCard('bttsComboArea')">
+                    <h2>8. BTTS Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        GG = Both Teams to Score (FT), IGG = BTTS 1H, IIGG = BTTS 2H
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bttsComboTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- FIRST TEAM TO SCORE BLOCK -->
+            <div class="card hidden" id="ftsComboArea">
+                <div class="card-header" onclick="toggleCard('ftsComboArea')">
+                    <h2>9. First Team to Score</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        T1 = Home, T2 = Away, no = No goals. I = 1H, II = 2H.
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Market / Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ftsComboTable"></tbody>
                     </table>
                 </div>
             </div>
