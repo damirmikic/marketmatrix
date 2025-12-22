@@ -38,6 +38,7 @@ function getScoreProb(x, y, lambda, mu) {
 /**
  * SHIN'S METHOD FOR VIG REMOVAL
  */
+
 function solveShin(oddsArr) {
     const sumImplied = oddsArr.reduce((sum, o) => sum + (1 / o), 0);
     const m = sumImplied - 1; // Margin
@@ -171,6 +172,9 @@ function runModel() {
     document.getElementById('htftComboArea').classList.remove('hidden');
     document.getElementById('homeGoalComboArea').classList.remove('hidden');
     document.getElementById('awayGoalComboArea').classList.remove('hidden');
+    document.getElementById('bttsComboArea').classList.remove('hidden');
+    document.getElementById('ftsComboArea').classList.remove('hidden');
+    document.getElementById('ahArea').classList.remove('hidden');
 
     // 3. Generate Matrices & Markets
     const matrixFT = calculateMatrix(params.lambda, params.mu);
@@ -312,6 +316,43 @@ function runModel() {
         <tr><td>12</td><td class="num-col prob-col">${((ft1x2.p1 + ft1x2.p2) * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(ft1x2.p1 + ft1x2.p2)}</td></tr>
         <tr><td>X2</td><td class="num-col prob-col">${((ft1x2.pX + ft1x2.p2) * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(ft1x2.pX + ft1x2.p2)}</td></tr>
     `;
+
+    // Draw No Bet
+    const pDnbHome = ft1x2.p1 / (ft1x2.p1 + ft1x2.p2);
+    const pDnbAway = ft1x2.p2 / (ft1x2.p1 + ft1x2.p2);
+    document.getElementById('ftDnbTable').innerHTML = `
+        <tr><td>Home</td><td class="num-col prob-col">${(pDnbHome * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(pDnbHome)}</td></tr>
+        <tr><td>Away</td><td class="num-col prob-col">${(pDnbAway * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(pDnbAway)}</td></tr>
+    `;
+
+    // Asian Handicap
+    function getAhProb(line, matrix) {
+        let pHome = 0, pPush = 0, pAway = 0;
+        for (let x = 0; x <= 10; x++) {
+            for (let y = 0; y <= 10; y++) {
+                let p = matrix[x][y];
+                if (x + line > y) pHome += p;
+                else if (Math.abs((x + line) - y) < 0.01) pPush += p;
+                else pAway += p;
+            }
+        }
+        const adjPHome = (pHome + pAway > 0) ? (pHome / (pHome + pAway)) : 0;
+        const adjPAway = (pHome + pAway > 0) ? (pAway / (pHome + pAway)) : 0;
+        return { h: adjPHome, a: adjPAway };
+    }
+
+    const ahSpreads = [0, -0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2, -2.5, 2.5];
+    let ahHtml = "";
+    ahSpreads.forEach(L => {
+        const probs = getAhProb(L, matrixFT);
+        const lineStr = L > 0 ? `+${L}` : L;
+        ahHtml += `<tr>
+            <td>AH ${lineStr}</td>
+            <td class="num-col">${probToOdds(probs.h)}</td>
+            <td class="num-col">${probToOdds(probs.a)}</td>
+        </tr>`;
+    });
+    document.getElementById('ahTable').innerHTML = ahHtml;
 
     const fh1x2 = get1X2Probs(matrixFH);
     const sh1x2 = get1X2Probs(matrixSH);
@@ -584,14 +625,79 @@ function runModel() {
     });
     document.getElementById('intervalComboTable').innerHTML = icHtml;
 
-    // ADDED: Win & Goal Combinations (Home & Away)
+    // --- BTTS COMBINATIONS ---
+    function calculateBttsCombos(matrixFH, matrixSH) {
+        let pFH_GG = 0;
+        for (let x = 1; x <= 7; x++) for (let y = 1; y <= 7; y++) pFH_GG += matrixFH[x][y];
+        let pFH_NG = 1 - pFH_GG;
+
+        let pSH_GG = 0;
+        for (let x = 1; x <= 7; x++) for (let y = 1; y <= 7; y++) pSH_GG += matrixSH[x][y];
+        let pSH_NG = 1 - pSH_GG;
+
+        let combos = [
+            { label: "GG & 4+", p: 0 },
+            { label: "GG & 2-3", p: 0 },
+            { label: "GG & I 1+", p: 0 },
+            { label: "GG & I 2+", p: 0 },
+            { label: "GG & II 1+", p: 0 },
+            { label: "GG & II 2+", p: 0 },
+            { label: "GG & I 1+ & II 1+", p: 0 },
+            { label: "GG & 3+", p: 0 },
+            { label: "IGG & 3+", p: 0 },
+            { label: "IGG & 4+", p: 0 },
+            { label: "ING & IIGG", p: pFH_NG * pSH_GG },
+            { label: "IGG & IING", p: pFH_GG * pSH_NG },
+            { label: "ING & IING", p: pFH_NG * pSH_NG },
+            { label: "IGG & IIGG", p: pFH_GG * pSH_GG },
+            { label: "IGG or IIGG", p: pFH_GG + pSH_GG - (pFH_GG * pSH_GG) }
+        ];
+
+        for (let h1 = 0; h1 <= 7; h1++) {
+            for (let a1 = 0; a1 <= 7; a1++) {
+                let p1 = matrixFH[h1][a1];
+                for (let h2 = 0; h2 <= 7; h2++) {
+                    for (let a2 = 0; a2 <= 7; a2++) {
+                        let p2 = matrixSH[h2][a2];
+                        let pj = p1 * p2;
+                        let hFT = h1 + h2;
+                        let aFT = a1 + a2;
+                        let ggFT = hFT > 0 && aFT > 0;
+                        let ggFH = h1 > 0 && a1 > 0;
+
+                        if (ggFT && (hFT + aFT >= 4)) combos[0].p += pj;    // GG & 4+
+                        if (ggFT && (hFT + aFT >= 2 && hFT + aFT <= 3)) combos[1].p += pj; // GG & 2-3
+                        if (ggFT && (h1 + a1 >= 1)) combos[2].p += pj;    // GG & I 1+
+                        if (ggFT && (h1 + a1 >= 2)) combos[3].p += pj;    // GG & I 2+
+                        if (ggFT && (h2 + a2 >= 1)) combos[4].p += pj;    // GG & II 1+
+                        if (ggFT && (h2 + a2 >= 2)) combos[5].p += pj;    // GG & II 2+
+                        if (ggFT && (h1 + a1 >= 1) && (h2 + a2 >= 1)) combos[6].p += pj; // GG & I 1+ & II 1+
+                        if (ggFT && (hFT + aFT >= 3)) combos[7].p += pj;   // GG & 3+
+                        if (ggFH && (hFT + aFT >= 3)) combos[8].p += pj;   // IGG & 3+
+                        if (ggFH && (hFT + aFT >= 4)) combos[9].p += pj;   // IGG & 4+
+                    }
+                }
+            }
+        }
+
+        let html = "";
+        combos.forEach(c => {
+            html += `<tr><td>${c.label}</td><td class="num-col prob-col">${(c.p * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(c.p)}</td></tr>`;
+        });
+        return html;
+    }
+    document.getElementById('bttsComboTable').innerHTML = calculateBttsCombos(matrixFH, matrixSH);
+
+    // ADDED: Team Specific Markets (Home & Away)
     function calculateWinCombos(matrix1H, matrix2H, isHome) {
         let combos = {
             "Win & 1+I": 0, "Win & 2+I": 0, "Win & 2-3I": 0,
             "Win & 1+II": 0, "Win & 2+II": 0, "Win & 1+I & 1+II": 0,
             "Win & GG": 0, "Win & GGI": 0, "Win & GGII": 0,
             "Win & 1+I & 2+": 0, "Win & 1+I & 3+": 0,
-            "Win & 1-3I & 1-3II": 0, "Win & 2+I & 4+": 0
+            "Win & 1-3I & 1-3II": 0, "Win & 2+I & 4+": 0,
+            "Win Both Halves": 0, "Win To Nil": 0, "Win Both Halves With Nil": 0,
+            "WBH & 4+": 0, "Lead on HT & Not Win": 0
         };
 
         const prefix = isHome ? "1" : "2";
@@ -599,47 +705,54 @@ function runModel() {
         for (let h1 = 0; h1 <= 7; h1++) {
             for (let a1 = 0; a1 <= 7; a1++) {
                 let p1 = matrix1H[h1][a1];
-                let tot1H = h1 + a1;
+                let s1H = isHome ? h1 : a1;
+                let o1H = isHome ? a1 : h1;
 
                 for (let h2 = 0; h2 <= 7; h2++) {
                     for (let a2 = 0; a2 <= 7; a2++) {
                         let p2 = matrix2H[h2][a2];
                         let pJoint = p1 * p2;
 
-                        let hFT = h1 + h2;
-                        let aFT = a1 + a2;
-                        let totFT = hFT + aFT;
-                        let tot2H = h2 + a2;
+                        let s2H = isHome ? h2 : a2;
+                        let o2H = isHome ? a2 : h2;
 
-                        let win = isHome ? (hFT > aFT) : (aFT > hFT);
-                        if (!win) continue;
+                        let sFT = s1H + s2H;
+                        let oFT = o1H + o2H;
+                        let totFT = sFT + oFT;
 
-                        // 1. Win & 1+I
-                        if (tot1H >= 1) combos["Win & 1+I"] += pJoint;
-                        // 2. Win & 2+I
-                        if (tot1H >= 2) combos["Win & 2+I"] += pJoint;
-                        // 3. Win & 2-3I
-                        if (tot1H >= 2 && tot1H <= 3) combos["Win & 2-3I"] += pJoint;
-                        // 4. Win & 1+II
-                        if (tot2H >= 1) combos["Win & 1+II"] += pJoint;
-                        // 5. Win & 2+II
-                        if (tot2H >= 2) combos["Win & 2+II"] += pJoint;
-                        // 6. Win & 1+I & 1+II
-                        if (tot1H >= 1 && tot2H >= 1) combos["Win & 1+I & 1+II"] += pJoint;
-                        // 7. Win & GG
-                        if (hFT >= 1 && aFT >= 1) combos["Win & GG"] += pJoint;
-                        // 8. Win & GGI
-                        if (h1 >= 1 && a1 >= 1) combos["Win & GGI"] += pJoint;
-                        // 9. Win & GGII
-                        if (h2 >= 1 && a2 >= 1) combos["Win & GGII"] += pJoint;
-                        // 10. Win & 1+I & 2+
-                        if (tot1H >= 1 && totFT >= 2) combos["Win & 1+I & 2+"] += pJoint;
-                        // 11. Win & 1+I & 3+
-                        if (tot1H >= 1 && totFT >= 3) combos["Win & 1+I & 3+"] += pJoint;
-                        // 12. Win & 1-3I & 1-3II
-                        if (tot1H >= 1 && tot1H <= 3 && tot2H >= 1 && tot2H <= 3) combos["Win & 1-3I & 1-3II"] += pJoint;
-                        // 13. Win & 2+I & 4+
-                        if (tot1H >= 2 && totFT >= 4) combos["Win & 2+I & 4+"] += pJoint;
+                        let win = sFT > oFT;
+
+                        // 1. Standard Win Combos
+                        if (win) {
+                            if (s1H + o1H >= 1) combos["Win & 1+I"] += pJoint;
+                            if (s1H + o1H >= 2) combos["Win & 2+I"] += pJoint;
+                            if (s1H + o1H >= 2 && s1H + o1H <= 3) combos["Win & 2-3I"] += pJoint;
+                            if (s2H + o2H >= 1) combos["Win & 1+II"] += pJoint;
+                            if (s2H + o2H >= 2) combos["Win & 2+II"] += pJoint;
+                            if (s1H + o1H >= 1 && s2H + o2H >= 1) combos["Win & 1+I & 1+II"] += pJoint;
+                            if (sFT >= 1 && oFT >= 1) combos["Win & GG"] += pJoint;
+                            if (s1H >= 1 && o1H >= 1) combos["Win & GGI"] += pJoint;
+                            if (s2H >= 1 && o2H >= 1) combos["Win & GGII"] += pJoint;
+                            if (s1H + o1H >= 1 && totFT >= 2) combos["Win & 1+I & 2+"] += pJoint;
+                            if (s1H + o1H >= 1 && totFT >= 3) combos["Win & 1+I & 3+"] += pJoint;
+                            if ((s1H + o1H >= 1 && s1H + o1H <= 3) && (s2H + o2H >= 1 && s2H + o2H <= 3)) combos["Win & 1-3I & 1-3II"] += pJoint;
+                            if (s1H + o1H >= 2 && totFT >= 4) combos["Win & 2+I & 4+"] += pJoint;
+
+                            // Special: To Win To Nil
+                            if (oFT === 0) combos["Win To Nil"] += pJoint;
+                        }
+
+                        // Special: Win Both Halves
+                        if (s1H > o1H && s2H > o2H) {
+                            combos["Win Both Halves"] += pJoint;
+                            if (oFT === 0) combos["Win Both Halves With Nil"] += pJoint;
+                            if (totFT >= 4) combos["WBH & 4+"] += pJoint;
+                        }
+
+                        // Special: Lead HT & Not Win
+                        if (s1H > o1H && sFT <= oFT) {
+                            combos["Lead on HT & Not Win"] += pJoint;
+                        }
                     }
                 }
             }
@@ -648,6 +761,7 @@ function runModel() {
         let html = "";
         Object.keys(combos).forEach(key => {
             let label = key.replace("Win", prefix);
+            if (label.includes("WBH")) label = label.replace("WBH", "WBH" + prefix);
             let p = combos[key];
             html += `<tr><td>${label}</td><td class="num-col prob-col">${(p * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(p)}</td></tr>`;
         });
@@ -675,14 +789,45 @@ function runModel() {
                 { label: "X & 0-2 I & 1-3 II", check: (h1, a1, h2, a2, hFT, aFT) => (hFT === aFT) && (h1 + a1 <= 2) && (h2 + a2 >= 1 && h2 + a2 <= 3) }
             ];
         } else if (type === 'dc') {
-            results = [
-                { label: "1X & 1-2 I & 1-2 II", check: (h1, a1, h2, a2, hFT, aFT) => (hFT >= aFT) && (h1 + a1 >= 1 && h1 + a1 <= 2) && (h2 + a2 >= 1 && h2 + a2 <= 2) },
-                { label: "X2 & 1-2 I & 1-2 II", check: (h1, a1, h2, a2, hFT, aFT) => (aFT >= hFT) && (h1 + a1 >= 1 && h1 + a1 <= 2) && (h2 + a2 >= 1 && h2 + a2 <= 2) },
-                { label: "1X & 1-3 I & 1-3 II", check: (h1, a1, h2, a2, hFT, aFT) => (hFT >= aFT) && (h1 + a1 >= 1 && h1 + a1 <= 3) && (h2 + a2 >= 1 && h2 + a2 <= 3) },
-                { label: "X2 & 1-3 I & 1-3 II", check: (h1, a1, h2, a2, hFT, aFT) => (aFT >= hFT) && (h1 + a1 >= 1 && h1 + a1 <= 3) && (h2 + a2 >= 1 && h2 + a2 <= 3) },
-                { label: "1X & I2+ & 4+", check: (h1, a1, h2, a2, hFT, aFT) => (hFT >= aFT) && (h1 + a1 >= 2) && (hFT + aFT >= 4) },
-                { label: "X2 & I2+ & 4+", check: (h1, a1, h2, a2, hFT, aFT) => (aFT >= hFT) && (h1 + a1 >= 2) && (hFT + aFT >= 4) }
+            const dcMarkets = [
+                // Base 1X, X2, 12 conditions
+                { cond: (hFT, aFT) => hFT >= aFT, prefix: "1X" },
+                { cond: (hFT, aFT) => aFT >= hFT, prefix: "X2" },
+                { cond: (hFT, aFT) => hFT !== aFT, prefix: "12" }
             ];
+
+            const goalChecks = [
+                { label: "2+", check: (h, a) => (h + a) >= 2 },
+                { label: "3+", check: (h, a) => (h + a) >= 3 },
+                { label: "0-3", check: (h, a) => (h + a) <= 3 },
+                { label: "0-1", check: (h, a) => (h + a) <= 1 },
+                { label: "0-2", check: (h, a) => (h + a) <= 2 },
+                { label: "4+", check: (h, a) => (h + a) >= 4 },
+                { label: "0-4", check: (h, a) => (h + a) <= 4 },
+                { label: "5+", check: (h, a) => (h + a) >= 5 },
+                { label: "1-2", check: (h, a) => (h + a) >= 1 && (h + a) <= 2 },
+                { label: "1-3", check: (h, a) => (h + a) >= 1 && (h + a) <= 3 },
+                { label: "2-3", check: (h, a) => (h + a) >= 2 && (h + a) <= 3 },
+                { label: "2-4", check: (h, a) => (h + a) >= 2 && (h + a) <= 4 },
+                { label: "2-5", check: (h, a) => (h + a) >= 2 && (h + a) <= 5 },
+                { label: "3-4", check: (h, a) => (h + a) >= 3 && (h + a) <= 4 },
+                { label: "3-5", check: (h, a) => (h + a) >= 3 && (h + a) <= 5 },
+                { label: "3-6", check: (h, a) => (h + a) >= 3 && (h + a) <= 6 },
+                { label: "4-6", check: (h, a) => (h + a) >= 4 && (h + a) <= 6 },
+                // Half-time Mixed
+                { label: "1-2 I & 1-2 II", check: (h, a, h1, a1, h2, a2) => (h1 + a1 >= 1 && h1 + a1 <= 2) && (h2 + a2 >= 1 && h2 + a2 <= 2) },
+                { label: "1-3 I & 1-3 II", check: (h, a, h1, a1, h2, a2) => (h1 + a1 >= 1 && h1 + a1 <= 3) && (h2 + a2 >= 1 && h2 + a2 <= 3) },
+                { label: "I2+ & 4+", check: (h, a, h1, a1, h2, a2) => (h1 + a1 >= 2) && (h + a >= 4) }
+            ];
+
+            dcMarkets.forEach(m => {
+                goalChecks.forEach(g => {
+                    results.push({
+                        label: `${m.prefix} & ${g.label}`,
+                        check: (h1, a1, h2, a2, hFT, aFT) => m.cond(hFT, aFT) && g.check(hFT, aFT, h1, a1, h2, a2)
+                    });
+                });
+            });
         } else if (type === 'htft') {
             results = [
                 // 1-1 Combinations
@@ -756,6 +901,71 @@ function runModel() {
         let html = "";
         probs.forEach(obj => {
             html += `<tr><td>${obj.label}</td><td class="num-col prob-col">${(obj.p * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(obj.p)}</td></tr>`;
+        });
+        return html;
+    }
+
+    // --- FIRST TEAM TO SCORE COMBINATIONS ---
+    function calculateFtsCombos(lamFT, muFT, lamFH, muFH, lamSH, muSH, matrixFT) {
+        const ratioFT_H = lamFT / (lamFT + muFT);
+        const ratioFT_A = muFT / (lamFT + muFT);
+
+        const ratioFH_H = lamFH / (lamFH + muFH);
+        const ratioFH_A = muFH / (lamFH + muFH);
+
+        const ratioSH_H = lamSH / (lamSH + muSH);
+        const ratioSH_A = muSH / (lamSH + muSH);
+
+        // Basic FT
+        const pFT_0_0 = matrixFT[0][0];
+        const pFT_AnyGoal = 1 - pFT_0_0;
+
+        // Result and Total helpers
+        let p1 = 0, pX = 0, p2 = 0, p2plus = 0, p3plus = 0;
+        for (let x = 0; x <= 7; x++) {
+            for (let y = 0; y <= 7; y++) {
+                let p = matrixFT[x][y];
+                if (x > y) p1 += p;
+                else if (x === y) pX += p;
+                else p2 += p;
+
+                if (x + y >= 2) p2plus += p;
+                if (x + y >= 3) p3plus += p;
+            }
+        }
+
+        const pX_Strict = pX - pFT_0_0; // Draw with at least 1 goal
+
+        const combos = [
+            // FT
+            { label: "T1", p: pFT_AnyGoal * ratioFT_H },
+            { label: "no", p: pFT_0_0 },
+            { label: "T2", p: pFT_AnyGoal * ratioFT_A },
+            // 1H
+            { label: "T1 I", p: (1 - Math.exp(-(lamFH + muFH))) * ratioFH_H },
+            { label: "no I", p: Math.exp(-(lamFH + muFH)) },
+            { label: "T2 I", p: (1 - Math.exp(-(lamFH + muFH))) * ratioFH_A },
+            // 2H
+            { label: "T1 II", p: (1 - Math.exp(-(lamSH + muSH))) * ratioSH_H },
+            { label: "no II", p: Math.exp(-(lamSH + muSH)) },
+            { label: "T2 II", p: (1 - Math.exp(-(lamSH + muSH))) * ratioSH_A },
+            // Result & FTS
+            { label: "1 & T1", p: p1 * ratioFT_H },
+            { label: "1 & T2", p: p1 * ratioFT_A },
+            { label: "2 & T1", p: p2 * ratioFT_H },
+            { label: "2 & T2", p: p2 * ratioFT_A },
+            { label: "X & T1", p: pX_Strict * ratioFT_H },
+            { label: "X & T2", p: pX_Strict * ratioFT_A },
+            // Goals & FTS
+            { label: "T1 & 2+", p: p2plus * ratioFT_H },
+            { label: "T2 & 2+", p: p2plus * ratioFT_A },
+            { label: "T1 & 3+", p: p3plus * ratioFT_H },
+            { label: "T2 & 3+", p: p3plus * ratioFT_A }
+        ];
+
+        let html = "";
+        combos.forEach(c => {
+            html += `<tr><td>${c.label}</td><td class="num-col prob-col">${(c.p * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(c.p)}</td></tr>`;
         });
         return html;
     }
@@ -852,6 +1062,13 @@ function runModel() {
 
     document.getElementById('homeGoalComboTable').innerHTML = calculateTeamGoalCombos(matrixFH, matrixSH, true);
     document.getElementById('awayGoalComboTable').innerHTML = calculateTeamGoalCombos(matrixFH, matrixSH, false);
+
+    document.getElementById('ftsComboTable').innerHTML = calculateFtsCombos(
+        params.lambda, params.mu,
+        params.lambda * 0.45, params.mu * 0.45,
+        params.lambda * 0.55, params.mu * 0.55,
+        matrixFT
+    );
 }
 
 // --- API MATCH LOADER LOGIC ---
