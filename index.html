@@ -11,46 +11,80 @@
 
 <body>
     <div class="container">
-        <!-- SIDEBAR: INPUTS & PARAMETERS -->
-        <div class="sidebar">
+        <!-- LEFT COLUMN: API LOADER & INPUTS -->
+        <div class="sidebar-column">
+            <!-- API MATCH LOADER -->
+            <div class="card" id="apiMatchLoader" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('apiMatchLoader')">
+                    <h2>0. Select Match</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COUNTRY</label>
+                            <select id="apiCountrySelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COMPETITION</label>
+                            <select id="apiLeagueSelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;"
+                                disabled>
+                                <option value="">Select country</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
+                            <select id="apiMatchSelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;"
+                                disabled>
+                                <option value="">Select competition</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INPUT ODDS -->
             <div class="card" id="inputCard">
                 <div class="card-header" onclick="toggleCard('inputCard')">
                     <h2>1. Input Odds</h2>
                 </div>
                 <div class="card-content">
-                    <h3>1x2 Market</h3>
+                    <h3>1x2 Odds</h3>
                     <div class="input-group">
-                        <label>Home Odds</label>
+                        <label>Home</label>
                         <input type="number" id="homeOdds" step="0.01" value="2.10" oninput="runModel()">
                     </div>
                     <div class="input-group">
-                        <label>Draw Odds</label>
+                        <label>Draw</label>
                         <input type="number" id="drawOdds" step="0.01" value="3.40" oninput="runModel()">
                     </div>
                     <div class="input-group">
-                        <label>Away Odds</label>
+                        <label>Away</label>
                         <input type="number" id="awayOdds" step="0.01" value="3.50" oninput="runModel()">
                     </div>
 
-                    <h3>Total Goals Market</h3>
+                    <h3>Goal Line</h3>
                     <div class="input-group">
-                        <label>Goal Line</label>
+                        <label>Line</label>
                         <input type="number" id="goalLine" step="0.5" value="2.5" oninput="runModel()">
                     </div>
                     <div class="input-group">
-                        <label id="overLabel">Over Odds</label>
+                        <label id="overLabel">Over</label>
                         <input type="number" id="overOdds" step="0.01" value="1.95" oninput="runModel()">
                     </div>
                     <div class="input-group">
-                        <label id="underLabel">Under Odds</label>
+                        <label id="underLabel">Under</label>
                         <input type="number" id="underOdds" step="0.01" value="1.90" oninput="runModel()">
                     </div>
 
-                    <p style="font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 10px;">
-                        Uses Dixon-Coles with Newton-Raphson Solver
-                    </p>
-
-                    <h3 style="margin-top: 20px;">Reverse Parameters</h3>
+                    <h3 style="margin-top: 20px;">Reverse λ / μ</h3>
                     <div class="stat-grid">
                         <div class="stat-box">
                             <div class="stat-val" id="xgHome">-</div>
