@@ -152,6 +152,11 @@ function runModel() {
     document.getElementById('shinDraw').textContent = (true1x2[1] * 100).toFixed(1) + "%";
     document.getElementById('shinAway').textContent = (true1x2[2] * 100).toFixed(1) + "%";
 
+    // Display Fair Odds
+    document.getElementById('fairOddsHome').textContent = (1 / true1x2[0]).toFixed(2);
+    document.getElementById('fairOddsDraw').textContent = (1 / true1x2[1]).toFixed(2);
+    document.getElementById('fairOddsAway').textContent = (1 / true1x2[2]).toFixed(2);
+
     const targetHome = true1x2[0];
     const targetOver = trueOU[0];
 
