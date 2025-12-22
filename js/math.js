@@ -8,9 +8,13 @@ export function factorial(n) {
     return n * factorial(n - 1);
 }
 
-// Standard Poisson
-export function poisson(k, lambda) {
-    return (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
+// Zero-Inflated Poisson (ZIP)
+export function zipPoisson(k, lambda, omega) {
+    if (k === 0) {
+        return omega + (1 - omega) * Math.exp(-lambda);
+    } else {
+        return (1 - omega) * ((Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k));
+    }
 }
 
 // Dixon-Coles Factor
@@ -23,8 +27,13 @@ export function correction(x, y, lambda, mu, rho = RHO) {
     return 1;
 }
 
-export function getScoreProb(x, y, lambda, mu) {
-    let base = poisson(x, lambda) * poisson(y, mu);
+// Updated to use ZIP by default
+export function getScoreProb(x, y, lambda, mu, omega = 0) {
+    // We treat Home/Away independent ZIP, sharing same Omega for simplicity or split if needed.
+    // Standard approach: Apply Omega to both sides symmetrically or weighted.
+    // For this implementation: We apply the same Omega to both Home and Away distributions.
+
+    let base = zipPoisson(x, lambda, omega) * zipPoisson(y, mu, omega);
     let adj = correction(x, y, lambda, mu, RHO);
     return base * adj;
 }
@@ -32,11 +41,11 @@ export function getScoreProb(x, y, lambda, mu) {
 // Shin's Method
 export function solveShin(oddsArr) {
     const sumImplied = oddsArr.reduce((sum, o) => sum + (1 / o), 0);
-    const m = sumImplied - 1; 
+    const m = sumImplied - 1;
 
     if (m <= 0) return oddsArr.map(o => 1 / o);
 
-    let z = 0.01; 
+    let z = 0.01;
     for (let i = 0; i < 50; i++) {
         let sumProb = oddsArr.reduce((sum, o) => {
             const pImplied = 1 / o;
@@ -45,7 +54,7 @@ export function solveShin(oddsArr) {
         }, 0);
 
         if (Math.abs(sumProb - 1) < 1e-7) break;
-        z += (sumProb - 1) * 0.5; 
+        z += (sumProb - 1) * 0.5;
         if (z < 0) z = 0;
         if (z > 1) z = 0.99;
     }
@@ -57,26 +66,39 @@ export function solveShin(oddsArr) {
 }
 
 // Matrix Calculation
-export function calculateMatrix(lambda, mu) {
+export function calculateMatrix(lambda, mu, omega = 0) {
     let matrix = [];
     for (let x = 0; x <= 10; x++) {
         matrix[x] = [];
         for (let y = 0; y <= 10; y++) {
-            matrix[x][y] = getScoreProb(x, y, lambda, mu);
+            matrix[x][y] = getScoreProb(x, y, lambda, mu, omega);
         }
     }
     return matrix;
 }
 
+// Helper to calculate Omega from Draw Probability
+export function calculateDynamicOmega(probDraw) {
+    // Linear interpolation:
+    // P(Draw) = 0.20 -> Omega = 0.00
+    // P(Draw) = 0.35 -> Omega = 0.15
+    if (probDraw <= 0.20) return 0;
+    if (probDraw >= 0.35) return 0.20;
+    return (probDraw - 0.20) * (0.20 / 0.15);
+}
+
 // Solver
-export function solveParameters(targetHomeWin, targetOverProb, targetLine) {
-    let lambda = 1.4; 
-    let mu = 1.0;     
-    let lr = 0.1;     
+export function solveParameters(targetHomeWin, targetOverProb, targetLine, targetDrawProb) {
+    let lambda = 1.4;
+    let mu = 1.0;
+    let lr = 0.1;
     let maxIter = 500;
 
+    // Calculate Omega once based on target draw probability
+    const omega = calculateDynamicOmega(targetDrawProb);
+
     for (let i = 0; i < maxIter; i++) {
-        let probs = calculateMatrix(lambda, mu);
+        let probs = calculateMatrix(lambda, mu, omega);
 
         let currHome = 0;
         let currOver = 0;
@@ -101,7 +123,7 @@ export function solveParameters(targetHomeWin, targetOverProb, targetLine) {
         if (mu < 0.01) mu = 0.01;
     }
 
-    return { lambda, mu };
+    return { lambda, mu, omega };
 }
 
 export function probToOdds(p) {

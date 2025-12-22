@@ -2,8 +2,7 @@ import {
     solveShin,
     solveParameters,
     calculateMatrix,
-    probToOdds,
-    poisson
+    probToOdds
 } from './js/math.js';
 
 import {
@@ -84,14 +83,16 @@ function runModel() {
     document.getElementById('fairOddsAway').textContent = (1 / true1x2[2]).toFixed(2);
 
     const targetHome = true1x2[0];
+    const targetDraw = true1x2[1]; // Get Target Draw Prob
     const targetOver = trueOU[0];
 
-    // 2. Solve for xG
-    const params = solveParameters(targetHome, targetOver, line);
+    // 2. Solve for xG (and Omega)
+    const params = solveParameters(targetHome, targetOver, line, targetDraw);
 
     // Display Parameters
     document.getElementById('xgHome').textContent = params.lambda.toFixed(3);
     document.getElementById('xgAway').textContent = params.mu.toFixed(3);
+    document.getElementById('zipOmega').textContent = params.omega.toFixed(2);
 
     // Show all hidden areas
     [
@@ -100,10 +101,18 @@ function runModel() {
         'homeGoalComboArea', 'awayGoalComboArea', 'bttsComboArea', 'ftsComboArea', 'ahArea'
     ].forEach(id => document.getElementById(id).classList.remove('hidden'));
 
-    // 3. Generate Matrices
-    const matrixFT = calculateMatrix(params.lambda, params.mu);
-    const matrixFH = calculateMatrix(params.lambda * 0.45, params.mu * 0.45);
-    const matrixSH = calculateMatrix(params.lambda * 0.55, params.mu * 0.55);
+    // 3. Generate Matrices (Pass Omega)
+    const matrixFT = calculateMatrix(params.lambda, params.mu, params.omega);
+    const matrixFH = calculateMatrix(params.lambda * 0.45, params.mu * 0.45, params.omega * 0.45); // Approximate Omega scaling? 
+    // ZIP usually applies to the *event* count. Zero goals in half is different.
+    // Standard ZIP for half-time is complex. 
+    // HEURISTIC: We will scale Omega linearly with time for simplicity or keep it constant?
+    // Let's keep it simple: The "Zero Bonus" is a property of the match defensiveness.
+    // However, P(0) in half is naturally Check.
+    // Let's use scaled Lambda/Mu but keep Omega constant (or scaled down?).
+    // A smaller time interval naturally has more zeros. A fixed additive zero-prob might be too strong for a half.
+    // Let's scale Omega by 0.5 for halves as a reasonable heuristic for now.
+    const matrixSH = calculateMatrix(params.lambda * 0.55, params.mu * 0.55, params.omega * 0.55);
 
     // --- MARKET GENERATION ---
 

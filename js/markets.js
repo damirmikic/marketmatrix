@@ -1,4 +1,4 @@
-import { probToOdds, poisson } from './math.js';
+import { probToOdds, zipPoisson } from './math.js';
 
 export function get1X2Probs(matrix) {
     let p1 = 0, pX = 0, p2 = 0;
@@ -72,7 +72,7 @@ export function populateHalfDetailed(matrix, prefix) {
 }
 
 export function populateTeamMarkets(lamFT, lamFH, lamSH, prefix) {
-    function pK(k, l) { return poisson(k, l); }
+    function pK(k, l) { return zipPoisson(k, l, 0); }
     function pOver(target, l) {
         let p = 0;
         for (let i = 0; i <= 10; i++) if (i > target) p += pK(i, l);
