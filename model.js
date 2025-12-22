@@ -32,8 +32,25 @@ function toggleCard(id) {
     if (el) el.classList.toggle('collapsed');
 }
 
+function toggleAllCards() {
+    const btn = document.getElementById('toggleAllBtn');
+    const cards = document.querySelectorAll('.card:not(.hidden)');
+    const isCollapsing = btn.textContent.includes('Collapse');
+
+    cards.forEach(card => {
+        if (isCollapsing) {
+            card.classList.add('collapsed');
+        } else {
+            card.classList.remove('collapsed');
+        }
+    });
+
+    btn.textContent = isCollapsing ? "Expand All" : "Collapse All";
+}
+
 // Make globally available for HTML onclick attributes
 window.toggleCard = toggleCard;
+window.toggleAllCards = toggleAllCards;
 
 // --- Main Controller ---
 function runModel() {
