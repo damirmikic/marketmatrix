@@ -98,7 +98,8 @@ function runModel() {
 
     // --- Show Markets Area ---
     ['marketsArea', 'firstHalfArea', 'secondHalfArea', 'teamTotalsArea',
-        'marginArea', 'specialsArea'].forEach(id => {
+        'marginArea', 'specialsArea', 'halftimeFulltimeArea', 'winnerTotalArea',
+        'handicapTotalArea'].forEach(id => {
             document.getElementById(id).classList.remove('hidden');
         });
 
@@ -350,6 +351,94 @@ function runModel() {
         <tr><td>2nd Half</td><td class="num-col">${probToOdds(p2HHigher)}</td></tr>
         <tr><td>Tie</td><td class="num-col">${probToOdds(pTied)}</td></tr>
     `;
+
+    // --- HALFTIME/FULLTIME ---
+    // Calculate probabilities for all HT/FT combinations
+    // Basketball doesn't have draws, so we only have 4 combinations:
+    // Home/Home, Home/Away, Away/Home, Away/Away
+    const pHomeHT = pHome1HWins;
+    const pAwayHT = 1 - pHome1HWins;
+    
+    // Conditional probabilities for FT given HT result
+    // If Home leads at HT, they're more likely to win FT
+    const pHomeFT_givenHomeHT = Math.min(0.95, homeWinProb + 0.15);
+    const pAwayFT_givenHomeHT = 1 - pHomeFT_givenHomeHT;
+    
+    // If Away leads at HT, they're more likely to win FT
+    const pAwayFT_givenAwayHT = Math.min(0.95, awayWinProb + 0.15);
+    const pHomeFT_givenAwayHT = 1 - pAwayFT_givenAwayHT;
+    
+    const htftCombos = [
+        { label: "Home/Home", prob: pHomeHT * pHomeFT_givenHomeHT },
+        { label: "Home/Away", prob: pHomeHT * pAwayFT_givenHomeHT },
+        { label: "Away/Home", prob: pAwayHT * pHomeFT_givenAwayHT },
+        { label: "Away/Away", prob: pAwayHT * pAwayFT_givenAwayHT }
+    ];
+    
+    let htftHtml = '';
+    htftCombos.forEach(combo => {
+        htftHtml += `<tr>
+            <td>${combo.label}</td>
+            <td class="num-col prob-col">${(combo.prob * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(combo.prob)}</td>
+        </tr>`;
+    });
+    document.getElementById('halftimeFulltimeTable').innerHTML = htftHtml;
+
+    // --- WINNER & TOTAL (incl. OT) ---
+    // Combine winner probabilities with total points over/under
+    const totalLines = [roundedBaseTotal - 4, roundedBaseTotal - 2, roundedBaseTotal, roundedBaseTotal + 2, roundedBaseTotal + 4];
+    let winnerTotalHtml = '';
+    
+    totalLines.forEach(line => {
+        const probShift = (line - roundedBaseTotal) * 0.03;
+        const pOverLine = Math.max(0.05, Math.min(0.95, pOver - probShift));
+        const pUnderLine = 1 - pOverLine;
+        
+        // Winner & Total combinations
+        const homeOver = homeWinProb * pOverLine;
+        const homeUnder = homeWinProb * pUnderLine;
+        const awayOver = awayWinProb * pOverLine;
+        const awayUnder = awayWinProb * pUnderLine;
+        
+        winnerTotalHtml += `<tr><td>Home & Over ${line.toFixed(1)}</td><td class="num-col prob-col">${(homeOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeOver)}</td></tr>`;
+        winnerTotalHtml += `<tr><td>Home & Under ${line.toFixed(1)}</td><td class="num-col prob-col">${(homeUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeUnder)}</td></tr>`;
+        winnerTotalHtml += `<tr><td>Away & Over ${line.toFixed(1)}</td><td class="num-col prob-col">${(awayOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awayOver)}</td></tr>`;
+        winnerTotalHtml += `<tr><td>Away & Under ${line.toFixed(1)}</td><td class="num-col prob-col">${(awayUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awayUnder)}</td></tr>`;
+    });
+    document.getElementById('winnerTotalTable').innerHTML = winnerTotalHtml;
+
+    // --- HANDICAP & TOTAL (incl. OT) ---
+    // Combine handicap (spread) probabilities with total points
+    const spreadLinesForCombo = [roundedBaseSpread - 2, roundedBaseSpread, roundedBaseSpread + 2];
+    let handicapTotalHtml = '';
+    
+    spreadLinesForCombo.forEach(spreadLineCombo => {
+        const spreadProbShift = (spreadLineCombo - roundedBaseSpread) * 0.035;
+        const pHomeCoversSpread = Math.max(0.05, Math.min(0.95, fairSpreadH + spreadProbShift));
+        const pAwayCoversSpread = 1 - pHomeCoversSpread;
+        
+        // For each spread line, combine with different total lines
+        [roundedBaseTotal - 2, roundedBaseTotal, roundedBaseTotal + 2].forEach(totalLineCombo => {
+            const totalProbShift = (totalLineCombo - roundedBaseTotal) * 0.03;
+            const pOverTotal = Math.max(0.05, Math.min(0.95, pOver - totalProbShift));
+            const pUnderTotal = 1 - pOverTotal;
+            
+            // Handicap & Total combinations
+            const homeSpreadOver = pHomeCoversSpread * pOverTotal;
+            const homeSpreadUnder = pHomeCoversSpread * pUnderTotal;
+            const awaySpreadOver = pAwayCoversSpread * pOverTotal;
+            const awaySpreadUnder = pAwayCoversSpread * pUnderTotal;
+            
+            const spreadLabel = spreadLineCombo > 0 ? `+${spreadLineCombo.toFixed(1)}` : spreadLineCombo.toFixed(1);
+            
+            handicapTotalHtml += `<tr><td>Home ${spreadLabel} & Over ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(homeSpreadOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeSpreadOver)}</td></tr>`;
+            handicapTotalHtml += `<tr><td>Home ${spreadLabel} & Under ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(homeSpreadUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeSpreadUnder)}</td></tr>`;
+            handicapTotalHtml += `<tr><td>Away ${spreadLineCombo > 0 ? spreadLineCombo.toFixed(1) : `+${Math.abs(spreadLineCombo).toFixed(1)}`} & Over ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadOver)}</td></tr>`;
+            handicapTotalHtml += `<tr><td>Away ${spreadLineCombo > 0 ? spreadLineCombo.toFixed(1) : `+${Math.abs(spreadLineCombo).toFixed(1)}`} & Under ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadUnder)}</td></tr>`;
+        });
+    });
+    document.getElementById('handicapTotalTable').innerHTML = handicapTotalHtml;
 }
 
 // Helper function to estimate margin probability bands
