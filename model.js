@@ -121,8 +121,14 @@ function runModel() {
     ].forEach(id => document.getElementById(id).classList.remove('hidden'));
 
     // 3. Generate Matrices (Pass Omega)
+    // Read half ratios from input (default 45/55 if unavailable)
+    const ratio1HEl = document.getElementById('ratio1H');
+    const ratio2HEl = document.getElementById('ratio2H');
+    const ratio1H = ratio1HEl ? parseFloat(ratio1HEl.value) / 100 : 0.45;
+    const ratio2H = ratio2HEl ? parseFloat(ratio2HEl.value) / 100 : 0.55;
+
     const matrixFT = calculateMatrix(params.lambda, params.mu, params.omega);
-    const matrixFH = calculateMatrix(params.lambda * 0.45, params.mu * 0.45, params.omega * 0.45); // Approximate Omega scaling? 
+    const matrixFH = calculateMatrix(params.lambda * ratio1H, params.mu * ratio1H, params.omega * ratio1H);
     // ZIP usually applies to the *event* count. Zero goals in half is different.
     // Standard ZIP for half-time is complex. 
     // HEURISTIC: We will scale Omega linearly with time for simplicity or keep it constant?
@@ -130,8 +136,8 @@ function runModel() {
     // However, P(0) in half is naturally Check.
     // Let's use scaled Lambda/Mu but keep Omega constant (or scaled down?).
     // A smaller time interval naturally has more zeros. A fixed additive zero-prob might be too strong for a half.
-    // Let's scale Omega by 0.5 for halves as a reasonable heuristic for now.
-    const matrixSH = calculateMatrix(params.lambda * 0.55, params.mu * 0.55, params.omega * 0.55);
+    // Let's scale Omega by half ratio for halves as a reasonable heuristic for now.
+    const matrixSH = calculateMatrix(params.lambda * ratio2H, params.mu * ratio2H, params.omega * ratio2H);
 
     // --- MARKET GENERATION ---
 
@@ -293,10 +299,26 @@ function runModel() {
         <tr><td>1H Away</td><td class="num-col prob-col">${(fh1x2.p2 * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(fh1x2.p2)}</td></tr>
     `;
 
+    // 1H Draw No Bet
+    const pDnbHome1H = fh1x2.p1 / (fh1x2.p1 + fh1x2.p2);
+    const pDnbAway1H = fh1x2.p2 / (fh1x2.p1 + fh1x2.p2);
+    document.getElementById('fhDnbTable').innerHTML = `
+        <tr><td>1H Home</td><td class="num-col prob-col">${(pDnbHome1H * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(pDnbHome1H)}</td></tr>
+        <tr><td>1H Away</td><td class="num-col prob-col">${(pDnbAway1H * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(pDnbAway1H)}</td></tr>
+    `;
+
     document.getElementById('sh1x2Table').innerHTML = `
         <tr><td>2H Home</td><td class="num-col prob-col">${(sh1x2.p1 * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(sh1x2.p1)}</td></tr>
         <tr><td>2H Draw</td><td class="num-col prob-col">${(sh1x2.pX * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(sh1x2.pX)}</td></tr>
         <tr><td>2H Away</td><td class="num-col prob-col">${(sh1x2.p2 * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(sh1x2.p2)}</td></tr>
+    `;
+
+    // 2H Draw No Bet
+    const pDnbHome2H = sh1x2.p1 / (sh1x2.p1 + sh1x2.p2);
+    const pDnbAway2H = sh1x2.p2 / (sh1x2.p1 + sh1x2.p2);
+    document.getElementById('shDnbTable').innerHTML = `
+        <tr><td>2H Home</td><td class="num-col prob-col">${(pDnbHome2H * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(pDnbHome2H)}</td></tr>
+        <tr><td>2H Away</td><td class="num-col prob-col">${(pDnbAway2H * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(pDnbAway2H)}</td></tr>
     `;
 
     // Detailed Markets (Delegated to markets.js)

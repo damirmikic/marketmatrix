@@ -98,6 +98,22 @@
                         <input type="number" id="underOdds" step="0.01" value="1.90" oninput="runModel()">
                     </div>
 
+                    <h3 style="margin-top: 15px; font-size: 0.95rem;">Half Goal Ratios</h3>
+                    <p style="font-size: 0.7rem; color: #64748b; margin-top: -8px; margin-bottom: 10px;">Goal
+                        distribution per half (default 45/55)</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label>1st Half %</label>
+                            <input type="number" id="ratio1H" step="1" value="45" min="30" max="70"
+                                onchange="syncRatio('1H'); runModel()" oninput="runModel()">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label>2nd Half %</label>
+                            <input type="number" id="ratio2H" step="1" value="55" min="30" max="70"
+                                onchange="syncRatio('2H'); runModel()" oninput="runModel()">
+                        </div>
+                    </div>
+
                     <h3 style="margin-top: 20px;">Reverse λ / μ</h3>
                     <div class="stat-grid">
                         <div class="stat-box">
@@ -480,6 +496,11 @@
                         <tbody id="fhGoalsTable"></tbody>
                     </table>
 
+                    <h3 style="margin-top: 20px;">1H Draw No Bet</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="fhDnbTable"></tbody>
+                    </table>
+
                     <div class="two-col-grid">
                         <div>
                             <h3 style="font-size: 0.9rem;">1H BTTS</h3>
@@ -538,6 +559,11 @@
                             </tr>
                         </thead>
                         <tbody id="shGoalsTable"></tbody>
+                    </table>
+
+                    <h3 style="margin-top: 20px;">2H Draw No Bet</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="shDnbTable"></tbody>
                     </table>
 
                     <div class="two-col-grid">
@@ -707,6 +733,20 @@
     <script>
         function toggleCard(id) {
             document.getElementById(id).classList.toggle('collapsed');
+        }
+
+        function syncRatio(changed) {
+            const r1H = document.getElementById('ratio1H');
+            const r2H = document.getElementById('ratio2H');
+            if (changed === '1H') {
+                let val = Math.max(30, Math.min(70, parseInt(r1H.value) || 45));
+                r1H.value = val;
+                r2H.value = 100 - val;
+            } else {
+                let val = Math.max(30, Math.min(70, parseInt(r2H.value) || 55));
+                r2H.value = val;
+                r1H.value = 100 - val;
+            }
         }
     </script>
     <script type="module" src="model.js"></script>
