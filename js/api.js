@@ -20,7 +20,9 @@ export async function initApiLoader() {
             countriesData = data.group.groups;
             let html = '<option value="">Select Country/Region</option>';
             countriesData.forEach((country, idx) => {
-                html += `<option value="${idx}">${country.name} (${country.eventCount || 0})</option>`;
+                if (country.eventCount > 0) {
+                    html += `<option value="${idx}">${country.name}</option>`;
+                }
             });
             countrySelect.innerHTML = html;
         }
@@ -44,13 +46,24 @@ export function handleCountryChange() {
     if (country && country.groups && country.groups.length > 0) {
         let html = '<option value="">Select Competition</option>';
         country.groups.forEach((league) => {
-            html += `<option value="${league.id}" data-term="${league.termKey || 'all'}">${league.name} (${league.eventCount || 0})</option>`;
+            const evCount = league.eventCount || 0;
+            const boCount = league.boCount || 0;
+
+            // Heuristic: Matches usually have many markets (1x2, Goals, etc.). 
+            // Outrights usually have 1 or very few markets.
+            // A calc-ready match needs at least ~3-5 basic markets.
+            // We exclude if average markets per event is very low (< 3).
+            const avgMarkets = evCount > 0 ? (boCount / evCount) : 0;
+
+            if (evCount > 0 && avgMarkets >= 3) {
+                html += `<option value="${league.id}" data-term="${league.termKey || 'all'}">${league.name}</option>`;
+            }
         });
         leagueSelect.innerHTML = html;
         leagueSelect.disabled = false;
     } else {
         // Handle cases where the country is actually a single league (e.g. Champions League)
-        leagueSelect.innerHTML = `<option value="${country.id}" data-term="all">Main Events (${country.eventCount || 0})</option>`;
+        leagueSelect.innerHTML = `<option value="${country.id}" data-term="all">Main Events</option>`;
         leagueSelect.disabled = false;
         handleLeagueChange(); // Jump straight to fetching
     }
@@ -83,8 +96,28 @@ export async function handleLeagueChange() {
             return;
         }
 
+        const validEvents = data.events.filter(item => {
+            const e = item.event;
+            // 1. Must have explicit Home and Away names (standard matches)
+            if (!e.homeName || !e.awayName) return false;
+
+            // 2. Filter out events where the main offer is "OT_UNTYPED" (Outrights/Season Bets)
+            if (item.betOffers && item.betOffers.length > 0) {
+                const firstOffer = item.betOffers[0];
+                if (firstOffer.outcomes && firstOffer.outcomes.every(o => o.type === 'OT_UNTYPED')) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        if (validEvents.length === 0) {
+            matchSelect.innerHTML = '<option value="">No matches found</option>';
+            return;
+        }
+
         let html = '<option value="">Select Match</option>';
-        data.events.forEach((item) => {
+        validEvents.forEach((item) => {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             html += `<option value="${e.id}">${e.name} (${startTime})</option>`;

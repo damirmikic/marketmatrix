@@ -62,7 +62,9 @@
                     <h2>1. Input Odds</h2>
                 </div>
                 <div class="card-content">
-                    <h3>1x2 Odds</h3>
+                    <h3>1x2 Odds <span id="oneWtMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
                     <div class="input-group">
                         <label>Home</label>
                         <input type="number" id="homeOdds" step="0.01" value="2.10" oninput="runModel()">
@@ -76,7 +78,9 @@
                         <input type="number" id="awayOdds" step="0.01" value="3.50" oninput="runModel()">
                     </div>
 
-                    <h3>Goal Line</h3>
+                    <h3>Goal Line <span id="goalsMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
                     <div class="input-group">
                         <label>Line</label>
                         <input type="number" id="goalLine" step="0.5" value="2.5" oninput="runModel()">
@@ -400,6 +404,48 @@
 
         <!-- COLUMN 3: INTERVAL MARKETS -->
         <div class="markets-content">
+            <!-- BET BUILDER BLOCK -->
+            <div class="card" id="betBuilderArea" style="margin-bottom: 20px; border: 1px solid #3b82f6;">
+                <div class="card-header" onclick="toggleCard('betBuilderArea')"
+                    style="background: rgba(59, 130, 246, 0.1);">
+                    <h2 style="color: #60a5fa;">★ Bet Builder</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <select id="bbMarketSelect"
+                            style="flex: 1; padding: 8px; border-radius: 6px; background: #0f172a; color: white; border: 1px solid var(--border);">
+                            <option value="1">Match Result: Home</option>
+                            <option value="X">Match Result: Draw</option>
+                            <option value="2">Match Result: Away</option>
+                            <option value="1X">Double Chance: 1X</option>
+                            <option value="12">Double Chance: 12</option>
+                            <option value="X2">Double Chance: X2</option>
+                            <option value="O25">Total Goals: Over...</option>
+                            <option value="U25">Total Goals: Under...</option>
+                            <option value="BTTS_Y">BTTS: Yes</option>
+                            <option value="BTTS_N">BTTS: No</option>
+                        </select>
+                        <button onclick="addBbLeg()"
+                            style="padding: 0 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Add</button>
+                    </div>
+
+                    <div id="bbLegsList"
+                        style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 10px;">
+                        <!-- Legs go here -->
+                        <div style="font-size: 0.8rem; color: #64748b; font-style: italic;">No selections added.</div>
+                    </div>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 10px; border-radius: 8px;">
+                        <div class="stat-label" style="font-size: 0.9rem;">Combined Odds</div>
+                        <div style="text-align: right;">
+                            <div class="stat-val" id="bbOdds" style="color: #60a5fa;">-</div>
+                            <div class="stat-sub-val" id="bbProb" style="color: #94a3b8;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 1ST HALF BLOCK -->
             <div class="card hidden" id="fhArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('fhArea')">

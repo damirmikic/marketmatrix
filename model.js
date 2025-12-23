@@ -25,6 +25,8 @@ import {
     setRunModelCallback
 } from './js/api.js';
 
+import { updateBuilderMatrices } from './js/bet_builder.js';
+
 // --- UI Helpers ---
 function toggleCard(id) {
     const el = document.getElementById(id);
@@ -67,6 +69,23 @@ function runModel() {
     // Update Labels
     document.getElementById('overLabel').textContent = `Over ${line} Odds`;
     document.getElementById('underLabel').textContent = `Under ${line} Odds`;
+
+    // Margin Calculation (1x2)
+    const margin = ((1 / h + 1 / d + 1 / a) - 1) * 100;
+    const marginEl = document.getElementById('oneWtMargin');
+    if (marginEl) {
+        marginEl.textContent = `Margin: ${margin.toFixed(2)}%`;
+        // Optional: color coding
+        marginEl.style.color = margin < 5 ? '#4ade80' : (margin < 8 ? '#facc15' : '#f87171');
+    }
+
+    // Margin Calculation (Goals)
+    const marginGoals = ((1 / o + 1 / u) - 1) * 100;
+    const marginGoalsEl = document.getElementById('goalsMargin');
+    if (marginGoalsEl) {
+        marginGoalsEl.textContent = `Margin: ${marginGoals.toFixed(2)}%`;
+        marginGoalsEl.style.color = marginGoals < 5 ? '#4ade80' : (marginGoals < 8 ? '#facc15' : '#f87171');
+    }
 
     // 1. Get True Probabilities (Shin Method)
     const true1x2 = solveShin([h, d, a]);
@@ -452,6 +471,9 @@ function runModel() {
     document.getElementById('drawComboTable').innerHTML = calculateJointCombos(matrixFH, matrixSH, 'draw');
     document.getElementById('dcComboTable').innerHTML = calculateJointCombos(matrixFH, matrixSH, 'dc');
     document.getElementById('htftComboTable').innerHTML = calculateJointCombos(matrixFH, matrixSH, 'htft');
+
+    // Update Bet Builder
+    updateBuilderMatrices(matrixFH, matrixSH);
 }
 
 // Make global
