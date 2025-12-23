@@ -98,7 +98,7 @@ function runModel() {
 
     // --- Show Markets Area ---
     ['marketsArea', 'firstHalfArea', 'secondHalfArea', 'teamTotalsArea',
-        'marginArea', 'halfDNBArea', 'specialsArea'].forEach(id => {
+        'marginArea', 'specialsArea'].forEach(id => {
             document.getElementById(id).classList.remove('hidden');
         });
 

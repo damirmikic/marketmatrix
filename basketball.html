@@ -246,6 +246,18 @@
                         </thead>
                         <tbody id="secondHalfTotalTable"></tbody>
                     </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">2H Draw No Bet</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnb2HHome">-</div>
+                            <div class="stat-label">Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnb2HAway">-</div>
+                            <div class="stat-label">Away</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -303,41 +315,10 @@
                 </div>
             </div>
 
-            <!-- HALF DRAW NO BET -->
-            <div class="card hidden" id="halfDNBArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('halfDNBArea')">
-                    <h2>7. Half Draw No Bet</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">1st Half DNB</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 15px;">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="dnb1HHome">-</div>
-                            <div class="stat-label">Home</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="dnb1HAway">-</div>
-                            <div class="stat-label">Away</div>
-                        </div>
-                    </div>
-                    <h3 style="font-size: 0.9rem;">2nd Half DNB</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="dnb2HHome">-</div>
-                            <div class="stat-label">Home</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="dnb2HAway">-</div>
-                            <div class="stat-label">Away</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- ODD/EVEN & SPECIALS -->
             <div class="card hidden" id="specialsArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('specialsArea')">
-                    <h2>8. Specials</h2>
+                    <h2>7. Specials</h2>
                 </div>
                 <div class="card-content">
                     <h3 style="font-size: 0.9rem;">Total Points Odd/Even</h3>
