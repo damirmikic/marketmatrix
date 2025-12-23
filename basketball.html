@@ -109,6 +109,24 @@
                         <input type="number" id="underOdds" step="0.01" value="1.91" oninput="runModel()">
                     </div>
 
+                    <h3 style="margin-top: 15px;">Quarter Ratios (Total = 1.00)</h3>
+                    <div class="input-group">
+                        <label>Q1 Ratio</label>
+                        <input type="number" id="q1Ratio" step="0.01" value="0.25" oninput="runModel()" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Q2 Ratio</label>
+                        <input type="number" id="q2Ratio" step="0.01" value="0.25" oninput="runModel()" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Q3 Ratio</label>
+                        <input type="number" id="q3Ratio" step="0.01" value="0.25" oninput="runModel()" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Q4 Ratio</label>
+                        <input type="number" id="q4Ratio" step="0.01" value="0.25" oninput="runModel()" min="0" max="1">
+                    </div>
+
                     <h3 style="margin-top: 15px;">Derived Parameters</h3>
                     <div class="stat-grid">
                         <div class="stat-box">
@@ -260,6 +278,183 @@
                     </div>
                 </div>
             </div>
+
+            <!-- QUARTER MARKETS -->
+            <!-- Q1 MARKETS -->
+            <div class="card hidden" id="q1Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('q1Area')">
+                    <h2>5. Q1 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Q1 Point Spread</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Home</th>
+                                <th class="num-col">Away</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q1SpreadTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q1 Total Points</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q1TotalTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q1 Draw No Bet</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ1Home">-</div>
+                            <div class="stat-label">Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ1Away">-</div>
+                            <div class="stat-label">Away</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q2 MARKETS -->
+            <div class="card hidden" id="q2Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('q2Area')">
+                    <h2>6. Q2 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Q2 Point Spread</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Home</th>
+                                <th class="num-col">Away</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q2SpreadTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q2 Total Points</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q2TotalTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q2 Draw No Bet</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ2Home">-</div>
+                            <div class="stat-label">Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ2Away">-</div>
+                            <div class="stat-label">Away</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q3 MARKETS -->
+            <div class="card hidden" id="q3Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('q3Area')">
+                    <h2>7. Q3 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Q3 Point Spread</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Home</th>
+                                <th class="num-col">Away</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q3SpreadTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q3 Total Points</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q3TotalTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q3 Draw No Bet</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ3Home">-</div>
+                            <div class="stat-label">Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ3Away">-</div>
+                            <div class="stat-label">Away</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q4 MARKETS -->
+            <div class="card hidden" id="q4Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('q4Area')">
+                    <h2>8. Q4 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Q4 Point Spread</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Home</th>
+                                <th class="num-col">Away</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q4SpreadTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q4 Total Points</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="q4TotalTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem; margin-top: 20px;">Q4 Draw No Bet</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ4Home">-</div>
+                            <div class="stat-label">Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="dnbQ4Away">-</div>
+                            <div class="stat-label">Away</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- COLUMN 3: ADDITIONAL MARKETS -->
@@ -267,7 +462,7 @@
             <!-- TEAM TOTALS -->
             <div class="card hidden" id="teamTotalsArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('teamTotalsArea')">
-                    <h2>5. Team Totals</h2>
+                    <h2>9. Team Totals</h2>
                 </div>
                 <div class="card-content">
                     <h3 style="font-size: 0.9rem;">Home Team Total Points</h3>
@@ -299,7 +494,7 @@
             <!-- WINNING MARGIN -->
             <div class="card hidden" id="marginArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('marginArea')">
-                    <h2>6. Winning Margin</h2>
+                    <h2>10. Winning Margin</h2>
                 </div>
                 <div class="card-content">
                     <table>
@@ -318,7 +513,7 @@
             <!-- ODD/EVEN & SPECIALS -->
             <div class="card hidden" id="specialsArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('specialsArea')">
-                    <h2>7. Specials</h2>
+                    <h2>11. Specials</h2>
                 </div>
                 <div class="card-content">
                     <h3 style="font-size: 0.9rem;">Total Points Odd/Even</h3>
@@ -336,7 +531,7 @@
             <!-- HALFTIME/FULLTIME -->
             <div class="card hidden" id="halftimeFulltimeArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('halftimeFulltimeArea')">
-                    <h2>8. Halftime/Fulltime</h2>
+                    <h2>12. Halftime/Fulltime</h2>
                 </div>
                 <div class="card-content">
                     <table>
@@ -355,7 +550,7 @@
             <!-- WINNER & TOTAL -->
             <div class="card hidden" id="winnerTotalArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('winnerTotalArea')">
-                    <h2>9. Winner &amp; Total (incl. OT)</h2>
+                    <h2>13. Winner &amp; Total (incl. OT)</h2>
                 </div>
                 <div class="card-content">
                     <table>
@@ -374,7 +569,7 @@
             <!-- HANDICAP & TOTAL -->
             <div class="card hidden" id="handicapTotalArea" style="margin-bottom: 20px;">
                 <div class="card-header" onclick="toggleCard('handicapTotalArea')">
-                    <h2>10. Handicap &amp; Total (incl. OT)</h2>
+                    <h2>14. Handicap &amp; Total (incl. OT)</h2>
                 </div>
                 <div class="card-content">
                     <table>

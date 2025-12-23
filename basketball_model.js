@@ -38,6 +38,16 @@ function runModel() {
     const totalLine = parseFloat(document.getElementById('totalLine').value);
     const overOdds = parseFloat(document.getElementById('overOdds').value);
     const underOdds = parseFloat(document.getElementById('underOdds').value);
+    
+    // Get Quarter Ratios
+    const q1Ratio = parseFloat(document.getElementById('q1Ratio').value) || 0.25;
+    const q2Ratio = parseFloat(document.getElementById('q2Ratio').value) || 0.25;
+    const q3Ratio = parseFloat(document.getElementById('q3Ratio').value) || 0.25;
+    const q4Ratio = parseFloat(document.getElementById('q4Ratio').value) || 0.25;
+    
+    // Calculate half ratios from quarter ratios
+    const halfRatio1H = q1Ratio + q2Ratio;
+    const halfRatio2H = q3Ratio + q4Ratio;
 
     // Basic validation
     if ([hOdds, aOdds, totalLine, overOdds, underOdds].some(isNaN)) return;
@@ -97,8 +107,8 @@ function runModel() {
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(1);
 
     // --- Show Markets Area ---
-    ['marketsArea', 'firstHalfArea', 'secondHalfArea', 'teamTotalsArea',
-        'marginArea', 'specialsArea', 'halftimeFulltimeArea', 'winnerTotalArea',
+    ['marketsArea', 'firstHalfArea', 'secondHalfArea', 'q1Area', 'q2Area', 'q3Area', 'q4Area',
+        'teamTotalsArea', 'marginArea', 'specialsArea', 'halftimeFulltimeArea', 'winnerTotalArea',
         'handicapTotalArea'].forEach(id => {
             document.getElementById(id).classList.remove('hidden');
         });
@@ -224,10 +234,7 @@ function runModel() {
     document.getElementById('awayTeamTotalTable').innerHTML = awayTeamHtml;
 
     // --- HALF MARKETS ---
-    // 1st half is approximately 48% of game, 2nd half 52%
-    const halfRatio1H = 0.48;
-    const halfRatio2H = 0.52;
-
+    // Use calculated ratios from quarter inputs
     // 1H expected spread and total
     const spread1H = roundedBaseSpread * halfRatio1H;
     const total1H = expectedTotal * halfRatio1H;
@@ -295,6 +302,59 @@ function runModel() {
         </tr>`;
     });
     document.getElementById('secondHalfTotalTable').innerHTML = total2HHtml;
+
+    // --- QUARTER MARKETS ---
+    // Generate markets for each quarter using the quarter ratios
+    const quarters = [
+        { ratio: q1Ratio, name: 'Q1', spreadTableId: 'q1SpreadTable', totalTableId: 'q1TotalTable', dnbHomeId: 'dnbQ1Home', dnbAwayId: 'dnbQ1Away' },
+        { ratio: q2Ratio, name: 'Q2', spreadTableId: 'q2SpreadTable', totalTableId: 'q2TotalTable', dnbHomeId: 'dnbQ2Home', dnbAwayId: 'dnbQ2Away' },
+        { ratio: q3Ratio, name: 'Q3', spreadTableId: 'q3SpreadTable', totalTableId: 'q3TotalTable', dnbHomeId: 'dnbQ3Home', dnbAwayId: 'dnbQ3Away' },
+        { ratio: q4Ratio, name: 'Q4', spreadTableId: 'q4SpreadTable', totalTableId: 'q4TotalTable', dnbHomeId: 'dnbQ4Home', dnbAwayId: 'dnbQ4Away' }
+    ];
+
+    quarters.forEach(quarter => {
+        // Expected spread and total for this quarter
+        const spreadQ = roundedBaseSpread * quarter.ratio;
+        const totalQ = expectedTotal * quarter.ratio;
+        
+        // Round to half points
+        const spreadQBase = Math.floor(spreadQ * 2) / 2 + 0.5;
+        const totalQBase = Math.floor(totalQ) + 0.5;
+
+        // Generate Quarter Spread table (4 lines on half points)
+        const spreadQLines = [spreadQBase - 1.5, spreadQBase - 0.5, spreadQBase + 0.5, spreadQBase + 1.5]
+            .filter(l => Math.abs(l) !== 0.5);
+        let spreadQHtml = '';
+        spreadQLines.forEach(line => {
+            const probShift = (line - spreadQBase) * 0.08;
+            let pHome = Math.max(0.05, Math.min(0.95, fairSpreadH + probShift));
+            spreadQHtml += `<tr>
+                <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
+                <td class="num-col">${probToOdds(pHome)}</td>
+                <td class="num-col">${probToOdds(1 - pHome)}</td>
+            </tr>`;
+        });
+        document.getElementById(quarter.spreadTableId).innerHTML = spreadQHtml;
+
+        // Generate Quarter Total table (4 lines on half points)
+        const totalQLines = [totalQBase - 1.5, totalQBase - 0.5, totalQBase + 0.5, totalQBase + 1.5];
+        let totalQHtml = '';
+        totalQLines.forEach(line => {
+            const probShift = (line - totalQBase) * 0.06;
+            let pOverQ = Math.max(0.05, Math.min(0.95, 0.5 - probShift));
+            totalQHtml += `<tr>
+                <td class="line-col">${line.toFixed(1)}</td>
+                <td class="num-col">${probToOdds(pOverQ)}</td>
+                <td class="num-col">${probToOdds(1 - pOverQ)}</td>
+            </tr>`;
+        });
+        document.getElementById(quarter.totalTableId).innerHTML = totalQHtml;
+
+        // Quarter DNB - who wins the quarter (excluding ties)
+        const pHomeQWins = Math.max(0.1, Math.min(0.9, fairSpreadH + (0 - spreadQBase) * 0.08));
+        document.getElementById(quarter.dnbHomeId).textContent = probToOdds(pHomeQWins);
+        document.getElementById(quarter.dnbAwayId).textContent = probToOdds(1 - pHomeQWins);
+    });
 
     // --- WINNING MARGIN ---
     // Based on home win prob and spread, estimate margin bands
