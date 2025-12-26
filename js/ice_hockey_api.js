@@ -294,6 +294,49 @@ function loadMatchData(item) {
             }
         }
 
+        // 4. Find Period 3 Winner (1X2)
+        const p3WinnerOffer = offers.find(bo => {
+            const crit = bo.criterion || {};
+            const label = (crit.englishLabel || crit.label || "").toLowerCase();
+            return (label.includes("period 3") || label.includes("3rd period"))
+                   && (label.includes("winner") || label.includes("1x2") || label.includes("three way"))
+                   && bo.outcomes && bo.outcomes.length === 3;
+        });
+
+        if (p3WinnerOffer) {
+            console.log("Period 3 Winner Market:", p3WinnerOffer.criterion.label);
+            const home = p3WinnerOffer.outcomes.find(o => o.type === "OT_ONE");
+            const draw = p3WinnerOffer.outcomes.find(o => o.type === "OT_CROSS");
+            const away = p3WinnerOffer.outcomes.find(o => o.type === "OT_TWO");
+
+            if (home) document.getElementById('p3HomeOdds').value = (home.odds / 1000).toFixed(2);
+            if (draw) document.getElementById('p3DrawOdds').value = (draw.odds / 1000).toFixed(2);
+            if (away) document.getElementById('p3AwayOdds').value = (away.odds / 1000).toFixed(2);
+        }
+
+        // 5. Find Period 3 Total Goals
+        const p3TotalOffer = offers.find(bo => {
+            const crit = bo.criterion || {};
+            const label = (crit.englishLabel || crit.label || "").toLowerCase();
+            return (label.includes("period 3") || label.includes("3rd period"))
+                   && (label.includes("total") || label.includes("over/under"))
+                   && bo.outcomes && bo.outcomes.length === 2;
+        });
+
+        if (p3TotalOffer) {
+            console.log("Period 3 Total Goals Market:", p3TotalOffer.criterion.label);
+            const over = p3TotalOffer.outcomes.find(o => o.type === "OT_OVER");
+            const under = p3TotalOffer.outcomes.find(o => o.type === "OT_UNDER");
+
+            if (over && over.line !== undefined) {
+                document.getElementById('p3TotalLine').value = (over.line / 1000).toFixed(1);
+                document.getElementById('p3OverOdds').value = (over.odds / 1000).toFixed(2);
+            }
+            if (under) {
+                document.getElementById('p3UnderOdds').value = (under.odds / 1000).toFixed(2);
+            }
+        }
+
         // Run the model
         if (runModelCallback) runModelCallback();
         window.scrollTo({ top: 0, behavior: 'smooth' });

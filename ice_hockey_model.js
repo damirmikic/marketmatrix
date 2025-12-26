@@ -239,6 +239,14 @@ function runModel() {
     const overOdds = parseFloat(document.getElementById('overOdds').value);
     const underOdds = parseFloat(document.getElementById('underOdds').value);
 
+    // Get Period 3 API Markets
+    const p3HomeOdds = parseFloat(document.getElementById('p3HomeOdds').value);
+    const p3DrawOdds = parseFloat(document.getElementById('p3DrawOdds').value);
+    const p3AwayOdds = parseFloat(document.getElementById('p3AwayOdds').value);
+    const p3TotalLine = parseFloat(document.getElementById('p3TotalLine').value);
+    const p3OverOdds = parseFloat(document.getElementById('p3OverOdds').value);
+    const p3UnderOdds = parseFloat(document.getElementById('p3UnderOdds').value);
+
     // Get Period Ratios
     const p1Ratio = parseFloat(document.getElementById('p1Ratio').value) || 0.333;
     const p2Ratio = parseFloat(document.getElementById('p2Ratio').value) || 0.333;
@@ -250,6 +258,11 @@ function runModel() {
     // Update Labels
     document.getElementById('overLabel').textContent = `Over ${totalGoalsLine}`;
     document.getElementById('underLabel').textContent = `Under ${totalGoalsLine}`;
+
+    if (!isNaN(p3TotalLine)) {
+        document.getElementById('p3OverLabel').textContent = `Over ${p3TotalLine}`;
+        document.getElementById('p3UnderLabel').textContent = `Under ${p3TotalLine}`;
+    }
 
     // --- Margin Calculations ---
     const mlMargin = ((1 / hOdds + 1 / dOdds + 1 / aOdds) - 1) * 100;
@@ -273,6 +286,26 @@ function runModel() {
     if (totalMarginEl) {
         totalMarginEl.textContent = `Margin: ${totalMargin.toFixed(2)}%`;
         totalMarginEl.style.color = totalMargin < 5 ? '#4ade80' : (totalMargin < 8 ? '#facc15' : '#f87171');
+    }
+
+    // Period 3 Winner Margin
+    if (!isNaN(p3HomeOdds) && !isNaN(p3DrawOdds) && !isNaN(p3AwayOdds)) {
+        const p3WinMargin = ((1 / p3HomeOdds + 1 / p3DrawOdds + 1 / p3AwayOdds) - 1) * 100;
+        const p3WinMarginEl = document.getElementById('p3WinnerMargin');
+        if (p3WinMarginEl) {
+            p3WinMarginEl.textContent = `Margin: ${p3WinMargin.toFixed(2)}%`;
+            p3WinMarginEl.style.color = p3WinMargin < 5 ? '#4ade80' : (p3WinMargin < 8 ? '#facc15' : '#f87171');
+        }
+    }
+
+    // Period 3 Total Margin
+    if (!isNaN(p3OverOdds) && !isNaN(p3UnderOdds)) {
+        const p3TotalMargin = ((1 / p3OverOdds + 1 / p3UnderOdds) - 1) * 100;
+        const p3TotalMarginEl = document.getElementById('p3TotalMargin');
+        if (p3TotalMarginEl) {
+            p3TotalMarginEl.textContent = `Margin: ${p3TotalMargin.toFixed(2)}%`;
+            p3TotalMarginEl.style.color = p3TotalMargin < 5 ? '#4ade80' : (p3TotalMargin < 8 ? '#facc15' : '#f87171');
+        }
     }
 
     // --- Remove Vig (Get Fair Probabilities) ---
