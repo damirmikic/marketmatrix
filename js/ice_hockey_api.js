@@ -233,7 +233,7 @@ function loadMatchData(item) {
         const moneylineOffer = offers.find(bo => {
             const crit = bo.criterion || {};
             const label = (crit.englishLabel || crit.label || "").toLowerCase();
-            return (label.includes("match result") || label.includes("1x2") || label.includes("three way"))
+            return (label.includes("match odds") || label.includes("match result") || label.includes("1x2") || label.includes("three way"))
                    && bo.outcomes && bo.outcomes.length === 3;
         });
 
