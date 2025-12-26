@@ -113,38 +113,6 @@
                         <input type="number" id="underOdds" step="0.01" value="1.91" oninput="runModel()">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Period 3 Winner (1X2) <span id="p3WinnerMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
-                    <div class="input-group">
-                        <label>Home</label>
-                        <input type="number" id="p3HomeOdds" step="0.01" value="" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Draw</label>
-                        <input type="number" id="p3DrawOdds" step="0.01" value="" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Away</label>
-                        <input type="number" id="p3AwayOdds" step="0.01" value="" oninput="runModel()">
-                    </div>
-
-                    <h3 style="margin-top: 15px;">Period 3 Total Goals <span id="p3TotalMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
-                    <div class="input-group">
-                        <label>Line</label>
-                        <input type="number" id="p3TotalLine" step="0.5" value="" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label id="p3OverLabel">Over</label>
-                        <input type="number" id="p3OverOdds" step="0.01" value="" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label id="p3UnderLabel">Under</label>
-                        <input type="number" id="p3UnderOdds" step="0.01" value="" oninput="runModel()">
-                    </div>
-
                     <h3 style="margin-top: 15px;">Period Ratios (Total = 1.00)</h3>
                     <div class="input-group">
                         <label>Period 1</label>
@@ -496,6 +464,53 @@
                             </tr>
                         </thead>
                         <tbody id="p3TeamAwayTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PERIOD 3 DEDICATED MARKETS -->
+            <div class="card hidden" id="period3MarketsArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('period3MarketsArea')">
+                    <h2>Period 3 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Period 3 Winner (1X2)</h3>
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="period3_1x2Table"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Period 3 Total Goals</h3>
+                    <table style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="period3TotalTable"></tbody>
+                    </table>
+                    <p style="margin-top: 5px; margin-bottom: 15px; font-size: 0.8rem; color: #64748b;">
+                        Line: 1.5 if FT ≤ 5.5, otherwise 2.5
+                    </p>
+
+                    <h3 style="font-size: 0.9rem;">Period 3 Score Ranges</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Range</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="period3RangesTable"></tbody>
                     </table>
                 </div>
             </div>

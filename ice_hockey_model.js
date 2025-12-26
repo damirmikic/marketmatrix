@@ -239,14 +239,6 @@ function runModel() {
     const overOdds = parseFloat(document.getElementById('overOdds').value);
     const underOdds = parseFloat(document.getElementById('underOdds').value);
 
-    // Get Period 3 API Markets
-    const p3HomeOdds = parseFloat(document.getElementById('p3HomeOdds').value);
-    const p3DrawOdds = parseFloat(document.getElementById('p3DrawOdds').value);
-    const p3AwayOdds = parseFloat(document.getElementById('p3AwayOdds').value);
-    const p3TotalLine = parseFloat(document.getElementById('p3TotalLine').value);
-    const p3OverOdds = parseFloat(document.getElementById('p3OverOdds').value);
-    const p3UnderOdds = parseFloat(document.getElementById('p3UnderOdds').value);
-
     // Get Period Ratios
     const p1Ratio = parseFloat(document.getElementById('p1Ratio').value) || 0.333;
     const p2Ratio = parseFloat(document.getElementById('p2Ratio').value) || 0.333;
@@ -258,11 +250,6 @@ function runModel() {
     // Update Labels
     document.getElementById('overLabel').textContent = `Over ${totalGoalsLine}`;
     document.getElementById('underLabel').textContent = `Under ${totalGoalsLine}`;
-
-    if (!isNaN(p3TotalLine)) {
-        document.getElementById('p3OverLabel').textContent = `Over ${p3TotalLine}`;
-        document.getElementById('p3UnderLabel').textContent = `Under ${p3TotalLine}`;
-    }
 
     // --- Margin Calculations ---
     const mlMargin = ((1 / hOdds + 1 / dOdds + 1 / aOdds) - 1) * 100;
@@ -286,26 +273,6 @@ function runModel() {
     if (totalMarginEl) {
         totalMarginEl.textContent = `Margin: ${totalMargin.toFixed(2)}%`;
         totalMarginEl.style.color = totalMargin < 5 ? '#4ade80' : (totalMargin < 8 ? '#facc15' : '#f87171');
-    }
-
-    // Period 3 Winner Margin
-    if (!isNaN(p3HomeOdds) && !isNaN(p3DrawOdds) && !isNaN(p3AwayOdds)) {
-        const p3WinMargin = ((1 / p3HomeOdds + 1 / p3DrawOdds + 1 / p3AwayOdds) - 1) * 100;
-        const p3WinMarginEl = document.getElementById('p3WinnerMargin');
-        if (p3WinMarginEl) {
-            p3WinMarginEl.textContent = `Margin: ${p3WinMargin.toFixed(2)}%`;
-            p3WinMarginEl.style.color = p3WinMargin < 5 ? '#4ade80' : (p3WinMargin < 8 ? '#facc15' : '#f87171');
-        }
-    }
-
-    // Period 3 Total Margin
-    if (!isNaN(p3OverOdds) && !isNaN(p3UnderOdds)) {
-        const p3TotalMargin = ((1 / p3OverOdds + 1 / p3UnderOdds) - 1) * 100;
-        const p3TotalMarginEl = document.getElementById('p3TotalMargin');
-        if (p3TotalMarginEl) {
-            p3TotalMarginEl.textContent = `Margin: ${p3TotalMargin.toFixed(2)}%`;
-            p3TotalMarginEl.style.color = p3TotalMargin < 5 ? '#4ade80' : (p3TotalMargin < 8 ? '#facc15' : '#f87171');
-        }
     }
 
     // --- Remove Vig (Get Fair Probabilities) ---
@@ -339,8 +306,8 @@ function runModel() {
 
     // --- Show Markets Area ---
     ['marketsArea', 'puckLineArea', 'totalGoalsArea', 'periodMarketsArea',
-     'exactScoreArea', 'specialMarketsArea', 'teamTotalsArea', 'comboBetsArea',
-     'exactGoalsArea', 'spreadGoalsArea'].forEach(id => {
+     'period3MarketsArea', 'exactScoreArea', 'specialMarketsArea', 'teamTotalsArea',
+     'comboBetsArea', 'exactGoalsArea', 'spreadGoalsArea'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('hidden');
     });
@@ -525,6 +492,131 @@ function runModel() {
             document.getElementById(period.teamAwayId).innerHTML = periodTeamAwayHtml;
         }
     });
+
+    // --- PERIOD 3 DEDICATED MARKETS ---
+    const p3LambdaHome = lambdas.lambdaHome * p3Ratio;
+    const p3LambdaAway = lambdas.lambdaAway * p3Ratio;
+    const p3Matrix = generateMatrix(p3LambdaHome, p3LambdaAway, 10);
+
+    // Determine Period 3 total line based on full-time line
+    const p3TotalLine = totalGoalsLine <= 5.5 ? 1.5 : 2.5;
+
+    // Period 3 1X2
+    const p3Result = calc1X2FromMatrix(p3Matrix);
+    let p3_1x2Html = `
+        <tr>
+            <td>Home</td>
+            <td class="num-col prob-col">${(p3Result.homeWin * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(p3Result.homeWin)}</td>
+        </tr>
+        <tr>
+            <td>Draw</td>
+            <td class="num-col prob-col">${(p3Result.draw * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(p3Result.draw)}</td>
+        </tr>
+        <tr>
+            <td>Away</td>
+            <td class="num-col prob-col">${(p3Result.awayWin * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(p3Result.awayWin)}</td>
+        </tr>
+    `;
+    if (document.getElementById('period3_1x2Table')) {
+        document.getElementById('period3_1x2Table').innerHTML = p3_1x2Html;
+    }
+
+    // Period 3 Total Goals
+    const p3Total = calcTotalFromMatrix(p3Matrix, p3TotalLine);
+    let p3TotalHtml = `
+        <tr>
+            <td class="line-col">${p3TotalLine.toFixed(1)}</td>
+            <td class="num-col">${probToOdds(p3Total.over)}</td>
+            <td class="num-col">${probToOdds(p3Total.under)}</td>
+        </tr>
+    `;
+    if (document.getElementById('period3TotalTable')) {
+        document.getElementById('period3TotalTable').innerHTML = p3TotalHtml;
+    }
+
+    // Period 3 Exact Score Ranges (from image)
+    const p3ScoreRanges = [
+        // Individual totals
+        { label: '3', minH: 0, maxH: 3, minA: 0, maxA: 3, exact: 3 },
+        { label: '4', minH: 0, maxH: 4, minA: 0, maxA: 4, exact: 4 },
+        { label: '5', minH: 0, maxH: 5, minA: 0, maxA: 5, exact: 5 },
+        { label: '6', minH: 0, maxH: 6, minA: 0, maxA: 6, exact: 6 },
+        { label: '7', minH: 0, maxH: 7, minA: 0, maxA: 7, exact: 7 },
+        { label: '8', minH: 0, maxH: 8, minA: 0, maxA: 8, exact: 8 },
+        // Ranges starting with 2
+        { label: '2-3', minTotal: 2, maxTotal: 3 },
+        { label: '2-4', minTotal: 2, maxTotal: 4 },
+        { label: '2-5', minTotal: 2, maxTotal: 5 },
+        { label: '2-6', minTotal: 2, maxTotal: 6 },
+        { label: '2-7', minTotal: 2, maxTotal: 7 },
+        { label: '2-8', minTotal: 2, maxTotal: 8 },
+        { label: '2-9', minTotal: 2, maxTotal: 9 },
+        // Ranges starting with 3
+        { label: '3-4', minTotal: 3, maxTotal: 4 },
+        { label: '3-5', minTotal: 3, maxTotal: 5 },
+        { label: '3-6', minTotal: 3, maxTotal: 6 },
+        { label: '3-7', minTotal: 3, maxTotal: 7 },
+        { label: '3-8', minTotal: 3, maxTotal: 8 },
+        { label: '3-9', minTotal: 3, maxTotal: 9 },
+        // Ranges starting with 4
+        { label: '4-5', minTotal: 4, maxTotal: 5 },
+        { label: '4-6', minTotal: 4, maxTotal: 6 },
+        { label: '4-7', minTotal: 4, maxTotal: 7 },
+        { label: '4-8', minTotal: 4, maxTotal: 8 },
+        { label: '4-9', minTotal: 4, maxTotal: 9 },
+        // Ranges starting with 5
+        { label: '5-6', minTotal: 5, maxTotal: 6 },
+        { label: '5-7', minTotal: 5, maxTotal: 7 },
+        { label: '5-8', minTotal: 5, maxTotal: 8 },
+        { label: '5-9', minTotal: 5, maxTotal: 9 },
+        // Ranges starting with 6
+        { label: '6-7', minTotal: 6, maxTotal: 7 },
+        { label: '6-8', minTotal: 6, maxTotal: 8 },
+        { label: '6-9', minTotal: 6, maxTotal: 9 },
+        // Ranges starting with 7
+        { label: '7-8', minTotal: 7, maxTotal: 8 },
+        { label: '7-9', minTotal: 7, maxTotal: 9 },
+        // Last range
+        { label: '8-9', minTotal: 8, maxTotal: 9 }
+    ];
+
+    let p3RangesHtml = '';
+    p3ScoreRanges.forEach(range => {
+        let prob = 0;
+
+        if (range.exact !== undefined) {
+            // Exact total goals
+            for (let h = 0; h <= 10; h++) {
+                for (let a = 0; a <= 10; a++) {
+                    if (h + a === range.exact) {
+                        prob += p3Matrix[h][a];
+                    }
+                }
+            }
+        } else {
+            // Range of totals
+            for (let h = 0; h <= 10; h++) {
+                for (let a = 0; a <= 10; a++) {
+                    const total = h + a;
+                    if (total >= range.minTotal && total <= range.maxTotal) {
+                        prob += p3Matrix[h][a];
+                    }
+                }
+            }
+        }
+
+        p3RangesHtml += `<tr>
+            <td>${range.label}</td>
+            <td class="num-col prob-col">${(prob * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(prob)}</td>
+        </tr>`;
+    });
+    if (document.getElementById('period3RangesTable')) {
+        document.getElementById('period3RangesTable').innerHTML = p3RangesHtml;
+    }
 
     // --- COMBO BET: 1X2 & Total (Regular Time) ---
     const comboResults = [];
