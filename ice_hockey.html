@@ -597,6 +597,66 @@
                     </table>
                 </div>
             </div>
+
+            <!-- COMBO BETS -->
+            <div class="card hidden" id="comboBetsArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('comboBetsArea')">
+                    <h2>9. Combo: 1X2 & Total</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Combo</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comboTable"></tbody>
+                    </table>
+                    <p style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
+                        Combined bets on match result AND total goals (regulation time)
+                    </p>
+                </div>
+            </div>
+
+            <!-- EXACT GOALS -->
+            <div class="card hidden" id="exactGoalsArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('exactGoalsArea')">
+                    <h2>10. Exact Total Goals</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Goals</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exactGoalsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SPREAD GOALS -->
+            <div class="card hidden" id="spreadGoalsArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('spreadGoalsArea')">
+                    <h2>11. Goal Ranges</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Range</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spreadGoalsTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
