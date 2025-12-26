@@ -167,10 +167,10 @@
         <div class="main-content">
             <div class="card hidden" id="marketsArea">
                 <div class="card-header" onclick="toggleCard('marketsArea')">
-                    <h2>2. Match Result (1X2)</h2>
+                    <h2>2. Moneyline (incl. OT)</h2>
                 </div>
                 <div class="card-content">
-                    <h3>Fair Odds</h3>
+                    <h3>Fair Odds (Regulation 1X2)</h3>
                     <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
                         <div class="stat-box">
                             <div class="stat-val prob-val" id="fairHome">-</div>
@@ -186,17 +186,20 @@
                         </div>
                     </div>
 
-                    <h3 style="margin-top: 20px;">Match Result Probabilities</h3>
+                    <h3 style="margin-top: 20px;">Moneyline (Including OT/Shootout)</h3>
                     <table>
                         <thead>
                             <tr>
-                                <th>Outcome</th>
+                                <th>Team</th>
                                 <th class="num-col">Prob</th>
                                 <th class="num-col">Odds</th>
                             </tr>
                         </thead>
-                        <tbody id="matchResultTable"></tbody>
+                        <tbody id="moneylineTable"></tbody>
                     </table>
+                    <p style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
+                        OT/Shootout edge flattened by 25% (3v3 OT higher variance, shootouts nearly 50/50)
+                    </p>
                 </div>
             </div>
 

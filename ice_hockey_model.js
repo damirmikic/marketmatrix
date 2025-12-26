@@ -116,6 +116,7 @@ function calcHandicap(matrix, line) {
     let homeCovers = 0;
     const maxGoals = matrix.length - 1;
 
+    // 1. Calculate Standard Poisson Probability
     for (let h = 0; h <= maxGoals; h++) {
         for (let a = 0; a <= maxGoals; a++) {
             if (h + line > a) {
@@ -124,7 +125,51 @@ function calcHandicap(matrix, line) {
         }
     }
 
+    // 2. EMPTY NET ADJUSTMENT (The "Hockey Factor")
+    // When leading by 1 goal late, losing team pulls goalie
+    // ~15% of 1-goal leads turn into 2-goal wins via empty net
+    const EN_FACTOR = 0.15;
+
+    // Calculate probability of exactly 1-goal win for Home and Away
+    let probHomeWinBy1 = 0;
+    let probAwayWinBy1 = 0;
+
+    for (let i = 0; i < maxGoals; i++) {
+        if (i + 1 <= maxGoals) probHomeWinBy1 += matrix[i + 1][i]; // 1-0, 2-1, 3-2...
+        if (i + 1 <= maxGoals) probAwayWinBy1 += matrix[i][i + 1]; // 0-1, 1-2, 2-3...
+    }
+
+    if (line === -1.5) {
+        // Home is favorite. Shift from "Win by 1" to "Win by 2+"
+        homeCovers += (probHomeWinBy1 * EN_FACTOR);
+    } else if (line === 1.5) {
+        // Away is favorite. Home covers if losing by ≤1
+        // But some "Lose by 1" become "Lose by 2" (empty net against)
+        homeCovers -= (probAwayWinBy1 * EN_FACTOR);
+    } else if (line === -2.5) {
+        // Less impact, but still some boost from multi-goal empty nets
+        homeCovers += (probHomeWinBy1 * EN_FACTOR * 0.5);
+    } else if (line === 2.5) {
+        homeCovers -= (probAwayWinBy1 * EN_FACTOR * 0.5);
+    }
+
     return { homeCovers, awayCovers: 1 - homeCovers };
+}
+
+// Calculate Moneyline including OT/Shootout
+function calcMoneylineOT(regulation1X2) {
+    const { homeWin, draw, awayWin } = regulation1X2;
+
+    // In OT/Shootout, the superior team's edge is reduced
+    // OT is 3v3 (higher variance), Shootouts are nearly 50/50
+    // We flatten the regulation edge by ~25% for the OT portion
+    const regHomeStrength = homeWin / (homeWin + awayWin);
+    const otHomeStrength = 0.5 + (regHomeStrength - 0.5) * 0.75; // Flatten edge
+
+    const homeML = homeWin + (draw * otHomeStrength);
+    const awayML = awayWin + (draw * (1 - otHomeStrength));
+
+    return { homeML, awayML };
 }
 
 // --- Lambda Solver (Gradient Descent) ---
@@ -266,51 +311,33 @@ function runModel() {
         if (el) el.classList.remove('hidden');
     });
 
-    // --- Match Result (1X2) ---
+    // --- Calculate regulation 1X2 for Moneyline (incl OT) ---
     const result1X2 = calc1X2FromMatrix(matrixFT);
-    let matchResultHtml = `
+
+    // --- Moneyline (Including OT/Shootout) ---
+    const moneylineOT = calcMoneylineOT(result1X2);
+    let moneylineHtml = `
         <tr>
-            <td>Home Win</td>
-            <td class="num-col prob-col">${(result1X2.homeWin * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(result1X2.homeWin)}</td>
+            <td>Home</td>
+            <td class="num-col prob-col">${(moneylineOT.homeML * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(moneylineOT.homeML)}</td>
         </tr>
         <tr>
-            <td>Draw</td>
-            <td class="num-col prob-col">${(result1X2.draw * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(result1X2.draw)}</td>
-        </tr>
-        <tr>
-            <td>Away Win</td>
-            <td class="num-col prob-col">${(result1X2.awayWin * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(result1X2.awayWin)}</td>
+            <td>Away</td>
+            <td class="num-col prob-col">${(moneylineOT.awayML * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(moneylineOT.awayML)}</td>
         </tr>
     `;
-    document.getElementById('matchResultTable').innerHTML = matchResultHtml;
+    document.getElementById('moneylineTable').innerHTML = moneylineHtml;
 
     // --- Puck Line (Handicap) ---
-    // Only use half-point lines to avoid push scenarios
-    // Exclude -0.5 and +0.5 as they're too close to pick'em
-    const basePuckLine = !isNaN(puckLine) ? puckLine : -1.5;
-
-    // Round base to nearest half-point
-    const roundedBase = Math.round(basePuckLine * 2) / 2;
-
-    const puckLines = [];
-    for (let i = -3; i <= 3; i++) {
-        const line = roundedBase + (i * 0.5);
-        // Only include half-point lines (ends in .5)
-        // Exclude -0.5 and +0.5
-        if (Math.abs(line % 1) === 0.5 && Math.abs(line) > 0.5) {
-            puckLines.push(line);
-        }
-    }
+    // Generate specific lines with empty net adjustments
+    const puckLines = [-3.5, -2.5, -1.5, 1.5, 2.5, 3.5];
 
     let puckLineHtml = '';
     puckLines.forEach(line => {
         const result = calcHandicap(matrixFT, line);
-        const isBaseLine = Math.abs(line - basePuckLine) < 0.3;
-        const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
-        puckLineHtml += `<tr${rowStyle}>
+        puckLineHtml += `<tr>
             <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
             <td class="num-col">${probToOdds(result.homeCovers)}</td>
             <td class="num-col">${probToOdds(result.awayCovers)}</td>
