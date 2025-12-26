@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Hockey | MarketMatrix</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- LEFT COLUMN: API LOADER & INPUTS -->
+        <div class="sidebar-column">
+            <!-- CONTROLS -->
+            <a href="index.html"
+                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+                &larr; Home
+            </a>
+            <button id="toggleAllBtn" onclick="toggleAllCards()" style="margin-top: 0; margin-bottom: 20px;">Collapse
+                All</button>
+
+            <!-- API MATCH LOADER -->
+            <div class="card" id="apiMatchLoader" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('apiMatchLoader')">
+                    <h2>0. Select Match</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COUNTRY
+                                / REGION</label>
+                            <select id="apiCountrySelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COMPETITION</label>
+                            <select id="apiLeagueSelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;"
+                                disabled>
+                                <option value="">Select country</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
+                            <select id="apiMatchSelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;"
+                                disabled>
+                                <option value="">Select competition</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INPUT ODDS -->
+            <div class="card" id="inputCard">
+                <div class="card-header" onclick="toggleCard('inputCard')">
+                    <h2>1. Input Odds</h2>
+                </div>
+                <div class="card-content">
+                    <h3>Match Result (1X2) <span id="moneylineMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
+                    <div class="input-group">
+                        <label>Home</label>
+                        <input type="number" id="homeOdds" step="0.01" value="2.10" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Draw</label>
+                        <input type="number" id="drawOdds" step="0.01" value="3.80" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Away</label>
+                        <input type="number" id="awayOdds" step="0.01" value="3.00" oninput="runModel()">
+                    </div>
+
+                    <h3>Puck Line <span id="puckLineMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
+                    <div class="input-group">
+                        <label>Line</label>
+                        <input type="number" id="puckLine" step="0.5" value="-1.5" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Home Odds</label>
+                        <input type="number" id="puckHomeOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Away Odds</label>
+                        <input type="number" id="puckAwayOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+
+                    <h3>Total Goals <span id="totalGoalsMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
+                    <div class="input-group">
+                        <label>Line</label>
+                        <input type="number" id="totalGoalsLine" step="0.5" value="5.5" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label id="overLabel">Over</label>
+                        <input type="number" id="overOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label id="underLabel">Under</label>
+                        <input type="number" id="underOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+
+                    <h3 style="margin-top: 15px;">Period Ratios (Total = 1.00)</h3>
+                    <div class="input-group">
+                        <label>Period 1</label>
+                        <input type="number" id="p1Ratio" step="0.001" value="0.333" oninput="runModel()" min="0"
+                            max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Period 2</label>
+                        <input type="number" id="p2Ratio" step="0.001" value="0.333" oninput="runModel()" min="0"
+                            max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Period 3</label>
+                        <input type="number" id="p3Ratio" step="0.001" value="0.334" oninput="runModel()" min="0"
+                            max="1">
+                    </div>
+
+                    <h3 style="margin-top: 15px;">Derived Parameters</h3>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-val" id="homeWinProb">-</div>
+                            <div class="stat-label">Home %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="drawProb">-</div>
+                            <div class="stat-label">Draw %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="awayWinProb">-</div>
+                            <div class="stat-label">Away %</div>
+                        </div>
+                    </div>
+                    <div class="stat-grid" style="margin-top: 10px;">
+                        <div class="stat-box">
+                            <div class="stat-val" id="expectedTotal">-</div>
+                            <div class="stat-label">Exp. Goals</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="lambdaHome">-</div>
+                            <div class="stat-label">λ Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="lambdaAway">-</div>
+                            <div class="stat-label">λ Away</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: MAIN MARKETS -->
+        <div class="main-content">
+            <div class="card hidden" id="marketsArea">
+                <div class="card-header" onclick="toggleCard('marketsArea')">
+                    <h2>2. Match Result (1X2)</h2>
+                </div>
+                <div class="card-content">
+                    <h3>Fair Odds</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="fairHome">-</div>
+                            <div class="stat-label">Home</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="fairDraw">-</div>
+                            <div class="stat-label">Draw</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="fairAway">-</div>
+                            <div class="stat-label">Away</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">Match Result Probabilities</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matchResultTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PUCK LINE MARKETS -->
+            <div class="card hidden" id="puckLineArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('puckLineArea')">
+                    <h2>3. Puck Line (Handicap)</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Home</th>
+                                <th class="num-col">Away</th>
+                            </tr>
+                        </thead>
+                        <tbody id="puckLineTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TOTAL GOALS MARKETS -->
+            <div class="card hidden" id="totalGoalsArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('totalGoalsArea')">
+                    <h2>4. Total Goals</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="totalGoalsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PERIOD MARKETS -->
+            <div class="card hidden" id="periodMarketsArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('periodMarketsArea')">
+                    <h2>5. Period Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Period 1 Winner</h3>
+                    <table style="margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p1WinTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Period 1 Total Goals</h3>
+                    <table style="margin-bottom: 30px;">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p1TotalTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Period 2 Winner</h3>
+                    <table style="margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p2WinTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Period 2 Total Goals</h3>
+                    <table style="margin-bottom: 30px;">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p2TotalTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Period 3 Winner</h3>
+                    <table style="margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p3WinTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Period 3 Total Goals</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p3TotalTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: ADDITIONAL MARKETS -->
+        <div class="markets-content">
+            <!-- EXACT SCORE -->
+            <div class="card hidden" id="exactScoreArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('exactScoreArea')">
+                    <h2>6. Exact Score (Top 20)</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Score</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exactScoreTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SPECIAL MARKETS -->
+            <div class="card hidden" id="specialMarketsArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('specialMarketsArea')">
+                    <h2>7. Special Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Both Teams To Score</h3>
+                    <table style="margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bttsTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Double Chance</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doubleChanceTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCard(id) {
+            document.getElementById(id).classList.toggle('collapsed');
+        }
+
+        function toggleAllCards() {
+            const cards = document.querySelectorAll('.card');
+            const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
+            cards.forEach(c => c.classList.toggle('collapsed', !allCollapsed));
+            document.getElementById('toggleAllBtn').textContent = allCollapsed ? 'Collapse All' : 'Expand All';
+        }
+    </script>
+    <script type="module" src="ice_hockey_model.js"></script>
+</body>
+
+</html>
