@@ -1,7 +1,7 @@
 // Ice Hockey API Module
 // Fetches matches from Kambi and organizes them by Country > Competition > Events
 
-const ICE_HOCKEY_URL = "https://eu-offering-api.kambicdn.com/offering/v2018/kambi/listView/ice-hockey/all/all/all/matches.json?lang=en_GB&market=LV&client_id=2&channel_id=1&ncid=1734979200000&useCombined=true&useCombinedLive=true";
+const ICE_HOCKEY_URL = "https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/ice_hockey/all/all/all/matches.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true";
 
 let iceHockeyData = {
     countries: [],    // { name, termKey, competitions: [...] }
