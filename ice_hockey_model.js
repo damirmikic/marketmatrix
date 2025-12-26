@@ -1,5 +1,5 @@
 // Ice Hockey Model
-// Main controller for ice hockey probability calculations
+// Advanced probability calculations with gradient descent solver
 
 import {
     initIceHockeyLoader,
@@ -9,67 +9,176 @@ import {
     setRunModelCallback
 } from './js/ice_hockey_api.js';
 
-// --- Utility Functions ---
+// --- Statistical Helper Functions ---
+
+// Memoized factorial function
+const factorialCache = {};
+function factorial(n) {
+    if (n === 0 || n === 1) return 1;
+    if (factorialCache[n]) return factorialCache[n];
+
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+        result *= i;
+    }
+    factorialCache[n] = result;
+    return result;
+}
+
+// Poisson Probability Mass Function
+function poissonPMF(k, lambda) {
+    if (lambda <= 0) return k === 0 ? 1 : 0;
+    if (k < 0) return 0;
+
+    // Using log-space for numerical stability
+    const logProb = k * Math.log(lambda) - lambda - Math.log(factorial(k));
+    return Math.exp(logProb);
+}
+
+// --- Probability Functions ---
+
 function probToOdds(p) {
     if (p <= 0) return "---";
     if (p >= 1) return "1.00";
     return (1 / p).toFixed(2);
 }
 
-// Simple Shin method for 3-way market (1X2)
-function solveShin3Way(odds) {
+// Remove vig (bookmaker margin) - proportional method
+function removeVig(odds) {
     const impliedProbs = odds.map(o => 1 / o);
     const total = impliedProbs.reduce((a, b) => a + b, 0);
-
-    // For 3-way, simple proportional adjustment
     const fairProbs = impliedProbs.map(p => p / total);
     return fairProbs;
 }
 
-// Simple Shin method for 2-way market
-function solveShin2Way(odds) {
-    const impliedProbs = odds.map(o => 1 / o);
-    const total = impliedProbs.reduce((a, b) => a + b, 0);
+// --- Matrix Generation ---
 
-    const fairProbs = impliedProbs.map(p => p / total);
-    return fairProbs;
-}
-
-// Poisson probability mass function
-function poisson(lambda, k) {
-    if (lambda <= 0) return k === 0 ? 1 : 0;
-    let prob = Math.exp(-lambda);
-    for (let i = 1; i <= k; i++) {
-        prob *= lambda / i;
-    }
-    return prob;
-}
-
-// Calculate score matrix using Poisson distribution
-function calculateScoreMatrix(lambdaHome, lambdaAway, maxGoals = 10) {
+function generateMatrix(lambdaHome, lambdaAway, maxGoals = 14) {
     const matrix = [];
+    let totalProb = 0;
+
+    // Generate initial matrix
     for (let h = 0; h <= maxGoals; h++) {
         matrix[h] = [];
         for (let a = 0; a <= maxGoals; a++) {
-            matrix[h][a] = poisson(lambdaHome, h) * poisson(lambdaAway, a);
+            matrix[h][a] = poissonPMF(h, lambdaHome) * poissonPMF(a, lambdaAway);
+            totalProb += matrix[h][a];
         }
     }
+
+    // Normalize to ensure sum = 1.0
+    if (totalProb > 0 && Math.abs(totalProb - 1.0) > 0.001) {
+        for (let h = 0; h <= maxGoals; h++) {
+            for (let a = 0; a <= maxGoals; a++) {
+                matrix[h][a] /= totalProb;
+            }
+        }
+    }
+
     return matrix;
 }
 
-// Estimate lambda values from 1X2 odds and total goals
-function estimateLambdas(homeProb, drawProb, awayProb, expectedTotal) {
-    // Simple estimation based on win probabilities and expected total
-    // Home advantage factor
-    const homeAdvantage = (homeProb - awayProb) * 0.5;
+// --- Market Calculations from Matrix ---
 
-    const lambdaHome = (expectedTotal / 2) + homeAdvantage;
-    const lambdaAway = (expectedTotal / 2) - homeAdvantage;
+function calc1X2FromMatrix(matrix) {
+    let homeWin = 0, draw = 0, awayWin = 0;
+    const maxGoals = matrix.length - 1;
 
-    return {
-        lambdaHome: Math.max(0.5, lambdaHome),
-        lambdaAway: Math.max(0.5, lambdaAway)
-    };
+    for (let h = 0; h <= maxGoals; h++) {
+        for (let a = 0; a <= maxGoals; a++) {
+            if (h > a) homeWin += matrix[h][a];
+            else if (h === a) draw += matrix[h][a];
+            else awayWin += matrix[h][a];
+        }
+    }
+
+    return { homeWin, draw, awayWin };
+}
+
+function calcTotalFromMatrix(matrix, line) {
+    let over = 0;
+    const maxGoals = matrix.length - 1;
+
+    for (let h = 0; h <= maxGoals; h++) {
+        for (let a = 0; a <= maxGoals; a++) {
+            if (h + a > line) {
+                over += matrix[h][a];
+            }
+        }
+    }
+
+    return { over, under: 1 - over };
+}
+
+function calcHandicap(matrix, line) {
+    // line is from home team perspective (negative means home is favorite)
+    // Home covers if: homeScore + line > awayScore
+    let homeCovers = 0;
+    const maxGoals = matrix.length - 1;
+
+    for (let h = 0; h <= maxGoals; h++) {
+        for (let a = 0; a <= maxGoals; a++) {
+            if (h + line > a) {
+                homeCovers += matrix[h][a];
+            }
+        }
+    }
+
+    return { homeCovers, awayCovers: 1 - homeCovers };
+}
+
+// --- Lambda Solver (Gradient Descent) ---
+
+function solveLambdas(targetHomeWin, targetDraw, targetOver, totalLine) {
+    // Initialize lambdas
+    let lambdaHome = totalLine / 2;
+    let lambdaAway = totalLine / 2;
+
+    const maxIterations = 1000;
+    const threshold = 0.0001;
+    let learningRate = 0.05;
+
+    for (let iter = 0; iter < maxIterations; iter++) {
+        // Generate matrix with current lambdas
+        const matrix = generateMatrix(lambdaHome, lambdaAway);
+
+        // Calculate model predictions
+        const model1X2 = calc1X2FromMatrix(matrix);
+        const modelTotal = calcTotalFromMatrix(matrix, totalLine);
+
+        // Calculate errors
+        const errorHomeWin = targetHomeWin - model1X2.homeWin;
+        const errorDraw = targetDraw - model1X2.draw;
+        const errorOver = targetOver - modelTotal.over;
+
+        // Total error
+        const totalError = Math.abs(errorHomeWin) + Math.abs(errorDraw) + Math.abs(errorOver);
+
+        // Check convergence
+        if (totalError < threshold) {
+            break;
+        }
+
+        // Adjust lambdas based on errors
+        // If model predicts too few home wins, increase lambdaHome
+        // If model predicts too low total, increase both lambdas
+
+        const homeAdjustment = errorHomeWin * learningRate * 2;
+        const totalAdjustment = errorOver * learningRate;
+
+        lambdaHome += homeAdjustment + totalAdjustment;
+        lambdaAway -= homeAdjustment * 0.5;  // Less sensitive
+        lambdaAway += totalAdjustment;
+
+        // Constrain lambdas to reasonable bounds
+        lambdaHome = Math.max(0.3, Math.min(8.0, lambdaHome));
+        lambdaAway = Math.max(0.3, Math.min(8.0, lambdaAway));
+
+        // Decay learning rate
+        learningRate *= 0.995;
+    }
+
+    return { lambdaHome, lambdaAway };
 }
 
 // --- Main Controller ---
@@ -98,7 +207,6 @@ function runModel() {
     document.getElementById('underLabel').textContent = `Under ${totalGoalsLine}`;
 
     // --- Margin Calculations ---
-    // Moneyline (1X2) Margin
     const mlMargin = ((1 / hOdds + 1 / dOdds + 1 / aOdds) - 1) * 100;
     const mlMarginEl = document.getElementById('moneylineMargin');
     if (mlMarginEl) {
@@ -106,7 +214,6 @@ function runModel() {
         mlMarginEl.style.color = mlMargin < 5 ? '#4ade80' : (mlMargin < 8 ? '#facc15' : '#f87171');
     }
 
-    // Puck Line Margin
     if (!isNaN(puckHomeOdds) && !isNaN(puckAwayOdds)) {
         const puckMargin = ((1 / puckHomeOdds + 1 / puckAwayOdds) - 1) * 100;
         const puckMarginEl = document.getElementById('puckLineMargin');
@@ -116,7 +223,6 @@ function runModel() {
         }
     }
 
-    // Total Goals Margin
     const totalMargin = ((1 / overOdds + 1 / underOdds) - 1) * 100;
     const totalMarginEl = document.getElementById('totalGoalsMargin');
     if (totalMarginEl) {
@@ -124,156 +230,131 @@ function runModel() {
         totalMarginEl.style.color = totalMargin < 5 ? '#4ade80' : (totalMargin < 8 ? '#facc15' : '#f87171');
     }
 
-    // --- Fair Probabilities ---
-    const fair1X2 = solveShin3Way([hOdds, dOdds, aOdds]);
-    const homeWinProb = fair1X2[0];
-    const drawProb = fair1X2[1];
-    const awayWinProb = fair1X2[2];
+    // --- Remove Vig (Get Fair Probabilities) ---
+    const fair1X2 = removeVig([hOdds, dOdds, aOdds]);
+    const fairOU = removeVig([overOdds, underOdds]);
 
-    document.getElementById('homeWinProb').textContent = (homeWinProb * 100).toFixed(1) + "%";
-    document.getElementById('drawProb').textContent = (drawProb * 100).toFixed(1) + "%";
-    document.getElementById('awayWinProb').textContent = (awayWinProb * 100).toFixed(1) + "%";
+    const targetHomeWin = fair1X2[0];
+    const targetDraw = fair1X2[1];
+    const targetAwayWin = fair1X2[2];
+    const targetOver = fairOU[0];
 
-    // Fair odds display
-    document.getElementById('fairHome').textContent = probToOdds(homeWinProb);
-    document.getElementById('fairDraw').textContent = probToOdds(drawProb);
-    document.getElementById('fairAway').textContent = probToOdds(awayWinProb);
+    // Display fair probabilities
+    document.getElementById('homeWinProb').textContent = (targetHomeWin * 100).toFixed(1) + "%";
+    document.getElementById('drawProb').textContent = (targetDraw * 100).toFixed(1) + "%";
+    document.getElementById('awayWinProb').textContent = (targetAwayWin * 100).toFixed(1) + "%";
 
-    // --- Derive Expected Total Goals from Over/Under ---
-    const fairOU = solveShin2Way([overOdds, underOdds]);
-    const pOver = fairOU[0];
-    // Estimate: if P(Over) = 0.5, expected total ≈ line
-    // Adjust: higher P(Over) means expected is above line
-    const expectedTotal = totalGoalsLine + (pOver - 0.5) * 4;
+    document.getElementById('fairHome').textContent = probToOdds(targetHomeWin);
+    document.getElementById('fairDraw').textContent = probToOdds(targetDraw);
+    document.getElementById('fairAway').textContent = probToOdds(targetAwayWin);
+
+    // --- Solve for Lambdas using Gradient Descent ---
+    const lambdas = solveLambdas(targetHomeWin, targetDraw, targetOver, totalGoalsLine);
+
+    const expectedTotal = lambdas.lambdaHome + lambdas.lambdaAway;
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(2);
-
-    // --- Estimate Poisson Parameters ---
-    const lambdas = estimateLambdas(homeWinProb, drawProb, awayWinProb, expectedTotal);
     document.getElementById('lambdaHome').textContent = lambdas.lambdaHome.toFixed(3);
     document.getElementById('lambdaAway').textContent = lambdas.lambdaAway.toFixed(3);
 
-    // --- Generate Score Matrix ---
-    const matrixFT = calculateScoreMatrix(lambdas.lambdaHome, lambdas.lambdaAway, 10);
+    // --- Generate Full-Time Score Matrix ---
+    const matrixFT = generateMatrix(lambdas.lambdaHome, lambdas.lambdaAway, 14);
 
     // --- Show Markets Area ---
     ['marketsArea', 'puckLineArea', 'totalGoalsArea', 'periodMarketsArea',
-     'exactScoreArea', 'specialMarketsArea'].forEach(id => {
-        document.getElementById(id).classList.remove('hidden');
+     'exactScoreArea', 'specialMarketsArea', 'teamTotalsArea'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('hidden');
     });
 
-    // --- Generate Match Result (1X2) Table ---
+    // --- Match Result (1X2) ---
+    const result1X2 = calc1X2FromMatrix(matrixFT);
     let matchResultHtml = `
         <tr>
             <td>Home Win</td>
-            <td class="num-col prob-col">${(homeWinProb * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(homeWinProb)}</td>
+            <td class="num-col prob-col">${(result1X2.homeWin * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(result1X2.homeWin)}</td>
         </tr>
         <tr>
             <td>Draw</td>
-            <td class="num-col prob-col">${(drawProb * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(drawProb)}</td>
+            <td class="num-col prob-col">${(result1X2.draw * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(result1X2.draw)}</td>
         </tr>
         <tr>
             <td>Away Win</td>
-            <td class="num-col prob-col">${(awayWinProb * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(awayWinProb)}</td>
+            <td class="num-col prob-col">${(result1X2.awayWin * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(result1X2.awayWin)}</td>
         </tr>
     `;
     document.getElementById('matchResultTable').innerHTML = matchResultHtml;
 
-    // --- Generate Puck Line Table ---
-    const fairPuckLine = !isNaN(puckHomeOdds) && !isNaN(puckAwayOdds) ?
-        solveShin2Way([puckHomeOdds, puckAwayOdds])[0] : 0.5;
-
+    // --- Puck Line (Handicap) ---
     const basePuckLine = !isNaN(puckLine) ? puckLine : -1.5;
     const puckLines = [];
     for (let i = -3; i <= 3; i++) {
         const line = basePuckLine + (i * 0.5);
-        if (Math.abs(line) >= 0.5) { // Exclude -0.5 and +0.5
+        if (Math.abs(line) >= 0.5) {
             puckLines.push(line);
         }
     }
 
     let puckLineHtml = '';
     puckLines.forEach(line => {
-        // Each 0.5 goal shift changes prob by ~7%
-        const probShift = (line - basePuckLine) * 0.07;
-        let pHomeCovers = Math.max(0.01, Math.min(0.99, fairPuckLine + probShift));
+        const result = calcHandicap(matrixFT, line);
         const isBaseLine = Math.abs(line - basePuckLine) < 0.3;
         const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
         puckLineHtml += `<tr${rowStyle}>
             <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
-            <td class="num-col">${probToOdds(pHomeCovers)}</td>
-            <td class="num-col">${probToOdds(1 - pHomeCovers)}</td>
+            <td class="num-col">${probToOdds(result.homeCovers)}</td>
+            <td class="num-col">${probToOdds(result.awayCovers)}</td>
         </tr>`;
     });
     document.getElementById('puckLineTable').innerHTML = puckLineHtml;
 
-    // --- Generate Total Goals Table ---
+    // --- Total Goals ---
     const totalGoalsLines = [3.5, 4.5, 5.5, 6.5, 7.5, 8.5];
     let totalGoalsHtml = '';
 
     totalGoalsLines.forEach(line => {
-        // Calculate actual probability from matrix
-        let pOverLine = 0;
-        for (let h = 0; h <= 10; h++) {
-            for (let a = 0; a <= 10; a++) {
-                if (h + a > line) {
-                    pOverLine += matrixFT[h][a];
-                }
-            }
-        }
+        const result = calcTotalFromMatrix(matrixFT, line);
         const isBaseLine = Math.abs(line - totalGoalsLine) < 0.6;
         const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
         totalGoalsHtml += `<tr${rowStyle}>
             <td class="line-col">${line.toFixed(1)}</td>
-            <td class="num-col">${probToOdds(pOverLine)}</td>
-            <td class="num-col">${probToOdds(1 - pOverLine)}</td>
+            <td class="num-col">${probToOdds(result.over)}</td>
+            <td class="num-col">${probToOdds(result.under)}</td>
         </tr>`;
     });
     document.getElementById('totalGoalsTable').innerHTML = totalGoalsHtml;
 
     // --- PERIOD MARKETS ---
     const periods = [
-        { ratio: p1Ratio, name: 'P1', winTableId: 'p1WinTable', totalTableId: 'p1TotalTable' },
-        { ratio: p2Ratio, name: 'P2', winTableId: 'p2WinTable', totalTableId: 'p2TotalTable' },
-        { ratio: p3Ratio, name: 'P3', winTableId: 'p3WinTable', totalTableId: 'p3TotalTable' }
+        { ratio: p1Ratio, name: 'P1', winTableId: 'p1WinTable', totalTableId: 'p1TotalTable', dnbTableId: 'p1DnbTable', bttsTableId: 'p1BttsTable', teamHomeId: 'p1TeamHomeTable', teamAwayId: 'p1TeamAwayTable' },
+        { ratio: p2Ratio, name: 'P2', winTableId: 'p2WinTable', totalTableId: 'p2TotalTable', dnbTableId: 'p2DnbTable', bttsTableId: 'p2BttsTable', teamHomeId: 'p2TeamHomeTable', teamAwayId: 'p2TeamAwayTable' },
+        { ratio: p3Ratio, name: 'P3', winTableId: 'p3WinTable', totalTableId: 'p3TotalTable', dnbTableId: 'p3DnbTable', bttsTableId: 'p3BttsTable', teamHomeId: 'p3TeamHomeTable', teamAwayId: 'p3TeamAwayTable' }
     ];
 
     periods.forEach(period => {
-        // Expected goals for this period
         const periodLambdaHome = lambdas.lambdaHome * period.ratio;
         const periodLambdaAway = lambdas.lambdaAway * period.ratio;
+        const periodMatrix = generateMatrix(periodLambdaHome, periodLambdaAway, 10);
 
-        // Period matrix
-        const periodMatrix = calculateScoreMatrix(periodLambdaHome, periodLambdaAway, 8);
-
-        // Calculate period win probabilities
-        let pHomeWin = 0, pDraw = 0, pAwayWin = 0;
-        for (let h = 0; h <= 8; h++) {
-            for (let a = 0; a <= 8; a++) {
-                if (h > a) pHomeWin += periodMatrix[h][a];
-                else if (h === a) pDraw += periodMatrix[h][a];
-                else pAwayWin += periodMatrix[h][a];
-            }
-        }
-
-        // Period Winner Table (1X2)
+        // Period Winner (1X2)
+        const period1X2 = calc1X2FromMatrix(periodMatrix);
         let periodWinHtml = `
             <tr>
                 <td>Home</td>
-                <td class="num-col prob-col">${(pHomeWin * 100).toFixed(1)}%</td>
-                <td class="num-col">${probToOdds(pHomeWin)}</td>
+                <td class="num-col prob-col">${(period1X2.homeWin * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(period1X2.homeWin)}</td>
             </tr>
             <tr>
                 <td>Draw</td>
-                <td class="num-col prob-col">${(pDraw * 100).toFixed(1)}%</td>
-                <td class="num-col">${probToOdds(pDraw)}</td>
+                <td class="num-col prob-col">${(period1X2.draw * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(period1X2.draw)}</td>
             </tr>
             <tr>
                 <td>Away</td>
-                <td class="num-col prob-col">${(pAwayWin * 100).toFixed(1)}%</td>
-                <td class="num-col">${probToOdds(pAwayWin)}</td>
+                <td class="num-col prob-col">${(period1X2.awayWin * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(period1X2.awayWin)}</td>
             </tr>
         `;
         document.getElementById(period.winTableId).innerHTML = periodWinHtml;
@@ -282,25 +363,145 @@ function runModel() {
         const periodTotalLines = [0.5, 1.5, 2.5];
         let periodTotalHtml = '';
         periodTotalLines.forEach(line => {
+            const result = calcTotalFromMatrix(periodMatrix, line);
+            periodTotalHtml += `<tr>
+                <td class="line-col">${line.toFixed(1)}</td>
+                <td class="num-col">${probToOdds(result.over)}</td>
+                <td class="num-col">${probToOdds(result.under)}</td>
+            </tr>`;
+        });
+        document.getElementById(period.totalTableId).innerHTML = periodTotalHtml;
+
+        // Period Draw No Bet (DNB)
+        const pWinNoDrawHome = period1X2.homeWin / (1 - period1X2.draw);
+        const pWinNoDrawAway = period1X2.awayWin / (1 - period1X2.draw);
+        let periodDnbHtml = `
+            <tr>
+                <td>Home DNB</td>
+                <td class="num-col prob-col">${(pWinNoDrawHome * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(pWinNoDrawHome)}</td>
+            </tr>
+            <tr>
+                <td>Away DNB</td>
+                <td class="num-col prob-col">${(pWinNoDrawAway * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(pWinNoDrawAway)}</td>
+            </tr>
+        `;
+        if (document.getElementById(period.dnbTableId)) {
+            document.getElementById(period.dnbTableId).innerHTML = periodDnbHtml;
+        }
+
+        // Period BTTS (Both Teams To Score)
+        let pBttsYes = 0;
+        for (let h = 1; h <= 10; h++) {
+            for (let a = 1; a <= 10; a++) {
+                pBttsYes += periodMatrix[h][a];
+            }
+        }
+        const pBttsNo = 1 - pBttsYes;
+        let periodBttsHtml = `
+            <tr>
+                <td>Yes</td>
+                <td class="num-col prob-col">${(pBttsYes * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(pBttsYes)}</td>
+            </tr>
+            <tr>
+                <td>No</td>
+                <td class="num-col prob-col">${(pBttsNo * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(pBttsNo)}</td>
+            </tr>
+        `;
+        if (document.getElementById(period.bttsTableId)) {
+            document.getElementById(period.bttsTableId).innerHTML = periodBttsHtml;
+        }
+
+        // Period Team Totals
+        const periodTeamLines = [0.5, 1.5, 2.5];
+
+        // Home Team Total
+        let periodTeamHomeHtml = '';
+        periodTeamLines.forEach(line => {
             let pOver = 0;
-            for (let h = 0; h <= 8; h++) {
-                for (let a = 0; a <= 8; a++) {
-                    if (h + a > line) pOver += periodMatrix[h][a];
+            for (let h = 0; h <= 10; h++) {
+                for (let a = 0; a <= 10; a++) {
+                    if (h > line) pOver += periodMatrix[h][a];
                 }
             }
-            periodTotalHtml += `<tr>
+            periodTeamHomeHtml += `<tr>
                 <td class="line-col">${line.toFixed(1)}</td>
                 <td class="num-col">${probToOdds(pOver)}</td>
                 <td class="num-col">${probToOdds(1 - pOver)}</td>
             </tr>`;
         });
-        document.getElementById(period.totalTableId).innerHTML = periodTotalHtml;
+        if (document.getElementById(period.teamHomeId)) {
+            document.getElementById(period.teamHomeId).innerHTML = periodTeamHomeHtml;
+        }
+
+        // Away Team Total
+        let periodTeamAwayHtml = '';
+        periodTeamLines.forEach(line => {
+            let pOver = 0;
+            for (let h = 0; h <= 10; h++) {
+                for (let a = 0; a <= 10; a++) {
+                    if (a > line) pOver += periodMatrix[h][a];
+                }
+            }
+            periodTeamAwayHtml += `<tr>
+                <td class="line-col">${line.toFixed(1)}</td>
+                <td class="num-col">${probToOdds(pOver)}</td>
+                <td class="num-col">${probToOdds(1 - pOver)}</td>
+            </tr>`;
+        });
+        if (document.getElementById(period.teamAwayId)) {
+            document.getElementById(period.teamAwayId).innerHTML = periodTeamAwayHtml;
+        }
     });
 
-    // --- Exact Score Table ---
+    // --- Full-Time Team Totals ---
+    const teamTotalLines = [2.5, 3.5, 4.5];
+
+    // Home Team Total
+    let homeTeamHtml = '';
+    teamTotalLines.forEach(line => {
+        let pOver = 0;
+        for (let h = 0; h <= 14; h++) {
+            for (let a = 0; a <= 14; a++) {
+                if (h > line) pOver += matrixFT[h][a];
+            }
+        }
+        homeTeamHtml += `<tr>
+            <td class="line-col">${line.toFixed(1)}</td>
+            <td class="num-col">${probToOdds(pOver)}</td>
+            <td class="num-col">${probToOdds(1 - pOver)}</td>
+        </tr>`;
+    });
+    if (document.getElementById('homeTeamTotalTable')) {
+        document.getElementById('homeTeamTotalTable').innerHTML = homeTeamHtml;
+    }
+
+    // Away Team Total
+    let awayTeamHtml = '';
+    teamTotalLines.forEach(line => {
+        let pOver = 0;
+        for (let h = 0; h <= 14; h++) {
+            for (let a = 0; a <= 14; a++) {
+                if (a > line) pOver += matrixFT[h][a];
+            }
+        }
+        awayTeamHtml += `<tr>
+            <td class="line-col">${line.toFixed(1)}</td>
+            <td class="num-col">${probToOdds(pOver)}</td>
+            <td class="num-col">${probToOdds(1 - pOver)}</td>
+        </tr>`;
+    });
+    if (document.getElementById('awayTeamTotalTable')) {
+        document.getElementById('awayTeamTotalTable').innerHTML = awayTeamHtml;
+    }
+
+    // --- Exact Score ---
     const exactScores = [];
-    for (let h = 0; h <= 6; h++) {
-        for (let a = 0; a <= 6; a++) {
+    for (let h = 0; h <= 8; h++) {
+        for (let a = 0; a <= 8; a++) {
             exactScores.push({ h, a, prob: matrixFT[h][a] });
         }
     }
@@ -316,10 +517,10 @@ function runModel() {
     });
     document.getElementById('exactScoreTable').innerHTML = exactScoreHtml;
 
-    // --- Both Teams To Score ---
+    // --- Both Teams To Score (Full-Time) ---
     let bttsYes = 0;
-    for (let h = 1; h <= 10; h++) {
-        for (let a = 1; a <= 10; a++) {
+    for (let h = 1; h <= 14; h++) {
+        for (let a = 1; a <= 14; a++) {
             bttsYes += matrixFT[h][a];
         }
     }
@@ -339,9 +540,9 @@ function runModel() {
     `;
 
     // --- Double Chance ---
-    const homeOrDraw = homeWinProb + drawProb;
-    const homeOrAway = homeWinProb + awayWinProb;
-    const drawOrAway = drawProb + awayWinProb;
+    const homeOrDraw = result1X2.homeWin + result1X2.draw;
+    const homeOrAway = result1X2.homeWin + result1X2.awayWin;
+    const drawOrAway = result1X2.draw + result1X2.awayWin;
 
     document.getElementById('doubleChanceTable').innerHTML = `
         <tr>
@@ -360,6 +561,25 @@ function runModel() {
             <td class="num-col">${probToOdds(drawOrAway)}</td>
         </tr>
     `;
+
+    // --- Draw No Bet (Full-Time) ---
+    const ftDnbHome = result1X2.homeWin / (1 - result1X2.draw);
+    const ftDnbAway = result1X2.awayWin / (1 - result1X2.draw);
+
+    if (document.getElementById('dnbTable')) {
+        document.getElementById('dnbTable').innerHTML = `
+            <tr>
+                <td>Home DNB</td>
+                <td class="num-col prob-col">${(ftDnbHome * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(ftDnbHome)}</td>
+            </tr>
+            <tr>
+                <td>Away DNB</td>
+                <td class="num-col prob-col">${(ftDnbAway * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(ftDnbAway)}</td>
+            </tr>
+        `;
+    }
 }
 
 // Make global
@@ -367,15 +587,12 @@ window.runModel = runModel;
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    // Set up API loader
     setRunModelCallback(runModel);
     initIceHockeyLoader();
 
-    // Wire up dropdowns
     document.getElementById('apiCountrySelect').addEventListener('change', handleCountryChange);
     document.getElementById('apiLeagueSelect').addEventListener('change', handleLeagueChange);
     document.getElementById('apiMatchSelect').addEventListener('change', handleMatchChange);
 
-    // Initial run
     runModel();
 });
