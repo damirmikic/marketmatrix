@@ -239,6 +239,14 @@ function runModel() {
     const overOdds = parseFloat(document.getElementById('overOdds').value);
     const underOdds = parseFloat(document.getElementById('underOdds').value);
 
+    // Get Period 3 API Markets
+    const p3HomeOdds = parseFloat(document.getElementById('p3HomeOdds').value);
+    const p3DrawOdds = parseFloat(document.getElementById('p3DrawOdds').value);
+    const p3AwayOdds = parseFloat(document.getElementById('p3AwayOdds').value);
+    const p3TotalLine = parseFloat(document.getElementById('p3TotalLine').value);
+    const p3OverOdds = parseFloat(document.getElementById('p3OverOdds').value);
+    const p3UnderOdds = parseFloat(document.getElementById('p3UnderOdds').value);
+
     // Get Period Ratios
     const p1Ratio = parseFloat(document.getElementById('p1Ratio').value) || 0.333;
     const p2Ratio = parseFloat(document.getElementById('p2Ratio').value) || 0.333;
@@ -250,6 +258,11 @@ function runModel() {
     // Update Labels
     document.getElementById('overLabel').textContent = `Over ${totalGoalsLine}`;
     document.getElementById('underLabel').textContent = `Under ${totalGoalsLine}`;
+
+    if (!isNaN(p3TotalLine)) {
+        document.getElementById('p3OverLabel').textContent = `Over ${p3TotalLine}`;
+        document.getElementById('p3UnderLabel').textContent = `Under ${p3TotalLine}`;
+    }
 
     // --- Margin Calculations ---
     const mlMargin = ((1 / hOdds + 1 / dOdds + 1 / aOdds) - 1) * 100;
@@ -273,6 +286,26 @@ function runModel() {
     if (totalMarginEl) {
         totalMarginEl.textContent = `Margin: ${totalMargin.toFixed(2)}%`;
         totalMarginEl.style.color = totalMargin < 5 ? '#4ade80' : (totalMargin < 8 ? '#facc15' : '#f87171');
+    }
+
+    // Period 3 Winner Margin
+    if (!isNaN(p3HomeOdds) && !isNaN(p3DrawOdds) && !isNaN(p3AwayOdds)) {
+        const p3WinMargin = ((1 / p3HomeOdds + 1 / p3DrawOdds + 1 / p3AwayOdds) - 1) * 100;
+        const p3WinMarginEl = document.getElementById('p3WinnerMargin');
+        if (p3WinMarginEl) {
+            p3WinMarginEl.textContent = `Margin: ${p3WinMargin.toFixed(2)}%`;
+            p3WinMarginEl.style.color = p3WinMargin < 5 ? '#4ade80' : (p3WinMargin < 8 ? '#facc15' : '#f87171');
+        }
+    }
+
+    // Period 3 Total Margin
+    if (!isNaN(p3OverOdds) && !isNaN(p3UnderOdds)) {
+        const p3TotalMargin = ((1 / p3OverOdds + 1 / p3UnderOdds) - 1) * 100;
+        const p3TotalMarginEl = document.getElementById('p3TotalMargin');
+        if (p3TotalMarginEl) {
+            p3TotalMarginEl.textContent = `Margin: ${p3TotalMargin.toFixed(2)}%`;
+            p3TotalMarginEl.style.color = p3TotalMargin < 5 ? '#4ade80' : (p3TotalMargin < 8 ? '#facc15' : '#f87171');
+        }
     }
 
     // --- Remove Vig (Get Fair Probabilities) ---
@@ -306,7 +339,8 @@ function runModel() {
 
     // --- Show Markets Area ---
     ['marketsArea', 'puckLineArea', 'totalGoalsArea', 'periodMarketsArea',
-     'exactScoreArea', 'specialMarketsArea', 'teamTotalsArea'].forEach(id => {
+     'exactScoreArea', 'specialMarketsArea', 'teamTotalsArea', 'comboBetsArea',
+     'exactGoalsArea', 'spreadGoalsArea'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('hidden');
     });
@@ -491,6 +525,137 @@ function runModel() {
             document.getElementById(period.teamAwayId).innerHTML = periodTeamAwayHtml;
         }
     });
+
+    // --- COMBO BET: 1X2 & Total (Regular Time) ---
+    const comboResults = [];
+    const comboTotalLine = totalGoalsLine;
+
+    // Calculate probabilities for each combination
+    for (let h = 0; h <= 14; h++) {
+        for (let a = 0; a <= 14; a++) {
+            const total = h + a;
+            const prob = matrixFT[h][a];
+
+            if (h > a) {
+                // Home Win
+                if (total > comboTotalLine) {
+                    const idx = comboResults.findIndex(r => r.outcome === 'Home & Over');
+                    if (idx >= 0) comboResults[idx].prob += prob;
+                    else comboResults.push({ outcome: 'Home & Over', prob });
+                } else {
+                    const idx = comboResults.findIndex(r => r.outcome === 'Home & Under');
+                    if (idx >= 0) comboResults[idx].prob += prob;
+                    else comboResults.push({ outcome: 'Home & Under', prob });
+                }
+            } else if (h === a) {
+                // Draw
+                if (total > comboTotalLine) {
+                    const idx = comboResults.findIndex(r => r.outcome === 'Draw & Over');
+                    if (idx >= 0) comboResults[idx].prob += prob;
+                    else comboResults.push({ outcome: 'Draw & Over', prob });
+                } else {
+                    const idx = comboResults.findIndex(r => r.outcome === 'Draw & Under');
+                    if (idx >= 0) comboResults[idx].prob += prob;
+                    else comboResults.push({ outcome: 'Draw & Under', prob });
+                }
+            } else {
+                // Away Win
+                if (total > comboTotalLine) {
+                    const idx = comboResults.findIndex(r => r.outcome === 'Away & Over');
+                    if (idx >= 0) comboResults[idx].prob += prob;
+                    else comboResults.push({ outcome: 'Away & Over', prob });
+                } else {
+                    const idx = comboResults.findIndex(r => r.outcome === 'Away & Under');
+                    if (idx >= 0) comboResults[idx].prob += prob;
+                    else comboResults.push({ outcome: 'Away & Under', prob });
+                }
+            }
+        }
+    }
+
+    // Display Combo Bets
+    let comboHtml = '';
+    const comboOrder = ['Home & Over', 'Home & Under', 'Draw & Over', 'Draw & Under', 'Away & Over', 'Away & Under'];
+    comboOrder.forEach(outcome => {
+        const combo = comboResults.find(r => r.outcome === outcome);
+        if (combo) {
+            comboHtml += `<tr>
+                <td>${outcome.replace('&', `& ${comboTotalLine > 0 ? (outcome.includes('Over') ? 'O' : 'U') + comboTotalLine.toFixed(1) : ''}`)}</td>
+                <td class="num-col prob-col">${(combo.prob * 100).toFixed(1)}%</td>
+                <td class="num-col">${probToOdds(combo.prob)}</td>
+            </tr>`;
+        }
+    });
+    if (document.getElementById('comboTable')) {
+        document.getElementById('comboTable').innerHTML = comboHtml;
+    }
+
+    // --- EXACT GOALS MARKET ---
+    const exactGoals = [];
+    for (let g = 0; g <= 10; g++) {
+        let prob = 0;
+        for (let h = 0; h <= 14; h++) {
+            for (let a = 0; a <= 14; a++) {
+                if (h + a === g) {
+                    prob += matrixFT[h][a];
+                }
+            }
+        }
+        exactGoals.push({ goals: g, prob });
+    }
+
+    // 11+ goals
+    let prob11Plus = 0;
+    for (let h = 0; h <= 14; h++) {
+        for (let a = 0; a <= 14; a++) {
+            if (h + a >= 11) {
+                prob11Plus += matrixFT[h][a];
+            }
+        }
+    }
+    exactGoals.push({ goals: '11+', prob: prob11Plus });
+
+    let exactGoalsHtml = '';
+    exactGoals.forEach(eg => {
+        exactGoalsHtml += `<tr>
+            <td>${eg.goals} Goals</td>
+            <td class="num-col prob-col">${(eg.prob * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(eg.prob)}</td>
+        </tr>`;
+    });
+    if (document.getElementById('exactGoalsTable')) {
+        document.getElementById('exactGoalsTable').innerHTML = exactGoalsHtml;
+    }
+
+    // --- SPREAD GOALS (Goal Ranges) ---
+    const spreadGoals = [
+        { range: '0-2', min: 0, max: 2 },
+        { range: '3-4', min: 3, max: 4 },
+        { range: '5-6', min: 5, max: 6 },
+        { range: '7-8', min: 7, max: 8 },
+        { range: '9+', min: 9, max: 99 }
+    ];
+
+    let spreadGoalsHtml = '';
+    spreadGoals.forEach(sg => {
+        let prob = 0;
+        for (let h = 0; h <= 14; h++) {
+            for (let a = 0; a <= 14; a++) {
+                const total = h + a;
+                if (total >= sg.min && total <= sg.max) {
+                    prob += matrixFT[h][a];
+                }
+            }
+        }
+        spreadGoalsHtml += `<tr>
+            <td>${sg.range} Goals</td>
+            <td class="num-col prob-col">${(prob * 100).toFixed(1)}%</td>
+            <td class="num-col">${probToOdds(prob)}</td>
+        </tr>`;
+    });
+    if (document.getElementById('spreadGoalsTable')) {
+        document.getElementById('spreadGoalsTable').innerHTML = spreadGoalsHtml;
+    }
 
     // --- Full-Time Team Totals ---
     const teamTotalLines = [2.5, 3.5, 4.5];
