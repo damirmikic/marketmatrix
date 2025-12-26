@@ -288,11 +288,19 @@ function runModel() {
     document.getElementById('matchResultTable').innerHTML = matchResultHtml;
 
     // --- Puck Line (Handicap) ---
+    // Only use half-point lines to avoid push scenarios
+    // Exclude -0.5 and +0.5 as they're too close to pick'em
     const basePuckLine = !isNaN(puckLine) ? puckLine : -1.5;
+
+    // Round base to nearest half-point
+    const roundedBase = Math.round(basePuckLine * 2) / 2;
+
     const puckLines = [];
     for (let i = -3; i <= 3; i++) {
-        const line = basePuckLine + (i * 0.5);
-        if (Math.abs(line) >= 0.5) {
+        const line = roundedBase + (i * 0.5);
+        // Only include half-point lines (ends in .5)
+        // Exclude -0.5 and +0.5
+        if (Math.abs(line % 1) === 0.5 && Math.abs(line) > 0.5) {
             puckLines.push(line);
         }
     }
