@@ -241,8 +241,8 @@ function runModel() {
     const spread1HBase = Math.round(spread1H * 2) / 2; // round to nearest .5
     const total1HBase = Math.floor(total1H) + 0.5;
 
-    // Generate 1H Spread table (4 lines)
-    const spread1HLines = [spread1HBase - 2, spread1HBase - 1, spread1HBase, spread1HBase + 1]
+    // Generate 1H Spread table (5 lines)
+    const spread1HLines = [spread1HBase - 2, spread1HBase - 1, spread1HBase, spread1HBase + 1, spread1HBase + 2]
         .filter(l => Math.abs(l) !== 0.5);
     let spread1HHtml = '';
     spread1HLines.forEach(line => {
@@ -276,7 +276,7 @@ function runModel() {
     const spread2HBase = Math.round(spread2H * 2) / 2; // round to nearest .5
     const total2HBase = Math.floor(total2H) + 0.5;
 
-    const spread2HLines = [spread2HBase - 2, spread2HBase - 1, spread2HBase, spread2HBase + 1]
+    const spread2HLines = [spread2HBase - 2, spread2HBase - 1, spread2HBase, spread2HBase + 1, spread2HBase + 2]
         .filter(l => Math.abs(l) !== 0.5);
     let spread2HHtml = '';
     spread2HLines.forEach(line => {
