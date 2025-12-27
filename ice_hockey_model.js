@@ -719,28 +719,79 @@ function runModel() {
         document.getElementById('exactGoalsTable').innerHTML = exactGoalsHtml;
     }
 
-    // --- SPREAD GOALS (Goal Ranges) ---
-    const spreadGoals = [
-        { range: '0-2', min: 0, max: 2 },
-        { range: '3-4', min: 3, max: 4 },
-        { range: '5-6', min: 5, max: 6 },
-        { range: '7-8', min: 7, max: 8 },
-        { range: '9+', min: 9, max: 99 }
+    // --- MATCH SCORE RANGES (Detailed) ---
+    const matchScoreRanges = [
+        // Individual totals
+        { label: '3', minH: 0, maxH: 3, minA: 0, maxA: 3, exact: 3 },
+        { label: '4', minH: 0, maxH: 4, minA: 0, maxA: 4, exact: 4 },
+        { label: '5', minH: 0, maxH: 5, minA: 0, maxA: 5, exact: 5 },
+        { label: '6', minH: 0, maxH: 6, minA: 0, maxA: 6, exact: 6 },
+        { label: '7', minH: 0, maxH: 7, minA: 0, maxA: 7, exact: 7 },
+        { label: '8', minH: 0, maxH: 8, minA: 0, maxA: 8, exact: 8 },
+        // Ranges starting with 2
+        { label: '2-3', minTotal: 2, maxTotal: 3 },
+        { label: '2-4', minTotal: 2, maxTotal: 4 },
+        { label: '2-5', minTotal: 2, maxTotal: 5 },
+        { label: '2-6', minTotal: 2, maxTotal: 6 },
+        { label: '2-7', minTotal: 2, maxTotal: 7 },
+        { label: '2-8', minTotal: 2, maxTotal: 8 },
+        { label: '2-9', minTotal: 2, maxTotal: 9 },
+        // Ranges starting with 3
+        { label: '3-4', minTotal: 3, maxTotal: 4 },
+        { label: '3-5', minTotal: 3, maxTotal: 5 },
+        { label: '3-6', minTotal: 3, maxTotal: 6 },
+        { label: '3-7', minTotal: 3, maxTotal: 7 },
+        { label: '3-8', minTotal: 3, maxTotal: 8 },
+        { label: '3-9', minTotal: 3, maxTotal: 9 },
+        // Ranges starting with 4
+        { label: '4-5', minTotal: 4, maxTotal: 5 },
+        { label: '4-6', minTotal: 4, maxTotal: 6 },
+        { label: '4-7', minTotal: 4, maxTotal: 7 },
+        { label: '4-8', minTotal: 4, maxTotal: 8 },
+        { label: '4-9', minTotal: 4, maxTotal: 9 },
+        // Ranges starting with 5
+        { label: '5-6', minTotal: 5, maxTotal: 6 },
+        { label: '5-7', minTotal: 5, maxTotal: 7 },
+        { label: '5-8', minTotal: 5, maxTotal: 8 },
+        { label: '5-9', minTotal: 5, maxTotal: 9 },
+        // Ranges starting with 6
+        { label: '6-7', minTotal: 6, maxTotal: 7 },
+        { label: '6-8', minTotal: 6, maxTotal: 8 },
+        { label: '6-9', minTotal: 6, maxTotal: 9 },
+        // Ranges starting with 7
+        { label: '7-8', minTotal: 7, maxTotal: 8 },
+        { label: '7-9', minTotal: 7, maxTotal: 9 },
+        // Last range
+        { label: '8-9', minTotal: 8, maxTotal: 9 }
     ];
 
     let spreadGoalsHtml = '';
-    spreadGoals.forEach(sg => {
+    matchScoreRanges.forEach(range => {
         let prob = 0;
-        for (let h = 0; h <= 14; h++) {
-            for (let a = 0; a <= 14; a++) {
-                const total = h + a;
-                if (total >= sg.min && total <= sg.max) {
-                    prob += matrixFT[h][a];
+
+        if (range.exact !== undefined) {
+            // Exact total goals
+            for (let h = 0; h <= 14; h++) {
+                for (let a = 0; a <= 14; a++) {
+                    if (h + a === range.exact) {
+                        prob += matrixFT[h][a];
+                    }
+                }
+            }
+        } else {
+            // Range of totals
+            for (let h = 0; h <= 14; h++) {
+                for (let a = 0; a <= 14; a++) {
+                    const total = h + a;
+                    if (total >= range.minTotal && total <= range.maxTotal) {
+                        prob += matrixFT[h][a];
+                    }
                 }
             }
         }
+
         spreadGoalsHtml += `<tr>
-            <td>${sg.range} Goals</td>
+            <td>${range.label}</td>
             <td class="num-col prob-col">${(prob * 100).toFixed(1)}%</td>
             <td class="num-col">${probToOdds(prob)}</td>
         </tr>`;
