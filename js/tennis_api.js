@@ -97,6 +97,12 @@ export function handleTournamentChange() {
     const tournament = tennisData.tournaments.find(t => t.id == tournamentId);
     if (!tournament) return;
 
+    if (!tournament.events || tournament.events.length === 0) {
+        matchSelect.innerHTML = '<option value="">No matches available</option>';
+        matchSelect.disabled = true;
+        return;
+    }
+
     matchSelect.innerHTML = '<option value="">Select Match...</option>';
 
     tournament.events.forEach(event => {
@@ -105,6 +111,8 @@ export function handleTournamentChange() {
         option.textContent = `${event.homeName} vs ${event.awayName}`;
         matchSelect.appendChild(option);
     });
+
+    matchSelect.disabled = false;
 }
 
 // Fetch detailed odds for a specific event
