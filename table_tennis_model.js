@@ -165,9 +165,8 @@ function runModel() {
     });
 
     // --- EXACT SCORE ---
-    // Calculate probabilities for all possible scores in best of 5
+    // Display exact score probabilities (already calculated above)
     // Possible outcomes: 3-0, 3-1, 3-2, 2-3, 1-3, 0-3
-    const exactScores = calculateExactScores(homeWinProb);
     let exactScoreHtml = '';
     exactScores.forEach(score => {
         exactScoreHtml += `<tr>
