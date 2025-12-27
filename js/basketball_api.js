@@ -198,8 +198,8 @@ export function handleLeagueChange() {
         competition.events.forEach((item) => {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            // Basketball uses Away @ Home format typically
-            const displayName = `${e.awayName} @ ${e.homeName}`;
+            // Basketball display: Home vs Away format
+            const displayName = `${e.homeName} vs ${e.awayName}`;
             html += `<option value="${e.id}">${displayName} (${startTime})</option>`;
         });
         matchSelect.innerHTML = html;
