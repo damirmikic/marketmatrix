@@ -84,6 +84,14 @@ function calcMatchProb(pSet) {
     return p20 + p21;
 }
 
+// Calculate first set winner probability from match winner probability
+// Using logistic regression: P(First Set) = 1 / (1 + e^(-(3.25 * P(Match) - 1.72)))
+function calcFirstSetProb(pMatch) {
+    const z = 3.25 * pMatch - 1.72;
+    const pFirstSet = 1 / (1 + Math.exp(-z));
+    return pFirstSet;
+}
+
 // Calculate exact score probabilities for sets
 function calcExactScores(pSet) {
     const p20 = pSet * pSet;
@@ -207,6 +215,16 @@ window.runModel = function() {
         // Display match odds
         displayMatchOdds(matchFair, pMatch1, pMatch2);
 
+        // Calculate first set winner probabilities
+        const pFirstSet1 = calcFirstSetProb(matchFair.prob1);
+        const pFirstSet2 = 1 - pFirstSet1;
+
+        // Display first set winner
+        displayFirstSetWinner(pFirstSet1, pFirstSet2);
+
+        // Display correct scores based on first set probabilities
+        displayCorrectScores(pFirstSet1);
+
         // Calculate and display set handicap
         const setHandicapLine = parseFloat(document.getElementById('setHandicapLine').value);
         if (setHandicapLine) {
@@ -239,9 +257,6 @@ window.runModel = function() {
             displaySet1Total(set1TotalLine, set1TotalOver, set1TotalUnder, pGame1, pGame2);
         }
 
-        // Calculate and display exact scores
-        displayExactScores(pSet1);
-
     } catch (error) {
         console.error('Error running model:', error);
     }
@@ -258,7 +273,57 @@ function displayMatchOdds(fair, pMatch1, pMatch2) {
 
     // Show markets area
     document.getElementById('marketsArea')?.classList.remove('hidden');
+    document.getElementById('firstSetArea')?.classList.remove('hidden');
     document.getElementById('exactScoreArea')?.classList.remove('hidden');
+}
+
+function displayFirstSetWinner(pFirstSet1, pFirstSet2) {
+    const tbody = document.getElementById('firstSetWinnerTable');
+    if (!tbody) return;
+
+    tbody.innerHTML = `
+        <tr>
+            <td>Player 1</td>
+            <td class="num-col">${(pFirstSet1 * 100).toFixed(2)}%</td>
+            <td class="num-col">${(1 / pFirstSet1).toFixed(2)}</td>
+        </tr>
+        <tr>
+            <td>Player 2</td>
+            <td class="num-col">${(pFirstSet2 * 100).toFixed(2)}%</td>
+            <td class="num-col">${(1 / pFirstSet2).toFixed(2)}</td>
+        </tr>
+    `;
+}
+
+function displayCorrectScores(pFirstSet1) {
+    const tbody = document.getElementById('correctScoreTable');
+    if (!tbody) return;
+
+    // Using first set probability, calculate all possible match outcomes
+    // Assuming same probability for each set
+    const p = pFirstSet1;
+
+    // Calculate all possible correct scores
+    const scores = {
+        '2-0': p * p,
+        '2-1': 2 * p * p * (1 - p), // Player 1 wins 2 sets, loses 1 (binomial coefficient: 2 ways)
+        '1-2': 2 * (1 - p) * (1 - p) * p, // Player 2 wins 2 sets, Player 1 wins 1
+        '0-2': (1 - p) * (1 - p)
+    };
+
+    let html = '';
+    for (const [score, prob] of Object.entries(scores)) {
+        const odds = 1 / prob;
+        html += `
+            <tr>
+                <td>${score}</td>
+                <td class="num-col">${(prob * 100).toFixed(2)}%</td>
+                <td class="num-col">${odds.toFixed(2)}</td>
+            </tr>
+        `;
+    }
+
+    tbody.innerHTML = html;
 }
 
 function displaySetHandicap(line, odds1, odds2, pSet1) {
@@ -385,36 +450,6 @@ function displaySet1Total(line, overOdds, underOdds, pGame1, pGame2) {
     });
 
     tbody.innerHTML = html;
-}
-
-function displayExactScores(pSet1) {
-    const tbody = document.getElementById('exactScoreTable');
-    if (!tbody) return;
-
-    const scores = calcExactScores(pSet1);
-
-    tbody.innerHTML = `
-        <tr>
-            <td>2-0</td>
-            <td class="num-col">${(scores.p20 * 100).toFixed(2)}%</td>
-            <td class="num-col">${(1 / scores.p20).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>2-1</td>
-            <td class="num-col">${(scores.p21 * 100).toFixed(2)}%</td>
-            <td class="num-col">${(1 / scores.p21).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>1-2</td>
-            <td class="num-col">${(scores.p12 * 100).toFixed(2)}%</td>
-            <td class="num-col">${(1 / scores.p12).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>0-2</td>
-            <td class="num-col">${(scores.p02 * 100).toFixed(2)}%</td>
-            <td class="num-col">${(1 / scores.p02).toFixed(2)}</td>
-        </tr>
-    `;
 }
 
 // Initialize when DOM is loaded

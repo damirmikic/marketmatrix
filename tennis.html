@@ -203,12 +203,37 @@
                 </div>
             </div>
 
-            <!-- EXACT SCORE -->
-            <div class="card hidden" id="exactScoreArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('exactScoreArea')">
-                    <h2>3. Exact Score</h2>
+            <!-- FIRST SET WINNER -->
+            <div class="card hidden" id="firstSetArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('firstSetArea')">
+                    <h2>3. First Set Winner</h2>
                 </div>
                 <div class="card-content">
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">
+                        Calculated using: P(First Set) = 1 / (1 + e^(-(3.25 × P(Match) - 1.72)))
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="firstSetWinnerTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CORRECT SCORE -->
+            <div class="card hidden" id="exactScoreArea" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('exactScoreArea')">
+                    <h2>4. Correct Score (Match)</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">
+                        Based on first set probabilities, assuming same probability for each set
+                    </p>
                     <table>
                         <thead>
                             <tr>
@@ -217,7 +242,7 @@
                                 <th class="num-col">Odds</th>
                             </tr>
                         </thead>
-                        <tbody id="exactScoreTable"></tbody>
+                        <tbody id="correctScoreTable"></tbody>
                     </table>
                 </div>
             </div>
