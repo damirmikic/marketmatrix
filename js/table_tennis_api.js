@@ -230,64 +230,28 @@ function loadMatchData(item) {
 
         console.log("Loading Table Tennis Match:", event.englishName || event.name);
 
-        // 1. Find Match Winner (Moneyline)
+        // Find Match Odds (Match Winner)
+        // Look for "Match Odds", "Match Winner", "Moneyline", or "Fulltime"
         const moneylineOffer = offers.find(bo => {
             const crit = bo.criterion || {};
             const label = (crit.englishLabel || crit.label || "").toLowerCase();
-            return (label.includes("match winner") || label.includes("moneyline") || label === "fulltime") && bo.outcomes && bo.outcomes.length === 2;
+            return (label.includes("match odds") ||
+                    label.includes("match winner") ||
+                    label.includes("moneyline") ||
+                    label === "fulltime") &&
+                    bo.outcomes &&
+                    bo.outcomes.length === 2;
         });
 
         if (moneylineOffer) {
-            console.log("Match Winner Market:", moneylineOffer.criterion.label);
+            console.log("Match Odds Market:", moneylineOffer.criterion.label);
             const home = moneylineOffer.outcomes.find(o => o.type === "OT_ONE");
             const away = moneylineOffer.outcomes.find(o => o.type === "OT_TWO");
 
             if (home) document.getElementById('homeOdds').value = (home.odds / 1000).toFixed(2);
             if (away) document.getElementById('awayOdds').value = (away.odds / 1000).toFixed(2);
-        }
-
-        // 2. Find Set Handicap
-        const spreadOffer = offers.find(bo => {
-            const crit = bo.criterion || {};
-            const label = (crit.englishLabel || crit.label || "").toLowerCase();
-            const isMain = bo.tags && bo.tags.includes("MAIN_LINE");
-            return (label.includes("set handicap") || label.includes("game handicap")) && isMain && bo.outcomes && bo.outcomes.length === 2;
-        });
-
-        if (spreadOffer) {
-            console.log("Set Handicap Market:", spreadOffer.criterion.label);
-            const home = spreadOffer.outcomes.find(o => o.type === "OT_ONE");
-            const away = spreadOffer.outcomes.find(o => o.type === "OT_TWO");
-
-            if (home && home.line !== undefined) {
-                document.getElementById('spreadLine').value = (home.line / 1000).toFixed(1);
-                document.getElementById('spreadHomeOdds').value = (home.odds / 1000).toFixed(2);
-            }
-            if (away) {
-                document.getElementById('spreadAwayOdds').value = (away.odds / 1000).toFixed(2);
-            }
-        }
-
-        // 3. Find Total Sets (Over/Under)
-        const totalOffer = offers.find(bo => {
-            const crit = bo.criterion || {};
-            const label = (crit.englishLabel || crit.label || "").toLowerCase();
-            const isMain = bo.tags && bo.tags.includes("MAIN_LINE");
-            return (label.includes("total sets") || label.includes("total games")) && isMain && bo.outcomes && bo.outcomes.length === 2;
-        });
-
-        if (totalOffer) {
-            console.log("Total Sets Market:", totalOffer.criterion.label);
-            const over = totalOffer.outcomes.find(o => o.type === "OT_OVER");
-            const under = totalOffer.outcomes.find(o => o.type === "OT_UNDER");
-
-            if (over && over.line !== undefined) {
-                document.getElementById('totalLine').value = (over.line / 1000).toFixed(1);
-                document.getElementById('overOdds').value = (over.odds / 1000).toFixed(2);
-            }
-            if (under) {
-                document.getElementById('underOdds').value = (under.odds / 1000).toFixed(2);
-            }
+        } else {
+            console.warn("No Match Odds found for this match");
         }
 
         // Run the model
