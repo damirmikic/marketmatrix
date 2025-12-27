@@ -95,21 +95,28 @@ function calcExactScores(pSet) {
 }
 
 // Calculate set handicap probabilities
+// Line represents Player 1's handicap (e.g., -1.5 means Player 1 gives 1.5 sets)
 function calcSetHandicap(pSet, line) {
     const scores = calcExactScores(pSet);
 
-    if (line === 1.5) {
+    if (line === -2.5) {
+        // Player 1 -2.5: impossible to cover in best of 3
+        return { player1: 0, player2: 1 };
+    } else if (line === -1.5) {
         // Player 1 -1.5: needs to win 2-0
         return {
             player1: scores.p20,
             player2: 1 - scores.p20
         };
-    } else if (line === -1.5) {
-        // Player 2 -1.5: needs to win 2-0
+    } else if (line === 1.5) {
+        // Player 1 +1.5: covers unless loses 0-2
         return {
             player1: 1 - scores.p02,
             player2: scores.p02
         };
+    } else if (line === 2.5) {
+        // Player 1 +2.5: always covers
+        return { player1: 1, player2: 0 };
     }
 
     return { player1: 0.5, player2: 0.5 };
@@ -242,154 +249,146 @@ window.runModel = function() {
 
 // Display functions
 function displayMatchOdds(fair, pMatch1, pMatch2) {
-    const tbody = document.getElementById('matchOddsBody');
-    if (!tbody) return;
+    // Update fair odds in stat boxes
+    document.getElementById('fairPlayer1').textContent = (1 / fair.prob1).toFixed(2);
+    document.getElementById('fairPlayer2').textContent = (1 / fair.prob2).toFixed(2);
 
-    tbody.innerHTML = `
-        <tr>
-            <td>Player 1</td>
-            <td>${(fair.prob1 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob1).toFixed(2)}</td>
-            <td>${(pMatch1 * 100).toFixed(2)}%</td>
-            <td>${(1 / pMatch1).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>Player 2</td>
-            <td>${(fair.prob2 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob2).toFixed(2)}</td>
-            <td>${(pMatch2 * 100).toFixed(2)}%</td>
-            <td>${(1 / pMatch2).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><strong>Margin</strong></td>
-            <td colspan="3">${fair.margin}%</td>
-        </tr>
-    `;
+    // Update margin
+    document.getElementById('moneylineMargin').textContent = `Margin: ${fair.margin}%`;
+
+    // Show markets area
+    document.getElementById('marketsArea')?.classList.remove('hidden');
+    document.getElementById('exactScoreArea')?.classList.remove('hidden');
 }
 
 function displaySetHandicap(line, odds1, odds2, pSet1) {
-    const tbody = document.getElementById('setHandicapBody');
+    const tbody = document.getElementById('setHandicapTable');
     if (!tbody) return;
 
     const fair = removeFair(odds1, odds2);
-    const calc = calcSetHandicap(pSet1, line);
 
-    tbody.innerHTML = `
-        <tr>
-            <td>Player 1 (${line > 0 ? '+' : ''}${-line})</td>
-            <td>${(fair.prob1 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob1).toFixed(2)}</td>
-            <td>${(calc.player1 * 100).toFixed(2)}%</td>
-            <td>${(1 / calc.player1).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>Player 2 (${line > 0 ? '-' : '+'}${line})</td>
-            <td>${(fair.prob2 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob2).toFixed(2)}</td>
-            <td>${(calc.player2 * 100).toFixed(2)}%</td>
-            <td>${(1 / calc.player2).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><strong>Margin</strong></td>
-            <td colspan="3">${fair.margin}%</td>
-        </tr>
-    `;
+    // Update margin in header
+    document.getElementById('setHandicapMargin').textContent = `Margin: ${fair.margin}%`;
+
+    // Generate multiple handicap lines
+    const lines = [-2.5, -1.5, 1.5, 2.5];
+    let html = '';
+
+    lines.forEach(l => {
+        const calc = calcSetHandicap(pSet1, l);
+        const odds1Fair = 1 / calc.player1;
+        const odds2Fair = 1 / calc.player2;
+
+        html += `
+            <tr>
+                <td>${l > 0 ? '+' : ''}${l.toFixed(1)}</td>
+                <td class="num-col">${odds1Fair.toFixed(2)}</td>
+                <td class="num-col">${odds2Fair.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
 }
 
 function displayGameHandicap(line, odds1, odds2, pGame1, pGame2) {
-    const tbody = document.getElementById('gameHandicapBody');
+    const tbody = document.getElementById('gameHandicapTable');
     if (!tbody) return;
 
     const fair = removeFair(odds1, odds2);
-    const calc = calcGameHandicap(pGame1, pGame2, line);
 
-    tbody.innerHTML = `
-        <tr>
-            <td>Player 1 (${line > 0 ? '+' : ''}${-line})</td>
-            <td>${(fair.prob1 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob1).toFixed(2)}</td>
-            <td>${(calc.player1 * 100).toFixed(2)}%</td>
-            <td>${(1 / calc.player1).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>Player 2 (${line > 0 ? '-' : '+'}${line})</td>
-            <td>${(fair.prob2 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob2).toFixed(2)}</td>
-            <td>${(calc.player2 * 100).toFixed(2)}%</td>
-            <td>${(1 / calc.player2).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><strong>Margin</strong></td>
-            <td colspan="3">${fair.margin}%</td>
-        </tr>
-    `;
+    // Update margin in header
+    document.getElementById('gameHandicapMargin').textContent = `Margin: ${fair.margin}%`;
+
+    // Generate multiple handicap lines
+    const lines = [-5.5, -3.5, -1.5, 1.5, 3.5, 5.5];
+    let html = '';
+
+    lines.forEach(l => {
+        const calc = calcGameHandicap(pGame1, pGame2, l);
+        const odds1Fair = 1 / calc.player1;
+        const odds2Fair = 1 / calc.player2;
+
+        html += `
+            <tr>
+                <td>${l > 0 ? '+' : ''}${l.toFixed(1)}</td>
+                <td class="num-col">${odds1Fair.toFixed(2)}</td>
+                <td class="num-col">${odds2Fair.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
 }
 
 function displayTotalGames(line, overOdds, underOdds, pGame1, pGame2) {
-    const tbody = document.getElementById('totalGamesBody');
+    const tbody = document.getElementById('totalGamesTable');
     if (!tbody) return;
 
     const fair = removeFair(overOdds, underOdds);
-    const calc = calcTotalGames(pGame1, pGame2, line);
 
-    tbody.innerHTML = `
-        <tr>
-            <td>Over ${line}</td>
-            <td>${(fair.prob1 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob1).toFixed(2)}</td>
-            <td>${(calc.over * 100).toFixed(2)}%</td>
-            <td>${(1 / calc.over).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>Under ${line}</td>
-            <td>${(fair.prob2 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob2).toFixed(2)}</td>
-            <td>${(calc.under * 100).toFixed(2)}%</td>
-            <td>${(1 / calc.under).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><strong>Margin</strong></td>
-            <td colspan="3">${fair.margin}%</td>
-        </tr>
-    `;
+    // Update margin in header
+    document.getElementById('totalGamesMargin').textContent = `Margin: ${fair.margin}%`;
+
+    // Generate multiple total lines
+    const lines = [19.5, 20.5, 21.5, 22.5, 23.5, 24.5];
+    let html = '';
+
+    lines.forEach(l => {
+        const calc = calcTotalGames(pGame1, pGame2, l);
+        const overOdds = 1 / calc.over;
+        const underOdds = 1 / calc.under;
+
+        html += `
+            <tr>
+                <td>${l.toFixed(1)}</td>
+                <td class="num-col">${overOdds.toFixed(2)}</td>
+                <td class="num-col">${underOdds.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
 }
 
 function displaySet1Total(line, overOdds, underOdds, pGame1, pGame2) {
-    const tbody = document.getElementById('set1TotalBody');
+    const tbody = document.getElementById('set1TotalTable');
     if (!tbody) return;
 
     const fair = removeFair(overOdds, underOdds);
 
-    // Simplified calculation for set 1 total games
-    const meanGames = 9.5; // Average games in a set
-    const stdDev = 2;
-    const z = (line - meanGames) / stdDev;
-    const pOver = 1 - normalCDF(z);
+    // Update margin in header
+    document.getElementById('set1TotalMargin').textContent = `Margin: ${fair.margin}%`;
 
-    tbody.innerHTML = `
-        <tr>
-            <td>Over ${line}</td>
-            <td>${(fair.prob1 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob1).toFixed(2)}</td>
-            <td>${(pOver * 100).toFixed(2)}%</td>
-            <td>${(1 / pOver).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>Under ${line}</td>
-            <td>${(fair.prob2 * 100).toFixed(2)}%</td>
-            <td>${(1 / fair.prob2).toFixed(2)}</td>
-            <td>${((1 - pOver) * 100).toFixed(2)}%</td>
-            <td>${(1 / (1 - pOver)).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><strong>Margin</strong></td>
-            <td colspan="3">${fair.margin}%</td>
-        </tr>
-    `;
+    // Generate multiple total lines for Set 1
+    const lines = [8.5, 9.5, 10.5, 11.5, 12.5];
+    let html = '';
+
+    lines.forEach(l => {
+        // Simplified calculation for set 1 total games
+        const meanGames = 9.5; // Average games in a set
+        const stdDev = 2;
+        const z = (l - meanGames) / stdDev;
+        const pOver = 1 - normalCDF(z);
+        const pUnder = 1 - pOver;
+
+        const overOdds = 1 / pOver;
+        const underOdds = 1 / pUnder;
+
+        html += `
+            <tr>
+                <td>${l.toFixed(1)}</td>
+                <td class="num-col">${overOdds.toFixed(2)}</td>
+                <td class="num-col">${underOdds.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
 }
 
 function displayExactScores(pSet1) {
-    const tbody = document.getElementById('exactScoresBody');
+    const tbody = document.getElementById('exactScoreTable');
     if (!tbody) return;
 
     const scores = calcExactScores(pSet1);
@@ -397,23 +396,23 @@ function displayExactScores(pSet1) {
     tbody.innerHTML = `
         <tr>
             <td>2-0</td>
-            <td>${(scores.p20 * 100).toFixed(2)}%</td>
-            <td>${(1 / scores.p20).toFixed(2)}</td>
+            <td class="num-col">${(scores.p20 * 100).toFixed(2)}%</td>
+            <td class="num-col">${(1 / scores.p20).toFixed(2)}</td>
         </tr>
         <tr>
             <td>2-1</td>
-            <td>${(scores.p21 * 100).toFixed(2)}%</td>
-            <td>${(1 / scores.p21).toFixed(2)}</td>
+            <td class="num-col">${(scores.p21 * 100).toFixed(2)}%</td>
+            <td class="num-col">${(1 / scores.p21).toFixed(2)}</td>
         </tr>
         <tr>
             <td>1-2</td>
-            <td>${(scores.p12 * 100).toFixed(2)}%</td>
-            <td>${(1 / scores.p12).toFixed(2)}</td>
+            <td class="num-col">${(scores.p12 * 100).toFixed(2)}%</td>
+            <td class="num-col">${(1 / scores.p12).toFixed(2)}</td>
         </tr>
         <tr>
             <td>0-2</td>
-            <td>${(scores.p02 * 100).toFixed(2)}%</td>
-            <td>${(1 / scores.p02).toFixed(2)}</td>
+            <td class="num-col">${(scores.p02 * 100).toFixed(2)}%</td>
+            <td class="num-col">${(1 / scores.p02).toFixed(2)}</td>
         </tr>
     `;
 }
