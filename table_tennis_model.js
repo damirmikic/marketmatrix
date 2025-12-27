@@ -81,7 +81,7 @@ function runModel() {
 
     // --- Show Markets Area ---
     ['marketsArea', 'set1Area', 'set2Area', 'set3Area', 'set4Area', 'set5Area',
-        'exactScoreArea', 'specialsArea', 'winnerTotalArea', 'handicapTotalArea'].forEach(id => {
+        'exactScoreArea', 'specialsArea', 'winnerTotalArea'].forEach(id => {
             document.getElementById(id).classList.remove('hidden');
         });
 
@@ -255,55 +255,6 @@ function runModel() {
         winnerTotalHtml += `<tr><td>Player 2 & Under ${line.toFixed(1)}</td><td class="num-col prob-col">${(awayUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awayUnder)}</td></tr>`;
     });
     document.getElementById('winnerTotalTable').innerHTML = winnerTotalHtml;
-
-    // --- HANDICAP & TOTAL ---
-    // Combine handicap (spread) probabilities with total sets
-    // Use main handicap lines
-    const spreadLinesForCombo = [-2.5, -1.5, 1.5, 2.5];
-    let handicapTotalHtml = '';
-
-    spreadLinesForCombo.forEach(spreadLineCombo => {
-        // Calculate P(home covers) from exact scores
-        // Use same logic as main handicap table: covers if (home - away) > -line
-        let pHomeCoversSpread = 0;
-        exactScores.forEach(score => {
-            const [home, away] = score.label.split('-').map(Number);
-            const setDiff = home - away;
-            if (setDiff > -spreadLineCombo) {
-                pHomeCoversSpread += score.prob;
-            }
-        });
-        const pAwayCoversSpread = 1 - pHomeCoversSpread;
-
-        // For each spread line, combine with total line 3.5
-        [3.5].forEach(totalLineCombo => {
-            // Calculate P(Over total) from exact scores
-            let pOverTotal = 0;
-            exactScores.forEach(score => {
-                const [home, away] = score.label.split('-').map(Number);
-                const totalSets = home + away;
-                if (totalSets > totalLineCombo) {
-                    pOverTotal += score.prob;
-                }
-            });
-            const pUnderTotal = 1 - pOverTotal;
-
-            // Handicap & Total combinations (assuming independence)
-            const homeSpreadOver = pHomeCoversSpread * pOverTotal;
-            const homeSpreadUnder = pHomeCoversSpread * pUnderTotal;
-            const awaySpreadOver = pAwayCoversSpread * pOverTotal;
-            const awaySpreadUnder = pAwayCoversSpread * pUnderTotal;
-
-            const spreadLabel = spreadLineCombo > 0 ? `+${spreadLineCombo.toFixed(1)}` : spreadLineCombo.toFixed(1);
-            const awaySpreadLabel = spreadLineCombo > 0 ? `${(-spreadLineCombo).toFixed(1)}` : `+${Math.abs(spreadLineCombo).toFixed(1)}`;
-
-            handicapTotalHtml += `<tr><td>Player 1 ${spreadLabel} & Over ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(homeSpreadOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeSpreadOver)}</td></tr>`;
-            handicapTotalHtml += `<tr><td>Player 1 ${spreadLabel} & Under ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(homeSpreadUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeSpreadUnder)}</td></tr>`;
-            handicapTotalHtml += `<tr><td>Player 2 ${awaySpreadLabel} & Over ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadOver)}</td></tr>`;
-            handicapTotalHtml += `<tr><td>Player 2 ${awaySpreadLabel} & Under ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadUnder)}</td></tr>`;
-        });
-    });
-    document.getElementById('handicapTotalTable').innerHTML = handicapTotalHtml;
 }
 
 // Helper function to calculate exact score probabilities
