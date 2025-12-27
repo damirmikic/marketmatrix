@@ -92,8 +92,8 @@ function runModel() {
         expectedSetDiff += (home - away) * score.prob;
     });
 
-    // Generate handicap lines from -2.5 to +2.5
-    const spreadLines = [-2.5, -2.0, -1.5, -1.0, -0.5, 0.5, 1.0, 1.5, 2.0, 2.5];
+    // Generate handicap lines: only -2.5, -1.5, +1.5, +2.5
+    const spreadLines = [-2.5, -1.5, 1.5, 2.5];
 
     let spreadHtml = '';
     spreadLines.forEach(line => {
@@ -240,8 +240,8 @@ function runModel() {
 
     // --- HANDICAP & TOTAL ---
     // Combine handicap (spread) probabilities with total sets
-    // Use the most common handicap lines around the expected difference
-    const spreadLinesForCombo = [-1.5, -0.5, 0.5, 1.5];
+    // Use main handicap lines
+    const spreadLinesForCombo = [-2.5, -1.5, 1.5, 2.5];
     let handicapTotalHtml = '';
 
     spreadLinesForCombo.forEach(spreadLineCombo => {
