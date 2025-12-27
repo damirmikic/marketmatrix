@@ -321,8 +321,8 @@ function runModel() {
         const spreadQBase = Math.round(spreadQ * 2) / 2; // round to nearest .5
         const totalQBase = Math.floor(totalQ) + 0.5;
 
-        // Generate Quarter Spread table (4 lines on half points)
-        const spreadQLines = [spreadQBase - 1.5, spreadQBase - 0.5, spreadQBase + 0.5, spreadQBase + 1.5]
+        // Generate Quarter Spread table (5 lines on half points)
+        const spreadQLines = [spreadQBase - 2, spreadQBase - 1, spreadQBase, spreadQBase + 1, spreadQBase + 2]
             .filter(l => Math.abs(l) !== 0.5);
         let spreadQHtml = '';
         spreadQLines.forEach(line => {
