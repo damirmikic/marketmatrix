@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Tennis | MarketMatrix</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- LEFT COLUMN: API LOADER & INPUTS -->
+        <div class="sidebar-column">
+            <!-- CONTROLS -->
+            <a href="index.html"
+                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+                &larr; Home
+            </a>
+            <button id="toggleAllBtn" onclick="toggleAllCards()" style="margin-top: 0; margin-bottom: 20px;">Collapse
+                All</button>
+
+            <!-- API MATCH LOADER -->
+            <div class="card" id="apiMatchLoader" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('apiMatchLoader')">
+                    <h2>0. Select Match</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COUNTRY
+                                / REGION</label>
+                            <select id="apiCountrySelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COMPETITION</label>
+                            <select id="apiLeagueSelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;"
+                                disabled>
+                                <option value="">Select country</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
+                            <select id="apiMatchSelect"
+                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;"
+                                disabled>
+                                <option value="">Select competition</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INPUT ODDS -->
+            <div class="card" id="inputCard">
+                <div class="card-header" onclick="toggleCard('inputCard')">
+                    <h2>1. Input Odds</h2>
+                </div>
+                <div class="card-content">
+                    <h3>Match Winner <span id="moneylineMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
+                    <div class="input-group">
+                        <label>Player 1</label>
+                        <input type="number" id="homeOdds" step="0.01" value="1.55" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Player 2</label>
+                        <input type="number" id="awayOdds" step="0.01" value="2.50" oninput="runModel()">
+                    </div>
+
+                    <h3>Set Handicap <span id="spreadMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
+                    <div class="input-group">
+                        <label>Line</label>
+                        <input type="number" id="spreadLine" step="0.5" value="-1.5" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Player 1 Odds</label>
+                        <input type="number" id="spreadHomeOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label>Player 2 Odds</label>
+                        <input type="number" id="spreadAwayOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+
+                    <h3>Total Sets <span id="totalMargin"
+                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                            -</span></h3>
+                    <div class="input-group">
+                        <label>Line</label>
+                        <input type="number" id="totalLine" step="0.5" value="3.5" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label id="overLabel">Over</label>
+                        <input type="number" id="overOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+                    <div class="input-group">
+                        <label id="underLabel">Under</label>
+                        <input type="number" id="underOdds" step="0.01" value="1.91" oninput="runModel()">
+                    </div>
+
+                    <h3 style="margin-top: 15px;">Set Ratios (Total = 1.00)</h3>
+                    <div class="input-group">
+                        <label>Set 1 Ratio</label>
+                        <input type="number" id="set1Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Set 2 Ratio</label>
+                        <input type="number" id="set2Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Set 3 Ratio</label>
+                        <input type="number" id="set3Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Set 4 Ratio</label>
+                        <input type="number" id="set4Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Set 5 Ratio</label>
+                        <input type="number" id="set5Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">
+                    </div>
+
+                    <h3 style="margin-top: 15px;">Derived Parameters</h3>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-val" id="homeWinProb">-</div>
+                            <div class="stat-label">Player 1 %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="awayWinProb">-</div>
+                            <div class="stat-label">Player 2 %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="expectedTotal">-</div>
+                            <div class="stat-label">Exp. Sets</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: MARKETS -->
+        <div class="main-content">
+            <div class="card hidden" id="marketsArea">
+                <div class="card-header" onclick="toggleCard('marketsArea')">
+                    <h2>2. Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3>Match Winner (Fair Odds)</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="fairHome">-</div>
+                            <div class="stat-label">Player 1</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="fairAway">-</div>
+                            <div class="stat-label">Player 2</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">Set Handicap Lines</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Player 1</th>
+                                <th class="num-col">Player 2</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spreadTable"></tbody>
+                    </table>
+
+                    <h3 style="margin-top: 20px;">Total Sets Lines</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="totalTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SET MARKETS -->
+            <!-- SET 1 MARKETS -->
+            <div class="card hidden" id="set1Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('set1Area')">
+                    <h2>3. Set 1 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Set 1 Winner</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set1Player1">-</div>
+                            <div class="stat-label">Player 1</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set1Player2">-</div>
+                            <div class="stat-label">Player 2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SET 2 MARKETS -->
+            <div class="card hidden" id="set2Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('set2Area')">
+                    <h2>4. Set 2 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Set 2 Winner</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set2Player1">-</div>
+                            <div class="stat-label">Player 1</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set2Player2">-</div>
+                            <div class="stat-label">Player 2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SET 3 MARKETS -->
+            <div class="card hidden" id="set3Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('set3Area')">
+                    <h2>5. Set 3 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Set 3 Winner</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set3Player1">-</div>
+                            <div class="stat-label">Player 1</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set3Player2">-</div>
+                            <div class="stat-label">Player 2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SET 4 MARKETS -->
+            <div class="card hidden" id="set4Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('set4Area')">
+                    <h2>6. Set 4 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Set 4 Winner</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set4Player1">-</div>
+                            <div class="stat-label">Player 1</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set4Player2">-</div>
+                            <div class="stat-label">Player 2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SET 5 MARKETS -->
+            <div class="card hidden" id="set5Area" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('set5Area')">
+                    <h2>7. Set 5 Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Set 5 Winner</h3>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set5Player1">-</div>
+                            <div class="stat-label">Player 1</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="set5Player2">-</div>
+                            <div class="stat-label">Player 2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: ADDITIONAL MARKETS -->
+        <div class="markets-content">
+            <!-- EXACT SCORE -->
+            <div class="card hidden" id="exactScoreArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('exactScoreArea')">
+                    <h2>8. Exact Score</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Score</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exactScoreTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SPECIALS -->
+            <div class="card hidden" id="specialsArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('specialsArea')">
+                    <h2>9. Specials</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="font-size: 0.9rem;">Total Sets Odd/Even</h3>
+                    <table style="margin-bottom: 20px;">
+                        <tbody id="oddEvenTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 0.9rem;">Match Goes to 5 Sets</h3>
+                    <table>
+                        <tbody id="fiveSetterTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- WINNER & TOTAL -->
+            <div class="card hidden" id="winnerTotalArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('winnerTotalArea')">
+                    <h2>10. Winner &amp; Total</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Market</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="winnerTotalTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HANDICAP & TOTAL -->
+            <div class="card hidden" id="handicapTotalArea" style="margin-bottom: 20px;">
+                <div class="card-header" onclick="toggleCard('handicapTotalArea')">
+                    <h2>11. Handicap &amp; Total</h2>
+                </div>
+                <div class="card-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Market</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="handicapTotalTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCard(id) {
+            document.getElementById(id).classList.toggle('collapsed');
+        }
+
+        function toggleAllCards() {
+            const cards = document.querySelectorAll('.card');
+            const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
+            cards.forEach(c => c.classList.toggle('collapsed', !allCollapsed));
+            document.getElementById('toggleAllBtn').textContent = allCollapsed ? 'Collapse All' : 'Expand All';
+        }
+    </script>
+    <script type="module" src="table_tennis_model.js"></script>
+</body>
+
+</html>
