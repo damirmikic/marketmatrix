@@ -77,39 +77,8 @@
                         <input type="number" id="awayOdds" step="0.01" value="2.50" oninput="runModel()">
                     </div>
 
-                    <h3>Set Handicap <span id="spreadMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
-                    <div class="input-group">
-                        <label>Line</label>
-                        <input type="number" id="spreadLine" step="0.5" value="-1.5" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Player 1 Odds</label>
-                        <input type="number" id="spreadHomeOdds" step="0.01" value="1.91" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Player 2 Odds</label>
-                        <input type="number" id="spreadAwayOdds" step="0.01" value="1.91" oninput="runModel()">
-                    </div>
-
-                    <h3>Total Sets <span id="totalMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
-                    <div class="input-group">
-                        <label>Line</label>
-                        <input type="number" id="totalLine" step="0.5" value="3.5" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label id="overLabel">Over</label>
-                        <input type="number" id="overOdds" step="0.01" value="1.91" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label id="underLabel">Under</label>
-                        <input type="number" id="underOdds" step="0.01" value="1.91" oninput="runModel()">
-                    </div>
-
-                    <h3 style="margin-top: 15px;">Set Ratios (Total = 1.00)</h3>
+                    <h3 style="margin-top: 15px;">Set Ratios (Optional)</h3>
+                    <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0;">Individual set win probabilities (defaults to match probability)</p>
                     <div class="input-group">
                         <label>Set 1 Ratio</label>
                         <input type="number" id="set1Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">

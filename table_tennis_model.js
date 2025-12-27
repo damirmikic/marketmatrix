@@ -29,17 +29,11 @@ function solveShin(odds) {
 
 // --- Main Controller ---
 function runModel() {
-    // Get Inputs
+    // Get Inputs - only Match Winner odds
     const hOdds = parseFloat(document.getElementById('homeOdds').value);
     const aOdds = parseFloat(document.getElementById('awayOdds').value);
-    const spreadLine = parseFloat(document.getElementById('spreadLine').value);
-    const spreadHomeOdds = parseFloat(document.getElementById('spreadHomeOdds').value);
-    const spreadAwayOdds = parseFloat(document.getElementById('spreadAwayOdds').value);
-    const totalLine = parseFloat(document.getElementById('totalLine').value);
-    const overOdds = parseFloat(document.getElementById('overOdds').value);
-    const underOdds = parseFloat(document.getElementById('underOdds').value);
 
-    // Get Set Ratios
+    // Get Set Ratios (optional - used for individual set probabilities)
     const set1Ratio = parseFloat(document.getElementById('set1Ratio').value) || 0.20;
     const set2Ratio = parseFloat(document.getElementById('set2Ratio').value) || 0.20;
     const set3Ratio = parseFloat(document.getElementById('set3Ratio').value) || 0.20;
@@ -47,37 +41,15 @@ function runModel() {
     const set5Ratio = parseFloat(document.getElementById('set5Ratio').value) || 0.20;
 
     // Basic validation
-    if ([hOdds, aOdds, totalLine, overOdds, underOdds].some(isNaN)) return;
-
-    // Update Labels
-    document.getElementById('overLabel').textContent = `Over ${totalLine}`;
-    document.getElementById('underLabel').textContent = `Under ${totalLine}`;
+    if (isNaN(hOdds) || isNaN(aOdds)) return;
 
     // --- Margin Calculations ---
-    // Moneyline Margin
+    // Match Winner Margin
     const mlMargin = ((1 / hOdds + 1 / aOdds) - 1) * 100;
     const mlMarginEl = document.getElementById('moneylineMargin');
     if (mlMarginEl) {
         mlMarginEl.textContent = `Margin: ${mlMargin.toFixed(2)}%`;
         mlMarginEl.style.color = mlMargin < 5 ? '#4ade80' : (mlMargin < 8 ? '#facc15' : '#f87171');
-    }
-
-    // Spread Margin
-    if (!isNaN(spreadHomeOdds) && !isNaN(spreadAwayOdds)) {
-        const spreadMargin = ((1 / spreadHomeOdds + 1 / spreadAwayOdds) - 1) * 100;
-        const spreadMarginEl = document.getElementById('spreadMargin');
-        if (spreadMarginEl) {
-            spreadMarginEl.textContent = `Margin: ${spreadMargin.toFixed(2)}%`;
-            spreadMarginEl.style.color = spreadMargin < 5 ? '#4ade80' : (spreadMargin < 8 ? '#facc15' : '#f87171');
-        }
-    }
-
-    // Total Margin
-    const totalMargin = ((1 / overOdds + 1 / underOdds) - 1) * 100;
-    const totalMarginEl = document.getElementById('totalMargin');
-    if (totalMarginEl) {
-        totalMarginEl.textContent = `Margin: ${totalMargin.toFixed(2)}%`;
-        totalMarginEl.style.color = totalMargin < 5 ? '#4ade80' : (totalMargin < 8 ? '#facc15' : '#f87171');
     }
 
     // --- Fair Probabilities ---
@@ -92,12 +64,13 @@ function runModel() {
     document.getElementById('fairHome').textContent = probToOdds(homeWinProb);
     document.getElementById('fairAway').textContent = probToOdds(awayWinProb);
 
-    // --- Derive Expected Total Sets from Over/Under ---
-    const fairOU = solveShin([overOdds, underOdds]);
-    const pOver = fairOU[0];
-    // Table tennis best of 5: total can be 3, 4, or 5 sets
-    // If P(Over 3.5) = high, expect 4 or 5 sets
-    const expectedTotal = totalLine + (pOver - 0.5) * 2;
+    // --- Derive Expected Total Sets from Match Probability ---
+    // Closer the match (probability closer to 0.5), more sets expected
+    // Expected total = 3 + closeness_factor * 2
+    // If p = 0.5 (perfectly even), expect ~4.5 sets
+    // If p = 0.9 (one-sided), expect ~3.2 sets
+    const closeness = 1 - Math.abs(homeWinProb - 0.5) * 2; // 0 = one-sided, 1 = perfectly even
+    const expectedTotal = 3 + closeness * 1.5; // Range: 3.0 to 4.5 sets
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(1);
 
     // --- Show Markets Area ---
@@ -106,27 +79,36 @@ function runModel() {
             document.getElementById(id).classList.remove('hidden');
         });
 
-    // --- Generate Set Handicap Table ---
-    // Get fair probability at the base line
-    const fairSpreadH = !isNaN(spreadHomeOdds) && !isNaN(spreadAwayOdds) ?
-        solveShin([spreadHomeOdds, spreadAwayOdds])[0] : 0.5;
+    // --- Generate Set Handicap Table (Derived from Match Probability) ---
+    // Estimate the expected set difference based on match probability
+    // If homeWinProb = 0.65, we expect home to win by ~1 set on average
+    // Use exact score probabilities to derive expected handicap
+    const exactScores = calculateExactScores(homeWinProb);
 
-    // Round base spread to nearest half point
-    const baseSpread = !isNaN(spreadLine) ? spreadLine : -1.5;
-    const roundedBaseSpread = Math.round(baseSpread * 2) / 2;
+    // Calculate expected set difference
+    let expectedSetDiff = 0;
+    exactScores.forEach(score => {
+        const [home, away] = score.label.split('-').map(Number);
+        expectedSetDiff += (home - away) * score.prob;
+    });
 
-    // Generate lines from -2.5 to +2.5 in 0.5 increments
-    const spreadLines = [];
-    for (let i = -2.5; i <= 2.5; i += 0.5) {
-        spreadLines.push(i);
-    }
+    // Generate handicap lines from -2.5 to +2.5
+    const spreadLines = [-2.5, -2.0, -1.5, -1.0, -0.5, 0.5, 1.0, 1.5, 2.0, 2.5];
 
     let spreadHtml = '';
     spreadLines.forEach(line => {
-        // Each half-set shift changes prob by ~15%
-        const probShift = (line - roundedBaseSpread) * 0.15;
-        let pHomeCovers = Math.max(0.01, Math.min(0.99, fairSpreadH + probShift));
-        const isBaseLine = Math.abs(line - roundedBaseSpread) < 0.3;
+        // Probability that home covers the line
+        // Sum probabilities where (home_sets - away_sets) > line
+        let pHomeCovers = 0;
+        exactScores.forEach(score => {
+            const [home, away] = score.label.split('-').map(Number);
+            if ((home - away) > line) {
+                pHomeCovers += score.prob;
+            }
+        });
+
+        pHomeCovers = Math.max(0.01, Math.min(0.99, pHomeCovers));
+        const isBaseLine = Math.abs(line + expectedSetDiff) < 0.6;
         const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
         spreadHtml += `<tr${rowStyle}>
             <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
@@ -136,19 +118,24 @@ function runModel() {
     });
     document.getElementById('spreadTable').innerHTML = spreadHtml;
 
-    // --- Generate Total Sets Table ---
-    // Round base total to nearest half point
-    const roundedBaseTotal = Math.round(totalLine * 2) / 2;
-
-    // Generate lines from 2.5 to 4.5 in 0.5 increments
+    // --- Generate Total Sets Table (Derived from Exact Scores) ---
+    // Calculate probabilities for each total from exact scores
     const totalLines = [2.5, 3.5, 4.5];
 
     let totalHtml = '';
     totalLines.forEach(line => {
-        // Each half-set shift changes prob by ~20%
-        const probShift = (line - roundedBaseTotal) * 0.20;
-        let pOverLine = Math.max(0.01, Math.min(0.99, pOver - probShift));
-        const isBaseLine = Math.abs(line - roundedBaseTotal) < 0.3;
+        // Probability of over: sum probabilities where total sets > line
+        let pOverLine = 0;
+        exactScores.forEach(score => {
+            const [home, away] = score.label.split('-').map(Number);
+            const totalSets = home + away;
+            if (totalSets > line) {
+                pOverLine += score.prob;
+            }
+        });
+
+        pOverLine = Math.max(0.01, Math.min(0.99, pOverLine));
+        const isBaseLine = Math.abs(line - expectedTotal) < 0.6;
         const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
         totalHtml += `<tr${rowStyle}>
             <td class="line-col">${line.toFixed(1)}</td>
@@ -159,7 +146,8 @@ function runModel() {
     document.getElementById('totalTable').innerHTML = totalHtml;
 
     // --- INDIVIDUAL SET MARKETS ---
-    // For each set, the probability is roughly equal with slight home advantage
+    // For each set, use match probability as baseline
+    // Individual set probabilities are approximately equal to match probability
     const sets = [
         { ratio: set1Ratio, name: 'Set 1', player1Id: 'set1Player1', player2Id: 'set1Player2' },
         { ratio: set2Ratio, name: 'Set 2', player1Id: 'set2Player1', player2Id: 'set2Player2' },
@@ -169,9 +157,9 @@ function runModel() {
     ];
 
     sets.forEach(set => {
-        // Each set win probability is approximately the same as match probability
-        // with slight variation based on set importance (later sets might be more balanced)
-        const setHomeProb = Math.max(0.1, Math.min(0.9, homeWinProb + (Math.random() - 0.5) * 0.05));
+        // Each set win probability approximately equals match probability
+        // (assuming independent sets with consistent player strength)
+        const setHomeProb = homeWinProb;
         document.getElementById(set.player1Id).textContent = probToOdds(setHomeProb);
         document.getElementById(set.player2Id).textContent = probToOdds(1 - setHomeProb);
     });
@@ -213,15 +201,24 @@ function runModel() {
 
     // --- WINNER & TOTAL ---
     // Combine winner probabilities with total sets over/under
-    const totalLinesForCombo = [3.5];
+    // Calculate probabilities from exact scores
     let winnerTotalHtml = '';
+    const totalLinesForCombo = [3.5];
 
     totalLinesForCombo.forEach(line => {
-        const probShift = (line - roundedBaseTotal) * 0.20;
-        const pOverLine = Math.max(0.05, Math.min(0.95, pOver - probShift));
+        // Calculate P(Over) from exact scores
+        let pOverLine = 0;
+        exactScores.forEach(score => {
+            const [home, away] = score.label.split('-').map(Number);
+            const totalSets = home + away;
+            if (totalSets > line) {
+                pOverLine += score.prob;
+            }
+        });
+
         const pUnderLine = 1 - pOverLine;
 
-        // Winner & Total combinations
+        // Winner & Total combinations (assuming independence)
         const homeOver = homeWinProb * pOverLine;
         const homeUnder = homeWinProb * pUnderLine;
         const awayOver = awayWinProb * pOverLine;
@@ -236,32 +233,47 @@ function runModel() {
 
     // --- HANDICAP & TOTAL ---
     // Combine handicap (spread) probabilities with total sets
-    const spreadLinesForCombo = [roundedBaseSpread - 0.5, roundedBaseSpread, roundedBaseSpread + 0.5];
+    // Use the most common handicap lines around the expected difference
+    const spreadLinesForCombo = [-1.5, -0.5, 0.5, 1.5];
     let handicapTotalHtml = '';
 
     spreadLinesForCombo.forEach(spreadLineCombo => {
-        const spreadProbShift = (spreadLineCombo - roundedBaseSpread) * 0.15;
-        const pHomeCoversSpread = Math.max(0.05, Math.min(0.95, fairSpreadH + spreadProbShift));
+        // Calculate P(home covers) from exact scores
+        let pHomeCoversSpread = 0;
+        exactScores.forEach(score => {
+            const [home, away] = score.label.split('-').map(Number);
+            if ((home - away) > spreadLineCombo) {
+                pHomeCoversSpread += score.prob;
+            }
+        });
         const pAwayCoversSpread = 1 - pHomeCoversSpread;
 
-        // For each spread line, combine with total line
+        // For each spread line, combine with total line 3.5
         [3.5].forEach(totalLineCombo => {
-            const totalProbShift = (totalLineCombo - roundedBaseTotal) * 0.20;
-            const pOverTotal = Math.max(0.05, Math.min(0.95, pOver - totalProbShift));
+            // Calculate P(Over total) from exact scores
+            let pOverTotal = 0;
+            exactScores.forEach(score => {
+                const [home, away] = score.label.split('-').map(Number);
+                const totalSets = home + away;
+                if (totalSets > totalLineCombo) {
+                    pOverTotal += score.prob;
+                }
+            });
             const pUnderTotal = 1 - pOverTotal;
 
-            // Handicap & Total combinations
+            // Handicap & Total combinations (assuming independence)
             const homeSpreadOver = pHomeCoversSpread * pOverTotal;
             const homeSpreadUnder = pHomeCoversSpread * pUnderTotal;
             const awaySpreadOver = pAwayCoversSpread * pOverTotal;
             const awaySpreadUnder = pAwayCoversSpread * pUnderTotal;
 
             const spreadLabel = spreadLineCombo > 0 ? `+${spreadLineCombo.toFixed(1)}` : spreadLineCombo.toFixed(1);
+            const awaySpreadLabel = spreadLineCombo > 0 ? `${(-spreadLineCombo).toFixed(1)}` : `+${Math.abs(spreadLineCombo).toFixed(1)}`;
 
             handicapTotalHtml += `<tr><td>Player 1 ${spreadLabel} & Over ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(homeSpreadOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeSpreadOver)}</td></tr>`;
             handicapTotalHtml += `<tr><td>Player 1 ${spreadLabel} & Under ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(homeSpreadUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(homeSpreadUnder)}</td></tr>`;
-            handicapTotalHtml += `<tr><td>Player 2 ${spreadLineCombo > 0 ? spreadLineCombo.toFixed(1) : `+${Math.abs(spreadLineCombo).toFixed(1)}`} & Over ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadOver)}</td></tr>`;
-            handicapTotalHtml += `<tr><td>Player 2 ${spreadLineCombo > 0 ? spreadLineCombo.toFixed(1) : `+${Math.abs(spreadLineCombo).toFixed(1)}`} & Under ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadUnder)}</td></tr>`;
+            handicapTotalHtml += `<tr><td>Player 2 ${awaySpreadLabel} & Over ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadOver * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadOver)}</td></tr>`;
+            handicapTotalHtml += `<tr><td>Player 2 ${awaySpreadLabel} & Under ${totalLineCombo.toFixed(1)}</td><td class="num-col prob-col">${(awaySpreadUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awaySpreadUnder)}</td></tr>`;
         });
     });
     document.getElementById('handicapTotalTable').innerHTML = handicapTotalHtml;
