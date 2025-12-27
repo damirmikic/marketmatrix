@@ -64,6 +64,12 @@ function runModel() {
     document.getElementById('fairHome').textContent = probToOdds(homeWinProb);
     document.getElementById('fairAway').textContent = probToOdds(awayWinProb);
 
+    // --- Calculate Set Win Probability from Match Probability ---
+    // Formula: P_Set = 0.5 + 0.742 × (P_Match - 0.5)
+    // Individual sets regress toward 50/50 compared to match probability
+    const setHomeProb = 0.5 + 0.742 * (homeWinProb - 0.5);
+    const setAwayProb = 1 - setHomeProb;
+
     // --- Derive Expected Total Sets from Match Probability ---
     // Closer the match (probability closer to 0.5), more sets expected
     // Expected total = 3 + closeness_factor * 2
@@ -79,11 +85,10 @@ function runModel() {
             document.getElementById(id).classList.remove('hidden');
         });
 
-    // --- Generate Set Handicap Table (Derived from Match Probability) ---
-    // Estimate the expected set difference based on match probability
-    // If homeWinProb = 0.65, we expect home to win by ~1 set on average
-    // Use exact score probabilities to derive expected handicap
-    const exactScores = calculateExactScores(homeWinProb);
+    // --- Generate Set Handicap Table (Derived from Set Probability) ---
+    // Use set win probability (not match) for binomial model
+    // This accounts for regression toward 50/50 at individual set level
+    const exactScores = calculateExactScores(setHomeProb);
 
     // Calculate expected set difference
     let expectedSetDiff = 0;
@@ -154,8 +159,7 @@ function runModel() {
     document.getElementById('totalTable').innerHTML = totalHtml;
 
     // --- INDIVIDUAL SET MARKETS ---
-    // For each set, use match probability as baseline
-    // Individual set probabilities are approximately equal to match probability
+    // Use derived set probability (regressed from match probability)
     const sets = [
         { ratio: set1Ratio, name: 'Set 1', player1Id: 'set1Player1', player2Id: 'set1Player2' },
         { ratio: set2Ratio, name: 'Set 2', player1Id: 'set2Player1', player2Id: 'set2Player2' },
@@ -165,11 +169,9 @@ function runModel() {
     ];
 
     sets.forEach(set => {
-        // Each set win probability approximately equals match probability
-        // (assuming independent sets with consistent player strength)
-        const setHomeProb = homeWinProb;
+        // Use regressed set probability: P_Set = 0.5 + 0.742 × (P_Match - 0.5)
         document.getElementById(set.player1Id).textContent = probToOdds(setHomeProb);
-        document.getElementById(set.player2Id).textContent = probToOdds(1 - setHomeProb);
+        document.getElementById(set.player2Id).textContent = probToOdds(setAwayProb);
     });
 
     // --- EXACT SCORE ---
@@ -204,6 +206,22 @@ function runModel() {
     document.getElementById('fiveSetterTable').innerHTML = `
         <tr><td>Yes</td><td class="num-col">${probToOdds(pFiveSets)}</td></tr>
         <tr><td>No</td><td class="num-col">${probToOdds(1 - pFiveSets)}</td></tr>
+    `;
+
+    // --- BOTH/EACH PLAYER TO WIN SET ---
+    // P(Player 1 wins at least 1 set) = 1 - P(0-3)
+    // P(Player 2 wins at least 1 set) = 1 - P(3-0)
+    // P(Both win at least 1 set) = 1 - P(3-0) - P(0-3)
+    const p30 = exactScores.find(s => s.label === '3-0')?.prob || 0;
+    const p03 = exactScores.find(s => s.label === '0-3')?.prob || 0;
+    const pPlayer1WinsSet = 1 - p03;
+    const pPlayer2WinsSet = 1 - p30;
+    const pBothWinSet = 1 - p30 - p03;
+
+    document.getElementById('bothWinSetTable').innerHTML = `
+        <tr><td>Player 1 to win a set</td><td class="num-col">${probToOdds(pPlayer1WinsSet)}</td></tr>
+        <tr><td>Player 2 to win a set</td><td class="num-col">${probToOdds(pPlayer2WinsSet)}</td></tr>
+        <tr><td>Both to win a set</td><td class="num-col">${probToOdds(pBothWinSet)}</td></tr>
     `;
 
     // --- WINNER & TOTAL ---
@@ -289,12 +307,14 @@ function runModel() {
 }
 
 // Helper function to calculate exact score probabilities
-function calculateExactScores(homeWinProb) {
+function calculateExactScores(setWinProb) {
     // Best of 5 table tennis
     // Possible scores: 3-0, 3-1, 3-2, 2-3, 1-3, 0-3
 
-    // Simplified model: each set is independent with same win probability
-    const p = homeWinProb;
+    // Uses SET win probability (not match), calculated via:
+    // P_Set = 0.5 + 0.742 × (P_Match - 0.5)
+    // This accounts for regression toward 50/50 at individual set level
+    const p = setWinProb;
     const q = 1 - p;
 
     // Binomial probabilities for best of 5
