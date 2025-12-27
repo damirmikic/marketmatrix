@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis Model - Market Matrix</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <a href="index.html" class="home-button">← Home</a>
+                <h2>Tennis Model</h2>
+            </div>
+
+            <!-- Match Selector -->
+            <div class="input-section">
+                <h3>Select Match</h3>
+                <div class="form-group">
+                    <label for="tournamentSelect">Tournament:</label>
+                    <select id="tournamentSelect" class="form-control">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="matchSelect">Match:</label>
+                    <select id="matchSelect" class="form-control">
+                        <option value="">Select Tournament First</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Match Odds Input -->
+            <div class="input-section">
+                <h3>Match Odds</h3>
+                <div class="form-group">
+                    <label for="player1Odds">Player 1 Odds:</label>
+                    <input type="number" id="player1Odds" class="form-control" step="0.01" placeholder="e.g., 1.65">
+                </div>
+                <div class="form-group">
+                    <label for="player2Odds">Player 2 Odds:</label>
+                    <input type="number" id="player2Odds" class="form-control" step="0.01" placeholder="e.g., 2.25">
+                </div>
+            </div>
+
+            <!-- Set Handicap Input -->
+            <div class="input-section">
+                <h3>Set Handicap</h3>
+                <div class="form-group">
+                    <label for="setHandicapLine">Line:</label>
+                    <input type="number" id="setHandicapLine" class="form-control" step="0.5" placeholder="e.g., 1.5">
+                </div>
+                <div class="form-group">
+                    <label for="setHandicapPlayer1">Player 1 Odds:</label>
+                    <input type="number" id="setHandicapPlayer1" class="form-control" step="0.01" placeholder="e.g., 1.90">
+                </div>
+                <div class="form-group">
+                    <label for="setHandicapPlayer2">Player 2 Odds:</label>
+                    <input type="number" id="setHandicapPlayer2" class="form-control" step="0.01" placeholder="e.g., 1.90">
+                </div>
+            </div>
+
+            <!-- Game Handicap Input -->
+            <div class="input-section">
+                <h3>Game Handicap</h3>
+                <div class="form-group">
+                    <label for="gameHandicapLine">Line:</label>
+                    <input type="number" id="gameHandicapLine" class="form-control" step="0.5" placeholder="e.g., 3.5">
+                </div>
+                <div class="form-group">
+                    <label for="gameHandicapPlayer1">Player 1 Odds:</label>
+                    <input type="number" id="gameHandicapPlayer1" class="form-control" step="0.01" placeholder="e.g., 1.85">
+                </div>
+                <div class="form-group">
+                    <label for="gameHandicapPlayer2">Player 2 Odds:</label>
+                    <input type="number" id="gameHandicapPlayer2" class="form-control" step="0.01" placeholder="e.g., 1.95">
+                </div>
+            </div>
+
+            <!-- Total Games Input -->
+            <div class="input-section">
+                <h3>Total Games</h3>
+                <div class="form-group">
+                    <label for="totalGamesLine">Line:</label>
+                    <input type="number" id="totalGamesLine" class="form-control" step="0.5" placeholder="e.g., 21.5">
+                </div>
+                <div class="form-group">
+                    <label for="totalGamesOver">Over Odds:</label>
+                    <input type="number" id="totalGamesOver" class="form-control" step="0.01" placeholder="e.g., 1.90">
+                </div>
+                <div class="form-group">
+                    <label for="totalGamesUnder">Under Odds:</label>
+                    <input type="number" id="totalGamesUnder" class="form-control" step="0.01" placeholder="e.g., 1.90">
+                </div>
+            </div>
+
+            <!-- Total Games Set 1 Input -->
+            <div class="input-section">
+                <h3>Total Games - Set 1</h3>
+                <div class="form-group">
+                    <label for="set1TotalLine">Line:</label>
+                    <input type="number" id="set1TotalLine" class="form-control" step="0.5" placeholder="e.g., 9.5">
+                </div>
+                <div class="form-group">
+                    <label for="set1TotalOver">Over Odds:</label>
+                    <input type="number" id="set1TotalOver" class="form-control" step="0.01" placeholder="e.g., 1.85">
+                </div>
+                <div class="form-group">
+                    <label for="set1TotalUnder">Under Odds:</label>
+                    <input type="number" id="set1TotalUnder" class="form-control" step="0.01" placeholder="e.g., 1.95">
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1>Tennis Betting Model</h1>
+
+            <!-- Match Odds Output -->
+            <div class="output-section">
+                <h2>Match Odds (Moneyline)</h2>
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>Outcome</th>
+                            <th>Fair Prob</th>
+                            <th>Fair Odds</th>
+                            <th>Model Prob</th>
+                            <th>Model Odds</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchOddsBody">
+                        <tr>
+                            <td colspan="5" class="no-data">Enter odds to see results</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Set Handicap Output -->
+            <div class="output-section">
+                <h2>Set Handicap</h2>
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>Outcome</th>
+                            <th>Fair Prob</th>
+                            <th>Fair Odds</th>
+                            <th>Model Prob</th>
+                            <th>Model Odds</th>
+                        </tr>
+                    </thead>
+                    <tbody id="setHandicapBody">
+                        <tr>
+                            <td colspan="5" class="no-data">Enter set handicap odds to see results</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Game Handicap Output -->
+            <div class="output-section">
+                <h2>Game Handicap</h2>
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>Outcome</th>
+                            <th>Fair Prob</th>
+                            <th>Fair Odds</th>
+                            <th>Model Prob</th>
+                            <th>Model Odds</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gameHandicapBody">
+                        <tr>
+                            <td colspan="5" class="no-data">Enter game handicap odds to see results</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total Games Output -->
+            <div class="output-section">
+                <h2>Total Games</h2>
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>Outcome</th>
+                            <th>Fair Prob</th>
+                            <th>Fair Odds</th>
+                            <th>Model Prob</th>
+                            <th>Model Odds</th>
+                        </tr>
+                    </thead>
+                    <tbody id="totalGamesBody">
+                        <tr>
+                            <td colspan="5" class="no-data">Enter total games odds to see results</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total Games Set 1 Output -->
+            <div class="output-section">
+                <h2>Total Games - Set 1</h2>
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>Outcome</th>
+                            <th>Fair Prob</th>
+                            <th>Fair Odds</th>
+                            <th>Model Prob</th>
+                            <th>Model Odds</th>
+                        </tr>
+                    </thead>
+                    <tbody id="set1TotalBody">
+                        <tr>
+                            <td colspan="5" class="no-data">Enter set 1 total odds to see results</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Exact Scores Output -->
+            <div class="output-section">
+                <h2>Exact Set Score</h2>
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>Score</th>
+                            <th>Probability</th>
+                            <th>Fair Odds</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exactScoresBody">
+                        <tr>
+                            <td colspan="3" class="no-data">Enter match odds to see results</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="tennis_model.js"></script>
+</body>
+</html>
