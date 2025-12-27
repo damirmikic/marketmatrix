@@ -238,7 +238,7 @@ function runModel() {
     // 1H expected spread and total
     const spread1H = roundedBaseSpread * halfRatio1H;
     const total1H = expectedTotal * halfRatio1H;
-    const spread1HBase = Math.floor(spread1H * 2) / 2 + 0.5; // nearest .5
+    const spread1HBase = Math.round(spread1H * 2) / 2; // round to nearest .5
     const total1HBase = Math.floor(total1H) + 0.5;
 
     // Generate 1H Spread table (4 lines)
@@ -273,7 +273,7 @@ function runModel() {
     // 2H markets (similar logic)
     const spread2H = roundedBaseSpread * halfRatio2H;
     const total2H = expectedTotal * halfRatio2H;
-    const spread2HBase = Math.floor(spread2H * 2) / 2 + 0.5;
+    const spread2HBase = Math.round(spread2H * 2) / 2; // round to nearest .5
     const total2HBase = Math.floor(total2H) + 0.5;
 
     const spread2HLines = [spread2HBase - 2, spread2HBase - 1, spread2HBase, spread2HBase + 1]
@@ -316,9 +316,9 @@ function runModel() {
         // Expected spread and total for this quarter
         const spreadQ = roundedBaseSpread * quarter.ratio;
         const totalQ = expectedTotal * quarter.ratio;
-        
+
         // Round to half points
-        const spreadQBase = Math.floor(spreadQ * 2) / 2 + 0.5;
+        const spreadQBase = Math.round(spreadQ * 2) / 2; // round to nearest .5
         const totalQBase = Math.floor(totalQ) + 0.5;
 
         // Generate Quarter Spread table (4 lines on half points)
@@ -337,7 +337,7 @@ function runModel() {
         document.getElementById(quarter.spreadTableId).innerHTML = spreadQHtml;
 
         // Generate Quarter Total table (4 lines on half points)
-        const totalQLines = [totalQBase - 1.5, totalQBase - 0.5, totalQBase + 0.5, totalQBase + 1.5];
+        const totalQLines = [totalQBase - 1, totalQBase, totalQBase + 1, totalQBase + 2];
         let totalQHtml = '';
         totalQLines.forEach(line => {
             const probShift = (line - totalQBase) * 0.06;
