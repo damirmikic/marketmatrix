@@ -98,11 +98,18 @@ function runModel() {
     let spreadHtml = '';
     spreadLines.forEach(line => {
         // Probability that home covers the line
-        // Sum probabilities where (home_sets - away_sets) > line
+        // Line -2.5 means home needs to win by more than 2.5 sets (3-0 only)
+        // Line +2.5 means home can lose by up to 2.5 sets (all except 0-3)
+        // Check: (home_sets - away_sets) > abs(line) for negative lines
+        //        (home_sets - away_sets) > -abs(line) for positive lines
         let pHomeCovers = 0;
         exactScores.forEach(score => {
             const [home, away] = score.label.split('-').map(Number);
-            if ((home - away) > line) {
+            const setDiff = home - away;
+            // For handicap betting: Player 1 at line X covers if (home - away) > -X
+            // So for line -2.5: home covers if (home - away) > 2.5
+            // And for line +2.5: home covers if (home - away) > -2.5
+            if (setDiff > -line) {
                 pHomeCovers += score.prob;
             }
         });
@@ -120,7 +127,8 @@ function runModel() {
 
     // --- Generate Total Sets Table (Derived from Exact Scores) ---
     // Calculate probabilities for each total from exact scores
-    const totalLines = [2.5, 3.5, 4.5];
+    // Best-of-5 can only be 3, 4, or 5 sets (2.5 is impossible, always Over)
+    const totalLines = [3.5, 4.5];
 
     let totalHtml = '';
     totalLines.forEach(line => {
@@ -238,10 +246,12 @@ function runModel() {
 
     spreadLinesForCombo.forEach(spreadLineCombo => {
         // Calculate P(home covers) from exact scores
+        // Use same logic as main handicap table: covers if (home - away) > -line
         let pHomeCoversSpread = 0;
         exactScores.forEach(score => {
             const [home, away] = score.label.split('-').map(Number);
-            if ((home - away) > spreadLineCombo) {
+            const setDiff = home - away;
+            if (setDiff > -spreadLineCombo) {
                 pHomeCoversSpread += score.prob;
             }
         });
