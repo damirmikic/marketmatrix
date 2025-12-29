@@ -52,7 +52,7 @@
             <!-- INPUT ODDS -->
             <div class="card" id="inputCard">
                 <div class="card-header" onclick="toggleCard('inputCard')">
-                    <h2>1. Input Odds</h2>
+                    <h2>1. Input Market Odds</h2>
                 </div>
                 <div class="card-content">
                     <h3>Match Winner <span id="moneylineMargin"
@@ -67,68 +67,16 @@
                         <input type="number" id="player2Odds" step="0.01" placeholder="2.25" oninput="runModel()">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Set Handicap (Optional) <span id="setHandicapMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
+                    <h3 style="margin-top: 20px;">Total Games</h3>
                     <div class="input-group">
                         <label>Line</label>
-                        <input type="number" id="setHandicapLine" step="0.5" placeholder="1.5" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Player 1 Odds</label>
-                        <input type="number" id="setHandicapPlayer1" step="0.01" placeholder="1.90" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Player 2 Odds</label>
-                        <input type="number" id="setHandicapPlayer2" step="0.01" placeholder="1.90" oninput="runModel()">
+                        <input type="number" id="totalGamesLine" step="0.5" placeholder="22.5" oninput="runModel()">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Game Handicap (Optional) <span id="gameHandicapMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
-                    <div class="input-group">
-                        <label>Line</label>
-                        <input type="number" id="gameHandicapLine" step="0.5" placeholder="3.5" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Player 1 Odds</label>
-                        <input type="number" id="gameHandicapPlayer1" step="0.01" placeholder="1.85" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Player 2 Odds</label>
-                        <input type="number" id="gameHandicapPlayer2" step="0.01" placeholder="1.95" oninput="runModel()">
-                    </div>
-
-                    <h3 style="margin-top: 15px;">Total Games (Optional) <span id="totalGamesMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
-                    <div class="input-group">
-                        <label>Line</label>
-                        <input type="number" id="totalGamesLine" step="0.5" placeholder="21.5" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Over Odds</label>
-                        <input type="number" id="totalGamesOver" step="0.01" placeholder="1.90" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Under Odds</label>
-                        <input type="number" id="totalGamesUnder" step="0.01" placeholder="1.90" oninput="runModel()">
-                    </div>
-
-                    <h3 style="margin-top: 15px;">Total Games - Set 1 (Optional) <span id="set1TotalMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
-                    <div class="input-group">
-                        <label>Line</label>
-                        <input type="number" id="set1TotalLine" step="0.5" placeholder="9.5" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Over Odds</label>
-                        <input type="number" id="set1TotalOver" step="0.01" placeholder="1.85" oninput="runModel()">
-                    </div>
-                    <div class="input-group">
-                        <label>Under Odds</label>
-                        <input type="number" id="set1TotalUnder" step="0.01" placeholder="1.95" oninput="runModel()">
+                    <div style="margin-top: 20px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">
+                            💡 The model uses these two inputs to calculate serve hold percentages, then derives all other markets.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -136,9 +84,42 @@
 
         <!-- COLUMN 2: MARKETS -->
         <div class="main-content">
-            <div class="card hidden" id="marketsArea">
+            <!-- CALIBRATED PARAMETERS -->
+            <div class="card hidden" id="parametersArea">
+                <div class="card-header" onclick="toggleCard('parametersArea')">
+                    <h2>2. Calibrated Parameters</h2>
+                </div>
+                <div class="card-content">
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
+                        Serve hold percentages calculated from market odds via Monte Carlo simulation
+                    </p>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val" id="p1HoldRate" style="color: #3b82f6; font-size: 2rem;">-</div>
+                            <div class="stat-label">Player 1 Hold %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="p2HoldRate" style="color: #8b5cf6; font-size: 2rem;">-</div>
+                            <div class="stat-label">Player 2 Hold %</div>
+                        </div>
+                    </div>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 15px;">
+                        <div class="stat-box">
+                            <div class="stat-val" id="simWinProb" style="font-size: 1.3rem;">-</div>
+                            <div class="stat-label">Simulated Win %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="simTotalGames" style="font-size: 1.3rem;">-</div>
+                            <div class="stat-label">Simulated Avg Games</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DERIVED MARKETS -->
+            <div class="card hidden" id="marketsArea" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('marketsArea')">
-                    <h2>2. Markets</h2>
+                    <h2>3. Derived Markets</h2>
                 </div>
                 <div class="card-content">
                     <h3>Match Winner (Fair Odds)</h3>
@@ -188,25 +169,13 @@
                         </thead>
                         <tbody id="totalGamesTable"></tbody>
                     </table>
-
-                    <h3 style="margin-top: 20px;">Total Games - Set 1</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="set1TotalTable"></tbody>
-                    </table>
                 </div>
             </div>
 
             <!-- FIRST SET WINNER -->
             <div class="card hidden" id="firstSetArea" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('firstSetArea')">
-                    <h2>3. First Set Winner</h2>
+                    <h2>4. First Set Winner</h2>
                 </div>
                 <div class="card-content">
                     <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">
@@ -228,11 +197,11 @@
             <!-- CORRECT SCORE -->
             <div class="card hidden" id="exactScoreArea" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('exactScoreArea')">
-                    <h2>4. Correct Score (Match)</h2>
+                    <h2>5. Correct Score (Match)</h2>
                 </div>
                 <div class="card-content">
                     <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">
-                        Based on first set probabilities, assuming same probability for each set
+                        Based on Monte Carlo simulation results
                     </p>
                     <table>
                         <thead>

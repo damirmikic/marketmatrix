@@ -238,60 +238,15 @@ function populateInputs(odds) {
         document.getElementById('player2Odds').value = odds.matchOdds.player2.toFixed(2);
     }
 
-    // Game Handicap
-    if (odds.gameHandicap.line) {
-        document.getElementById('gameHandicapLine').value = odds.gameHandicap.line.toFixed(1);
-    }
-    if (odds.gameHandicap.player1) {
-        document.getElementById('gameHandicapPlayer1').value = odds.gameHandicap.player1.toFixed(2);
-    }
-    if (odds.gameHandicap.player2) {
-        document.getElementById('gameHandicapPlayer2').value = odds.gameHandicap.player2.toFixed(2);
-    }
-
-    // Total Games
+    // Total Games Line
     if (odds.totalGames.line) {
         document.getElementById('totalGamesLine').value = odds.totalGames.line.toFixed(1);
-    }
-    if (odds.totalGames.over) {
-        document.getElementById('totalGamesOver').value = odds.totalGames.over.toFixed(2);
-    }
-    if (odds.totalGames.under) {
-        document.getElementById('totalGamesUnder').value = odds.totalGames.under.toFixed(2);
-    }
-
-    // Set Handicap
-    if (odds.setHandicap.line) {
-        document.getElementById('setHandicapLine').value = odds.setHandicap.line.toFixed(1);
-    }
-    if (odds.setHandicap.player1) {
-        document.getElementById('setHandicapPlayer1').value = odds.setHandicap.player1.toFixed(2);
-    }
-    if (odds.setHandicap.player2) {
-        document.getElementById('setHandicapPlayer2').value = odds.setHandicap.player2.toFixed(2);
-    }
-
-    // Total Games Set 1
-    if (odds.totalGamesSet1.line) {
-        document.getElementById('set1TotalLine').value = odds.totalGamesSet1.line.toFixed(1);
-    }
-    if (odds.totalGamesSet1.over) {
-        document.getElementById('set1TotalOver').value = odds.totalGamesSet1.over.toFixed(2);
-    }
-    if (odds.totalGamesSet1.under) {
-        document.getElementById('set1TotalUnder').value = odds.totalGamesSet1.under.toFixed(2);
     }
 }
 
 // Clear all input fields
 function clearInputs() {
-    const inputs = [
-        'player1Odds', 'player2Odds',
-        'gameHandicapLine', 'gameHandicapPlayer1', 'gameHandicapPlayer2',
-        'totalGamesLine', 'totalGamesOver', 'totalGamesUnder',
-        'setHandicapLine', 'setHandicapPlayer1', 'setHandicapPlayer2',
-        'set1TotalLine', 'set1TotalOver', 'set1TotalUnder'
-    ];
+    const inputs = ['player1Odds', 'player2Odds', 'totalGamesLine'];
 
     inputs.forEach(id => {
         const element = document.getElementById(id);
