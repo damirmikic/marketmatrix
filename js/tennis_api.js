@@ -157,7 +157,7 @@ function parseOdds(betOffers) {
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_ONE') {
                     odds.gameHandicap.player1 = outcome.odds / 1000;
-                    odds.gameHandicap.line = Math.abs(outcome.line / 1000);
+                    odds.gameHandicap.line = outcome.line / 1000; // Keep the sign!
                 } else if (outcome.type === 'OT_TWO') {
                     odds.gameHandicap.player2 = outcome.odds / 1000;
                 }
@@ -181,7 +181,7 @@ function parseOdds(betOffers) {
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_ONE') {
                     odds.setHandicap.player1 = outcome.odds / 1000;
-                    odds.setHandicap.line = Math.abs(outcome.line / 1000);
+                    odds.setHandicap.line = outcome.line / 1000; // Keep the sign!
                 } else if (outcome.type === 'OT_TWO') {
                     odds.setHandicap.player2 = outcome.odds / 1000;
                 }
