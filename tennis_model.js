@@ -2,6 +2,10 @@
 // Calculates probabilities and generates betting markets for tennis matches
 
 import * as TennisAPI from './js/tennis_api.js';
+import { TennisEngine } from './tennis_engine.js';
+
+// Initialize the Monte Carlo engine
+const tennisEngine = new TennisEngine();
 
 // Remove vigorish and get fair probabilities
 function removeFair(odds1, odds2) {
@@ -186,6 +190,7 @@ window.runModel = function() {
         // Get input values
         const player1Odds = parseFloat(document.getElementById('player1Odds').value);
         const player2Odds = parseFloat(document.getElementById('player2Odds').value);
+        const totalGamesLine = parseFloat(document.getElementById('totalGamesLine').value);
 
         if (!player1Odds || !player2Odds) {
             return;
@@ -194,73 +199,128 @@ window.runModel = function() {
         // Calculate fair probabilities for match winner
         const matchFair = removeFair(player1Odds, player2Odds);
 
-        // Estimate point probability from match probability
-        // Using inverse calculation: if P(match) = p, estimate P(point)
-        // This is a simplification
-        const pPoint1 = 0.5 + (matchFair.prob1 - 0.5) * 0.4;
-        const pPoint2 = 1 - pPoint1;
+        // Choose model based on available data
+        // If we have total games line, use Monte Carlo simulation (more accurate)
+        // Otherwise, fall back to analytical model
+        const useSimulation = totalGamesLine && totalGamesLine > 0;
 
-        // Calculate game probabilities
-        const pGame1 = calcGameProb(pPoint1);
-        const pGame2 = calcGameProb(pPoint2);
-
-        // Calculate set probabilities
-        const pSet1 = calcSetProb(pGame1);
-        const pSet2 = 1 - pSet1;
-
-        // Calculate match probabilities (should match fair probs)
-        const pMatch1 = calcMatchProb(pSet1);
-        const pMatch2 = 1 - pMatch1;
-
-        // Display match odds
-        displayMatchOdds(matchFair, pMatch1, pMatch2);
-
-        // Calculate first set winner probabilities
-        const pFirstSet1 = calcFirstSetProb(matchFair.prob1);
-        const pFirstSet2 = 1 - pFirstSet1;
-
-        // Display first set winner
-        displayFirstSetWinner(pFirstSet1, pFirstSet2);
-
-        // Display correct scores based on first set probabilities
-        displayCorrectScores(pFirstSet1);
-
-        // Calculate and display set handicap
-        const setHandicapLine = parseFloat(document.getElementById('setHandicapLine').value);
-        if (setHandicapLine) {
-            const setHandicapPlayer1Odds = parseFloat(document.getElementById('setHandicapPlayer1').value);
-            const setHandicapPlayer2Odds = parseFloat(document.getElementById('setHandicapPlayer2').value);
-            displaySetHandicap(setHandicapLine, setHandicapPlayer1Odds, setHandicapPlayer2Odds, pSet1);
-        }
-
-        // Calculate and display game handicap
-        const gameHandicapLine = parseFloat(document.getElementById('gameHandicapLine').value);
-        if (gameHandicapLine) {
-            const gameHandicapPlayer1Odds = parseFloat(document.getElementById('gameHandicapPlayer1').value);
-            const gameHandicapPlayer2Odds = parseFloat(document.getElementById('gameHandicapPlayer2').value);
-            displayGameHandicap(gameHandicapLine, gameHandicapPlayer1Odds, gameHandicapPlayer2Odds, pGame1, pGame2);
-        }
-
-        // Calculate and display total games
-        const totalGamesLine = parseFloat(document.getElementById('totalGamesLine').value);
-        if (totalGamesLine) {
-            const totalGamesOver = parseFloat(document.getElementById('totalGamesOver').value);
-            const totalGamesUnder = parseFloat(document.getElementById('totalGamesUnder').value);
-            displayTotalGames(totalGamesLine, totalGamesOver, totalGamesUnder, pGame1, pGame2);
-        }
-
-        // Calculate and display Set 1 total games
-        const set1TotalLine = parseFloat(document.getElementById('set1TotalLine').value);
-        if (set1TotalLine) {
-            const set1TotalOver = parseFloat(document.getElementById('set1TotalOver').value);
-            const set1TotalUnder = parseFloat(document.getElementById('set1TotalUnder').value);
-            displaySet1Total(set1TotalLine, set1TotalOver, set1TotalUnder, pGame1, pGame2);
+        if (useSimulation) {
+            console.log('=== Using Monte Carlo Simulation Engine ===');
+            runSimulationModel(player1Odds, player2Odds, totalGamesLine, matchFair);
+        } else {
+            console.log('=== Using Analytical Model (Total Games line not provided) ===');
+            runAnalyticalModel(player1Odds, player2Odds, matchFair);
         }
 
     } catch (error) {
         console.error('Error running model:', error);
     }
 };
+
+// Run the simulation-based model
+function runSimulationModel(player1Odds, player2Odds, totalGamesLine, matchFair) {
+    // Generate prices using Monte Carlo engine
+    const results = tennisEngine.generatePrices(player1Odds, player2Odds, totalGamesLine);
+
+    console.log('Calibration:', results.calibration);
+
+    // Display match odds
+    displayMatchOdds(matchFair, null, null);
+
+    // Display first set winner from simulation
+    const setBetting = results.markets.setBetting;
+    const pFirstSet1 = calcFirstSetProb(matchFair.prob1);
+    const pFirstSet2 = 1 - pFirstSet1;
+    displayFirstSetWinner(pFirstSet1, pFirstSet2);
+
+    // Display correct scores from simulation
+    displaySimulationCorrectScores(setBetting);
+
+    // Display set handicaps from simulation
+    displaySimulationSetHandicaps(results.markets.setHandicaps);
+
+    // Display game handicaps from simulation
+    displaySimulationGameHandicaps(results.markets.gameHandicaps);
+
+    // Display total games from simulation
+    displaySimulationTotalGames(results.markets.totalGames);
+
+    // Set 1 total - use analytical model for now
+    const set1TotalLine = parseFloat(document.getElementById('set1TotalLine').value);
+    if (set1TotalLine) {
+        const set1TotalOver = parseFloat(document.getElementById('set1TotalOver').value);
+        const set1TotalUnder = parseFloat(document.getElementById('set1TotalUnder').value);
+        // Use simple estimation for set 1
+        const pPoint1 = 0.5 + (matchFair.prob1 - 0.5) * 0.4;
+        const pGame1 = calcGameProb(pPoint1);
+        const pGame2 = calcGameProb(1 - pPoint1);
+        displaySet1Total(set1TotalLine, set1TotalOver, set1TotalUnder, pGame1, pGame2);
+    }
+}
+
+// Run the analytical model (fallback)
+function runAnalyticalModel(player1Odds, player2Odds, matchFair) {
+    // Estimate point probability from match probability
+    const pPoint1 = 0.5 + (matchFair.prob1 - 0.5) * 0.4;
+    const pPoint2 = 1 - pPoint1;
+
+    // Calculate game probabilities
+    const pGame1 = calcGameProb(pPoint1);
+    const pGame2 = calcGameProb(pPoint2);
+
+    // Calculate set probabilities
+    const pSet1 = calcSetProb(pGame1);
+    const pSet2 = 1 - pSet1;
+
+    // Calculate match probabilities
+    const pMatch1 = calcMatchProb(pSet1);
+    const pMatch2 = 1 - pMatch1;
+
+    // Display match odds
+    displayMatchOdds(matchFair, pMatch1, pMatch2);
+
+    // Calculate first set winner probabilities
+    const pFirstSet1 = calcFirstSetProb(matchFair.prob1);
+    const pFirstSet2 = 1 - pFirstSet1;
+
+    // Display first set winner
+    displayFirstSetWinner(pFirstSet1, pFirstSet2);
+
+    // Display correct scores
+    displayCorrectScores(pFirstSet1);
+
+    // Calculate and display set handicap
+    const setHandicapLine = parseFloat(document.getElementById('setHandicapLine').value);
+    if (setHandicapLine) {
+        const setHandicapPlayer1Odds = parseFloat(document.getElementById('setHandicapPlayer1').value);
+        const setHandicapPlayer2Odds = parseFloat(document.getElementById('setHandicapPlayer2').value);
+        displaySetHandicap(setHandicapLine, setHandicapPlayer1Odds, setHandicapPlayer2Odds, pSet1);
+    }
+
+    // Calculate and display game handicap
+    const gameHandicapLine = parseFloat(document.getElementById('gameHandicapLine').value);
+    if (gameHandicapLine) {
+        const gameHandicapPlayer1Odds = parseFloat(document.getElementById('gameHandicapPlayer1').value);
+        const gameHandicapPlayer2Odds = parseFloat(document.getElementById('gameHandicapPlayer2').value);
+        displayGameHandicap(gameHandicapLine, gameHandicapPlayer1Odds, gameHandicapPlayer2Odds, pGame1, pGame2);
+    }
+
+    // Calculate and display total games
+    const totalGamesLine = parseFloat(document.getElementById('totalGamesLine').value);
+    if (totalGamesLine) {
+        const totalGamesOver = parseFloat(document.getElementById('totalGamesOver').value);
+        const totalGamesUnder = parseFloat(document.getElementById('totalGamesUnder').value);
+        displayTotalGames(totalGamesLine, totalGamesOver, totalGamesUnder, pGame1, pGame2);
+    }
+
+    // Calculate and display Set 1 total games
+    const set1TotalLine = parseFloat(document.getElementById('set1TotalLine').value);
+    if (set1TotalLine) {
+        const set1TotalOver = parseFloat(document.getElementById('set1TotalOver').value);
+        const set1TotalUnder = parseFloat(document.getElementById('set1TotalUnder').value);
+        displaySet1Total(set1TotalLine, set1TotalOver, set1TotalUnder, pGame1, pGame2);
+    }
+}
 
 // Display functions
 function displayMatchOdds(fair, pMatch1, pMatch2) {
@@ -448,6 +508,97 @@ function displaySet1Total(line, overOdds, underOdds, pGame1, pGame2) {
             </tr>
         `;
     });
+
+    tbody.innerHTML = html;
+}
+
+// Display functions for simulation-based results
+function displaySimulationCorrectScores(setBetting) {
+    const tbody = document.getElementById('correctScoreTable');
+    if (!tbody) return;
+
+    const scores = [
+        { score: '2-0', data: setBetting['2-0'] },
+        { score: '2-1', data: setBetting['2-1'] },
+        { score: '1-2', data: setBetting['1-2'] },
+        { score: '0-2', data: setBetting['0-2'] }
+    ];
+
+    let html = '';
+    scores.forEach(({ score, data }) => {
+        if (data && data.odds) {
+            html += `
+                <tr>
+                    <td>${score}</td>
+                    <td class="num-col">${data.prob}</td>
+                    <td class="num-col">${data.odds}</td>
+                </tr>
+            `;
+        }
+    });
+
+    tbody.innerHTML = html;
+}
+
+function displaySimulationSetHandicaps(setHandicaps) {
+    const tbody = document.getElementById('setHandicapTable');
+    if (!tbody) return;
+
+    let html = '';
+    for (const [line, handicap] of Object.entries(setHandicaps)) {
+        const lineNum = parseFloat(line);
+        if (handicap.player1 && handicap.player1.odds) {
+            html += `
+                <tr>
+                    <td>${lineNum > 0 ? '+' : ''}${lineNum.toFixed(1)}</td>
+                    <td class="num-col">${handicap.player1.odds}</td>
+                    <td class="num-col">${handicap.player2.odds}</td>
+                </tr>
+            `;
+        }
+    }
+
+    tbody.innerHTML = html;
+}
+
+function displaySimulationGameHandicaps(gameHandicaps) {
+    const tbody = document.getElementById('gameHandicapTable');
+    if (!tbody) return;
+
+    let html = '';
+    for (const [line, handicap] of Object.entries(gameHandicaps)) {
+        const lineNum = parseFloat(line);
+        if (handicap.player1 && handicap.player1.odds) {
+            html += `
+                <tr>
+                    <td>${lineNum > 0 ? '+' : ''}${lineNum.toFixed(1)}</td>
+                    <td class="num-col">${handicap.player1.odds}</td>
+                    <td class="num-col">${handicap.player2.odds}</td>
+                </tr>
+            `;
+        }
+    }
+
+    tbody.innerHTML = html;
+}
+
+function displaySimulationTotalGames(totalGamesMarkets) {
+    const tbody = document.getElementById('totalGamesTable');
+    if (!tbody) return;
+
+    let html = '';
+    for (const [line, totals] of Object.entries(totalGamesMarkets)) {
+        const lineNum = parseFloat(line);
+        if (totals.over && totals.over.odds) {
+            html += `
+                <tr>
+                    <td>${lineNum.toFixed(1)}</td>
+                    <td class="num-col">${totals.over.odds}</td>
+                    <td class="num-col">${totals.under.odds}</td>
+                </tr>
+            `;
+        }
+    }
 
     tbody.innerHTML = html;
 }
