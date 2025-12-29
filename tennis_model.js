@@ -171,12 +171,16 @@ function normalCDF(x) {
 function calcGameHandicap(pGame1, pGame2, line) {
     const meanGames1 = 14 * pGame1; // Approximate games won by player 1
     const meanGames2 = 14 * pGame2; // Approximate games won by player 2
-    const diff = meanGames1 - meanGames2;
+    const diff = meanGames1 - meanGames2; // Expected margin (positive = P1 winning)
+
+    // Player 1 covers if: (games1 - games2) > line
+    // For line = -4.5, P1 covers if margin > -4.5 (winning by more than 4.5)
+    // For line = +4.5, P1 covers if margin > +4.5 (winning by more than 4.5 as underdog)
 
     // Use normal approximation
     const stdDev = 3;
-    const z = (line - diff) / stdDev;
-    const pPlayer1 = normalCDF(-z);
+    const z = (diff - line) / stdDev; // Correct: diff - line, not line - diff
+    const pPlayer1 = normalCDF(z);
 
     return {
         player1: pPlayer1,
