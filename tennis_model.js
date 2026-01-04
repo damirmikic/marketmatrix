@@ -1,233 +1,93 @@
-// Tennis Model - Monte Carlo Simulation Based
-// Calculates serve hold percentages from market odds, then derives all markets
-
 import * as TennisAPI from './js/tennis_api.js';
 import { TennisEngine } from './tennis_engine.js';
 
-// Initialize the Monte Carlo engine
-const tennisEngine = new TennisEngine();
+const engine = new TennisEngine();
 
-// Remove vigorish and get fair probabilities
-function removeFair(odds1, odds2) {
-    const imp1 = 1 / odds1;
-    const imp2 = 1 / odds2;
-    const total = imp1 + imp2;
-
-    return {
-        prob1: imp1 / total,
-        prob2: imp2 / total,
-        margin: ((total - 1) * 100).toFixed(2)
-    };
-}
-
-// Calculate first set winner probability from match winner probability
-function calcFirstSetProb(pMatch) {
-    const z = 3.25 * pMatch - 1.72;
-    const pFirstSet = 1 / (1 + Math.exp(-z));
-    return pFirstSet;
-}
-
-// Main model runner
-window.runModel = function() {
+window.runModel = function (surface = 'Hard') {
     try {
-        // Get input values
-        const player1Odds = parseFloat(document.getElementById('player1Odds').value);
-        const player2Odds = parseFloat(document.getElementById('player2Odds').value);
-        const totalGamesLine = parseFloat(document.getElementById('totalGamesLine').value);
+        const odds1 = parseFloat(document.getElementById('player1Odds').value);
+        const odds2 = parseFloat(document.getElementById('player2Odds').value);
+        const totalLine = parseFloat(document.getElementById('totalGamesLine').value);
 
-        // Validate inputs
-        if (!player1Odds || !player2Odds) {
-            return; // Need at least match winner odds
-        }
+        if (surface) document.getElementById('surfaceBadge').textContent = surface;
 
-        if (!totalGamesLine || totalGamesLine <= 0) {
-            alert('Please enter a Total Games line. The model requires both match winner odds and total games to calculate hold percentages.');
-            return;
-        }
+        if (!odds1 || !odds2 || !totalLine) return;
 
-        // Calculate fair probabilities for match winner
-        const matchFair = removeFair(player1Odds, player2Odds);
+        // 1. De-vig
+        const fairParams = engine.removeVigorish(odds1, odds2);
+        displayFairValue(fairParams);
 
-        // Update margin display
-        document.getElementById('moneylineMargin').textContent = `Margin: ${matchFair.margin}%`;
+        // 2. Solve
+        const result = engine.solveParameters(fairParams.p1, totalLine, surface);
+        displayParameters(result);
 
-        // Run Monte Carlo engine
-        console.log('=== Running Monte Carlo Tennis Engine ===');
-        const results = tennisEngine.generatePrices(player1Odds, player2Odds, totalGamesLine);
+        // 3. Derivatives
+        const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration);
+        displayDerivatives(derivatives);
 
-        console.log('Calibration:', results.calibration);
+        document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
 
-        // Display calibrated parameters
-        displayParameters(results.calibration);
-
-        // Display match odds
-        displayMatchOdds(matchFair);
-
-        // Display first set winner
-        const pFirstSet1 = calcFirstSetProb(matchFair.prob1);
-        const pFirstSet2 = 1 - pFirstSet1;
-        displayFirstSetWinner(pFirstSet1, pFirstSet2);
-
-        // Display all derived markets from simulation
-        displayCorrectScores(results.markets.setBetting);
-        displaySetHandicaps(results.markets.setHandicaps);
-        displayGameHandicaps(results.markets.gameHandicaps);
-        displayTotalGames(results.markets.totalGames);
-
-        // Show all result areas
-        document.getElementById('parametersArea')?.classList.remove('hidden');
-        document.getElementById('marketsArea')?.classList.remove('hidden');
-        document.getElementById('firstSetArea')?.classList.remove('hidden');
-        document.getElementById('exactScoreArea')?.classList.remove('hidden');
-
-    } catch (error) {
-        console.error('Error running model:', error);
-        alert('Error running model: ' + error.message);
+    } catch (e) {
+        console.error("Model Error:", e);
     }
 };
 
-// Display calibrated parameters
-function displayParameters(calibration) {
-    document.getElementById('p1HoldRate').textContent = calibration.p1HoldRate;
-    document.getElementById('p2HoldRate').textContent = calibration.p2HoldRate;
-    document.getElementById('simWinProb').textContent = calibration.simulatedWinProb;
-    document.getElementById('simTotalGames').textContent = calibration.simulatedTotalGames;
+function displayFairValue(fair) {
+    document.getElementById('fairP1').textContent = (1 / fair.p1).toFixed(2);
+    document.getElementById('fairP2').textContent = (1 / fair.p2).toFixed(2);
 }
 
-// Display match odds
-function displayMatchOdds(fair) {
-    document.getElementById('fairPlayer1').textContent = (1 / fair.prob1).toFixed(2);
-    document.getElementById('fairPlayer2').textContent = (1 / fair.prob2).toFixed(2);
+function displayParameters(result) {
+    document.getElementById('p1Hold').textContent = (result.pa * 100).toFixed(1) + '%';
+    document.getElementById('p2Hold').textContent = (result.pb * 100).toFixed(1) + '%';
+    document.getElementById('modelTotal').textContent = result.calibration.expTotal.toFixed(2);
+    document.getElementById('fairWin').textContent = (result.calibration.pMatch * 100).toFixed(1) + '%';
 }
 
-// Display first set winner
-function displayFirstSetWinner(pFirstSet1, pFirstSet2) {
-    const tbody = document.getElementById('firstSetWinnerTable');
-    if (!tbody) return;
-
-    tbody.innerHTML = `
-        <tr>
-            <td>Player 1</td>
-            <td class="num-col">${(pFirstSet1 * 100).toFixed(2)}%</td>
-            <td class="num-col">${(1 / pFirstSet1).toFixed(2)}</td>
-        </tr>
-        <tr>
-            <td>Player 2</td>
-            <td class="num-col">${(pFirstSet2 * 100).toFixed(2)}%</td>
-            <td class="num-col">${(1 / pFirstSet2).toFixed(2)}</td>
-        </tr>
-    `;
-}
-
-// Display correct scores from simulation
-function displayCorrectScores(setBetting) {
-    const tbody = document.getElementById('correctScoreTable');
-    if (!tbody) return;
-
-    const scores = [
-        { score: '2-0', data: setBetting['2-0'] },
-        { score: '2-1', data: setBetting['2-1'] },
-        { score: '1-2', data: setBetting['1-2'] },
-        { score: '0-2', data: setBetting['0-2'] }
-    ];
-
+function displayDerivatives(d) {
+    // Set Betting
+    const sb = d.setBetting;
+    const scores = ['2-0', '2-1', '0-2', '1-2'];
     let html = '';
-    scores.forEach(({ score, data }) => {
-        if (data && data.odds) {
-            html += `
-                <tr>
-                    <td>${score}</td>
-                    <td class="num-col">${data.prob}</td>
-                    <td class="num-col">${data.odds}</td>
-                </tr>
-            `;
+    scores.forEach(s => {
+        html += `<tr><td>${s}</td><td>${sb[s].prob}</td><td>${sb[s].odds}</td></tr>`;
+    });
+    document.getElementById('correctScoreTable').innerHTML = html;
+
+    // Set Winner (Set 1)
+    const sw = d.setWinner;
+    const swTable = document.getElementById('setWinnerTable');
+    if (swTable) {
+        swTable.innerHTML = `
+            <tr><td>Player 1</td><td>${sw.player1.prob}</td><td>${sw.player1.odds}</td></tr>
+            <tr><td>Player 2</td><td>${sw.player2.prob}</td><td>${sw.player2.odds}</td></tr>
+        `;
+    }
+
+    // Game Handicap
+    const gh = d.gameHandicap;
+    let ghHtml = '';
+    const lines = [-5.5, -4.5, -3.5, -2.5, -1.5, 1.5, 2.5, 3.5, 4.5, 5.5];
+
+    lines.forEach(l => {
+        if (gh[l]) {
+            ghHtml += `<tr><td>${l > 0 ? '+' : ''}${l}</td><td>${gh[l].player1.odds}</td><td>${gh[l].player2.odds}</td></tr>`;
         }
     });
+    document.getElementById('gameHandicapTable').innerHTML = ghHtml;
 
-    tbody.innerHTML = html;
+    // Tie Break
+    document.getElementById('tbProb').textContent = (d.tieBreakProb * 100).toFixed(1) + '%';
 }
 
-// Display set handicaps from simulation
-function displaySetHandicaps(setHandicaps) {
-    const tbody = document.getElementById('setHandicapTable');
-    if (!tbody) return;
-
-    let html = '';
-    for (const [line, handicap] of Object.entries(setHandicaps)) {
-        const lineNum = parseFloat(line);
-        if (handicap.player1 && handicap.player1.odds) {
-            html += `
-                <tr>
-                    <td>${lineNum > 0 ? '+' : ''}${lineNum.toFixed(1)}</td>
-                    <td class="num-col">${handicap.player1.odds}</td>
-                    <td class="num-col">${handicap.player2.odds}</td>
-                </tr>
-            `;
-        }
-    }
-
-    tbody.innerHTML = html;
-}
-
-// Display game handicaps from simulation
-function displayGameHandicaps(gameHandicaps) {
-    const tbody = document.getElementById('gameHandicapTable');
-    if (!tbody) return;
-
-    let html = '';
-    for (const [line, handicap] of Object.entries(gameHandicaps)) {
-        const lineNum = parseFloat(line);
-        if (handicap.player1 && handicap.player1.odds) {
-            html += `
-                <tr>
-                    <td>${lineNum > 0 ? '+' : ''}${lineNum.toFixed(1)}</td>
-                    <td class="num-col">${handicap.player1.odds}</td>
-                    <td class="num-col">${handicap.player2.odds}</td>
-                </tr>
-            `;
-        }
-    }
-
-    tbody.innerHTML = html;
-}
-
-// Display total games from simulation
-function displayTotalGames(totalGamesMarkets) {
-    const tbody = document.getElementById('totalGamesTable');
-    if (!tbody) return;
-
-    let html = '';
-    for (const [line, totals] of Object.entries(totalGamesMarkets)) {
-        const lineNum = parseFloat(line);
-        if (totals.over && totals.over.odds) {
-            html += `
-                <tr>
-                    <td>${lineNum.toFixed(1)}</td>
-                    <td class="num-col">${totals.over.odds}</td>
-                    <td class="num-col">${totals.under.odds}</td>
-                </tr>
-            `;
-        }
-    }
-
-    tbody.innerHTML = html;
-}
-
-// Initialize when DOM is loaded
+// Init
 document.addEventListener('DOMContentLoaded', async () => {
-    // Set up API callback
     TennisAPI.setRunModelCallback(window.runModel);
-
-    // Initialize match loader
     await TennisAPI.initLoader();
 
-    // Set up event listeners
-    document.getElementById('tournamentSelect')?.addEventListener('change', TennisAPI.handleTournamentChange);
-    document.getElementById('matchSelect')?.addEventListener('change', TennisAPI.handleMatchChange);
+    document.getElementById('tournamentSelect').addEventListener('change', TennisAPI.handleTournamentChange);
+    document.getElementById('matchSelect').addEventListener('change', TennisAPI.handleMatchChange);
 
-    // Add input listeners for manual changes
-    const inputs = document.querySelectorAll('input[type="number"]');
-    inputs.forEach(input => {
-        input.addEventListener('input', window.runModel);
-    });
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(i => i.addEventListener('input', () => window.runModel(document.getElementById('surfaceBadge').textContent)));
 });

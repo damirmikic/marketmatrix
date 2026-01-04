@@ -11,225 +11,169 @@
 
 <body>
     <div class="container">
-        <!-- LEFT COLUMN: API LOADER & INPUTS -->
+        <!-- LEFT COLUMN: INPUTS & PARAMETERS -->
         <div class="sidebar-column">
-            <!-- CONTROLS -->
             <a href="index.html"
-                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
                 &larr; Home
             </a>
-            <button id="toggleAllBtn" onclick="toggleAllCards()" style="margin-top: 0; margin-bottom: 20px;">Collapse
-                All</button>
 
-            <!-- API MATCH LOADER -->
-            <div class="card" id="apiMatchLoader" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('apiMatchLoader')">
-                    <h2>0. Select Match</h2>
+            <!-- 1. MATCH SELECTION -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>1. Select Match</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">TOURNAMENT</label>
-                            <select id="tournamentSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
-                                <option value="">Loading...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
-                            <select id="matchSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;"
-                                disabled>
-                                <option value="">Select tournament</option>
-                            </select>
-                        </div>
+                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">TOURNAMENT</label>
+                    <select id="tournamentSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
+
+                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">MATCH</label>
+                    <select id="matchSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;" disabled></select>
+
+                    <div style="font-size: 0.75rem; color: #94a3b8; text-align: right;">
+                        Surface: <span id="surfaceBadge" style="color: #3b82f6; font-weight: bold;">-</span>
                     </div>
                 </div>
             </div>
 
-            <!-- INPUT ODDS -->
-            <div class="card" id="inputCard">
-                <div class="card-header" onclick="toggleCard('inputCard')">
-                    <h2>1. Input Market Odds</h2>
+            <!-- 2. ODDS INPUT -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>2. Input Odds</h2>
                 </div>
                 <div class="card-content">
-                    <h3>Match Winner <span id="moneylineMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
-                            -</span></h3>
+                    <h3>Match Winner</h3>
                     <div class="input-group">
                         <label>Player 1</label>
-                        <input type="number" id="player1Odds" step="0.01" placeholder="1.65" oninput="runModel()">
+                        <input type="number" id="player1Odds" step="0.01" placeholder="1.90">
                     </div>
                     <div class="input-group">
                         <label>Player 2</label>
-                        <input type="number" id="player2Odds" step="0.01" placeholder="2.25" oninput="runModel()">
+                        <input type="number" id="player2Odds" step="0.01" placeholder="1.90">
                     </div>
 
-                    <h3 style="margin-top: 20px;">Total Games</h3>
+                    <h3 style="margin-top: 15px;">Total Games</h3>
                     <div class="input-group">
                         <label>Line</label>
-                        <input type="number" id="totalGamesLine" step="0.5" placeholder="22.5" oninput="runModel()">
+                        <input type="number" id="totalGamesLine" step="0.5" placeholder="22.5">
                     </div>
+                </div>
+            </div>
 
-                    <div style="margin-top: 20px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3);">
-                        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">
-                            💡 The model uses these two inputs to calculate serve hold percentages, then derives all other markets.
-                        </p>
+            <!-- 3. PARAMETERS (SIDE) -->
+            <div class="card hidden" id="paramsCard" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>3. Parameters</h2>
+                </div>
+                <div class="card-content">
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val" id="p1Hold">-</div>
+                            <div class="stat-label">P1 Hold %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="p2Hold">-</div>
+                            <div class="stat-label">P2 Hold %</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                            <span>Fair Win %</span>
+                            <span id="fairWin" style="font-weight: bold;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span>Exp Total</span>
+                            <span id="modelTotal" style="font-weight: bold;">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- COLUMN 2: MARKETS -->
+        <!-- RIGHT COLUMN: MARKETS -->
         <div class="main-content">
-            <!-- CALIBRATED PARAMETERS -->
-            <div class="card hidden" id="parametersArea">
-                <div class="card-header" onclick="toggleCard('parametersArea')">
-                    <h2>2. Calibrated Parameters</h2>
+            <!-- FAIR VALUE -->
+            <div class="card hidden" id="fairValueCard">
+                <div class="card-header">
+                    <h2>Fair Value (Raw)</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">
-                        Serve hold percentages calculated from market odds via Monte Carlo simulation
-                    </p>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val" id="p1HoldRate" style="color: #3b82f6; font-size: 2rem;">-</div>
-                            <div class="stat-label">Player 1 Hold %</div>
+                    <div style="display: flex; gap: 20px;">
+                        <div
+                            style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <div style="font-size: 0.8rem; color: #64748b;">Player 1 Fair Odds</div>
+                            <div id="fairP1" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-val" id="p2HoldRate" style="color: #8b5cf6; font-size: 2rem;">-</div>
-                            <div class="stat-label">Player 2 Hold %</div>
-                        </div>
-                    </div>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 15px;">
-                        <div class="stat-box">
-                            <div class="stat-val" id="simWinProb" style="font-size: 1.3rem;">-</div>
-                            <div class="stat-label">Simulated Win %</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val" id="simTotalGames" style="font-size: 1.3rem;">-</div>
-                            <div class="stat-label">Simulated Avg Games</div>
+                        <div
+                            style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <div style="font-size: 0.8rem; color: #64748b;">Player 2 Fair Odds</div>
+                            <div id="fairP2" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- DERIVED MARKETS -->
-            <div class="card hidden" id="marketsArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('marketsArea')">
-                    <h2>3. Derived Markets</h2>
+            <!-- DERIVATIVES -->
+            <div class="card hidden" id="derivativesCard" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>Derivative Markets</h2>
                 </div>
                 <div class="card-content">
-                    <h3>Match Winner (Fair Odds)</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="fairPlayer1">-</div>
-                            <div class="stat-label">Player 1</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Left Sub-Column -->
+                        <div>
+                            <div id="setWinnerContainer" style="margin-bottom: 20px;">
+                                <h3>Set 1 Winner</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Player</th>
+                                            <th>Prob</th>
+                                            <th>Odds</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="setWinnerTable"></tbody>
+                                </table>
+                            </div>
+
+                            <h3>Set Betting (Correct Score)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Score</th>
+                                        <th>Prob</th>
+                                        <th>Raw Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="correctScoreTable"></tbody>
+                            </table>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="fairPlayer2">-</div>
-                            <div class="stat-label">Player 2</div>
+
+                        <!-- Right Sub-Column -->
+                        <div>
+                            <h3>Game Handicap</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th>Home Odds</th>
+                                        <th>Away Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gameHandicapTable"></tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <h3 style="margin-top: 20px;">Set Handicap</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Player 1</th>
-                                <th class="num-col">Player 2</th>
-                            </tr>
-                        </thead>
-                        <tbody id="setHandicapTable"></tbody>
-                    </table>
-
-                    <h3 style="margin-top: 20px;">Game Handicap</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Player 1</th>
-                                <th class="num-col">Player 2</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gameHandicapTable"></tbody>
-                    </table>
-
-                    <h3 style="margin-top: 20px;">Total Games</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="totalGamesTable"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- FIRST SET WINNER -->
-            <div class="card hidden" id="firstSetArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('firstSetArea')">
-                    <h2>4. First Set Winner</h2>
-                </div>
-                <div class="card-content">
-                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">
-                        Calculated using: P(First Set) = 1 / (1 + e^(-(3.25 × P(Match) - 1.72)))
-                    </p>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="firstSetWinnerTable"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- CORRECT SCORE -->
-            <div class="card hidden" id="exactScoreArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('exactScoreArea')">
-                    <h2>5. Correct Score (Match)</h2>
-                </div>
-                <div class="card-content">
-                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">
-                        Based on Monte Carlo simulation results
-                    </p>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Score</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="correctScoreTable"></tbody>
-                    </table>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <strong>Tie Break Prob (Match):</strong> <span id="tbProb">-</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function toggleCard(id) {
-            document.getElementById(id).classList.toggle('collapsed');
-        }
-
-        function toggleAllCards() {
-            const cards = document.querySelectorAll('.card');
-            const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
-            cards.forEach(c => c.classList.toggle('collapsed', !allCollapsed));
-            document.getElementById('toggleAllBtn').textContent = allCollapsed ? 'Collapse All' : 'Expand All';
-        }
-    </script>
     <script type="module" src="tennis_model.js"></script>
 </body>
 

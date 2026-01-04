@@ -42,7 +42,8 @@ function buildHierarchy(events) {
             name: event.name,
             homeName: event.homeName,
             awayName: event.awayName,
-            start: event.start
+            start: event.start,
+            path: event.path // Store path for surface detection later if needed per event
         });
 
         // Store full event data
@@ -82,6 +83,19 @@ function populateTournamentSelector() {
         option.textContent = tournament.name;
         selector.appendChild(option);
     });
+}
+
+// Detect surface from tournament name
+function detectSurface(tournamentName) {
+    const name = tournamentName.toLowerCase();
+    if (name.includes('clay') || name.includes('garros') || name.includes('rome') || name.includes('madrid')) {
+        return 'Clay';
+    }
+    if (name.includes('grass') || name.includes('wimbledon') || name.includes('queens') || name.includes('halle')) {
+        return 'Grass';
+    }
+    // Default to Hard Court
+    return 'Hard';
 }
 
 // Handle tournament selection
@@ -207,6 +221,7 @@ function parseOdds(betOffers) {
 // Handle match selection and populate odds
 export async function handleMatchChange() {
     const eventId = document.getElementById('matchSelect').value;
+    const tournamentId = document.getElementById('tournamentSelect').value;
 
     if (!eventId) {
         clearInputs();
@@ -222,14 +237,27 @@ export async function handleMatchChange() {
     const odds = parseOdds(eventData.betOffers);
     populateInputs(odds);
 
-    // Trigger model calculation
+    // Get surface info
+    let surface = 'Hard';
+    if (tournamentId) {
+        const tournament = tennisData.tournaments.find(t => t.id == tournamentId);
+        if (tournament) {
+            surface = detectSurface(tournament.name);
+            console.log(`Verified Tournament: ${tournament.name} -> Surface: ${surface}`);
+        }
+    }
+
+    // Trigger model calculation with detected surface
     if (runModelCallback) {
-        runModelCallback();
+        runModelCallback(surface);
     }
 }
 
 // Populate input fields with parsed odds
 function populateInputs(odds) {
+    // Clear inputs first to ensure no stale data
+    clearInputs();
+
     // Match Odds
     if (odds.matchOdds.player1) {
         document.getElementById('player1Odds').value = odds.matchOdds.player1.toFixed(2);
@@ -253,3 +281,4 @@ function clearInputs() {
         if (element) element.value = '';
     });
 }
+
