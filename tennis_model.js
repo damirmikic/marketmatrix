@@ -96,6 +96,14 @@ function displayParameters(result) {
     document.getElementById('p2Hold').textContent = (result.pb * 100).toFixed(1) + '%';
     document.getElementById('modelTotal').textContent = result.calibration.expTotal.toFixed(2);
     document.getElementById('fairWin').textContent = (result.calibration.pMatch * 100).toFixed(1) + '%';
+
+    // Display expected games per player
+    if (result.calibration.expGamesPlayer1 !== undefined) {
+        document.getElementById('p1Games').textContent = result.calibration.expGamesPlayer1.toFixed(1);
+    }
+    if (result.calibration.expGamesPlayer2 !== undefined) {
+        document.getElementById('p2Games').textContent = result.calibration.expGamesPlayer2.toFixed(1);
+    }
 }
 
 function displayDerivatives(d) {

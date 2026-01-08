@@ -178,6 +178,12 @@ export class TennisEngine {
         }
 
         const finalMetrics = this.calculateMatchMetrics(bestPa, bestPb, surface);
+
+        // Run full simulation to get expected games per player
+        const fullSimStats = this.runFullSim(bestPa, bestPb, 5000);
+        finalMetrics.expGamesPlayer1 = fullSimStats.avgGamesA;
+        finalMetrics.expGamesPlayer2 = fullSimStats.avgGamesB;
+
         return { pa: bestPa, pb: bestPb, calibration: finalMetrics };
     }
 
@@ -345,6 +351,8 @@ export class TennisEngine {
         let marginSq = 0;
         let tieBreaks = 0;
         let totalSets = 0;
+        let totalGamesA = 0;
+        let totalGamesB = 0;
 
         const pha = this.probGame(pa);
         const phb = this.probGame(pb);
@@ -380,6 +388,8 @@ export class TennisEngine {
             totalMargin += margin;
             marginSq += margin * margin;
             totalSets += (setsA + setsB);
+            totalGamesA += gamesA;
+            totalGamesB += gamesB;
         }
 
         const avgMargin = totalMargin / iterations;
@@ -389,7 +399,9 @@ export class TennisEngine {
             avgMargin,
             stdMargin: Math.sqrt(variance),
             tieBreakCount: tieBreaks,
-            totalSets: totalSets
+            totalSets: totalSets,
+            avgGamesA: totalGamesA / iterations,
+            avgGamesB: totalGamesB / iterations
         };
     }
 
