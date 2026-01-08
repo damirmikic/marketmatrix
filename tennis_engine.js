@@ -39,23 +39,106 @@ export class TennisEngine {
     }
 
     // ==========================================
+    // PHASE 2.1: FAIR TOTAL CALCULATION (MARKET SKEW)
+    // ==========================================
+
+    /**
+     * Adjusts the target total based on Over/Under odds pricing
+     * A 22.5 line priced at 1.50/2.50 implies higher expected total than 1.90/1.90
+     * @param {number} line - The total games line (e.g., 22.5)
+     * @param {number} oddsOver - Odds for Over
+     * @param {number} oddsUnder - Odds for Under
+     * @returns {number} Adjusted target total
+     */
+    calculateExpectedTotalFromOdds(line, oddsOver, oddsUnder) {
+        if (!line || !oddsOver || !oddsUnder) return line; // Fallback to raw line
+
+        try {
+            // 1. Remove Vigorish to get Fair Probability
+            const fairProbs = this.removeVigorish(oddsOver, oddsUnder);
+            const pOver = fairProbs.p1; // p1 represents Over
+
+            // 2. Adjust Line based on market implied probability
+            // If P(Over) is 60% (0.6), we shift the target up.
+            // (0.6 - 0.5) * 12 = 1.2 games.
+            // Recommended SlopeFactor for Best-of-3 Tennis is 12.0
+            const SLOPE_FACTOR = 12.0;
+            const adjustment = (pOver - 0.5) * SLOPE_FACTOR;
+
+            return line + adjustment;
+        } catch (e) {
+            console.warn("Failed to calculate fair total from odds:", e);
+            return line; // Fallback to raw line on error
+        }
+    }
+
+    // ==========================================
+    // PHASE 2.3: SYNTHETIC TOTAL GENERATOR
+    // ==========================================
+
+    /**
+     * Generates a synthetic total when no market line is available
+     * Based on match competitiveness and surface characteristics
+     * @param {number} odds1 - Player 1 match winner odds
+     * @param {number} odds2 - Player 2 match winner odds
+     * @param {string} surface - Surface type (Grass/Hard/Clay)
+     * @returns {number} Estimated total games
+     */
+    estimateSyntheticTotal(odds1, odds2, surface = 'Hard') {
+        // Surface-specific base totals for evenly matched players
+        const SURFACE_BASE = {
+            'Grass': 23.5,
+            'Hard': 22.5,
+            'Clay': 21.5,
+            'Indoor': 23.5
+        };
+
+        const baseTotal = SURFACE_BASE[surface] || 22.5;
+
+        try {
+            // De-vig the match winner odds to get fair probabilities
+            const fairProbs = this.removeVigorish(odds1, odds2);
+            const pFavorite = Math.max(fairProbs.p1, fairProbs.p2);
+
+            // Competitiveness factor: How fast the total drops as match gets lopsided
+            // A factor of 12 works well empirically
+            const COMPETITIVENESS_FACTOR = 12.0;
+
+            // Calculate decay based on how far from 50/50 the match is
+            const decay = Math.abs(pFavorite - 0.5) * COMPETITIVENESS_FACTOR;
+
+            // Synthetic Total = Base - Decay
+            const syntheticTotal = baseTotal - decay;
+
+            // Ensure reasonable bounds (min 15 games, max 28 games for best-of-3)
+            return Math.max(15.0, Math.min(28.0, syntheticTotal));
+
+        } catch (e) {
+            console.warn("Failed to estimate synthetic total:", e);
+            return baseTotal; // Fallback to surface base
+        }
+    }
+
+    // ==========================================
     // PHASE 2: THE SOLVER (REVERSE ENGINEERING)
     // ==========================================
 
     solveParameters(targetPMatch, targetTotalGames, surface = 'Hard') {
-        // Surface-dependent modifiers for hold probability
-        // Faster surfaces = higher hold rates, slower surfaces = lower hold rates
-        const SURFACE_MODIFIERS = {
-            'Grass': 1.08,
-            'Hard': 1.0,
-            'Clay': 0.92
+        // PHASE 2.2: Surface-Dependent Hold Priors
+        // Bias the solver's initial guess based on surface to ensure convergence
+        // on the correct "style" of match (Serve-bot vs. Grinder)
+        const SURFACE_PRIORS = {
+            'Grass': 0.75,    // High Hold Probabilities (Serve-bot)
+            'Hard': 0.68,     // Neutral baseline
+            'Clay': 0.60,     // Lower Hold Probabilities (Grinder)
+            'Indoor': 0.73
         };
 
-        const surfaceFactor = SURFACE_MODIFIERS[surface] || 1.0;
+        const basePrior = SURFACE_PRIORS[surface] || 0.68;
 
-        // Initialize with surface adjustment
-        let pa = (0.60 + (targetPMatch - 0.5) * 0.2) * surfaceFactor;
-        let pb = (0.60 - (targetPMatch - 0.5) * 0.2) * surfaceFactor;
+        // Initialize with surface-specific priors adjusted by match winner expectation
+        let pa = basePrior + (targetPMatch - 0.5) * 0.2;
+        let pb = basePrior - (targetPMatch - 0.5) * 0.2;
 
         // Constrain to valid probability range
         pa = Math.max(0.40, Math.min(0.99, pa));
