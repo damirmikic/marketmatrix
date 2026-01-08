@@ -1,12 +1,9 @@
 // js/math.js
 
-// Factorial cache
-const factCache = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800];
-export function factorial(n) {
-    if (n < 0) return 1;
-    if (n < factCache.length) return factCache[n];
-    return n * factorial(n - 1);
-}
+import { factorial, solveShin, probToOdds } from './core/math_utils.js';
+
+// Re-export core utilities for backwards compatibility
+export { factorial, solveShin, probToOdds };
 
 // Zero-Inflated Poisson (ZIP)
 export function zipPoisson(k, lambda, omega) {
@@ -38,32 +35,6 @@ export function getScoreProb(x, y, lambda, mu, omega = 0) {
     return base * adj;
 }
 
-// Shin's Method
-export function solveShin(oddsArr) {
-    const sumImplied = oddsArr.reduce((sum, o) => sum + (1 / o), 0);
-    const m = sumImplied - 1;
-
-    if (m <= 0) return oddsArr.map(o => 1 / o);
-
-    let z = 0.01;
-    for (let i = 0; i < 50; i++) {
-        let sumProb = oddsArr.reduce((sum, o) => {
-            const pImplied = 1 / o;
-            const p = (Math.sqrt(z ** 2 + 4 * (1 - z) * (pImplied ** 2 / sumImplied)) - z) / (2 * (1 - z));
-            return sum + p;
-        }, 0);
-
-        if (Math.abs(sumProb - 1) < 1e-7) break;
-        z += (sumProb - 1) * 0.5;
-        if (z < 0) z = 0;
-        if (z > 1) z = 0.99;
-    }
-
-    return oddsArr.map(o => {
-        const pImplied = 1 / o;
-        return (Math.sqrt(z ** 2 + 4 * (1 - z) * (pImplied ** 2 / sumImplied)) - z) / (2 * (1 - z));
-    });
-}
 
 // Matrix Calculation
 export function calculateMatrix(lambda, mu, omega = 0) {
@@ -139,8 +110,4 @@ export function solveParameters(targetHomeWin, targetOverProb, targetLine, targe
     }
 
     return { lambda, mu, omega };
-}
-
-export function probToOdds(p) {
-    return p > 0 ? (1 / p).toFixed(2) : "∞";
 }

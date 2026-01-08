@@ -1,13 +1,8 @@
+import { probToOdds } from './core/math_utils.js';
 
 // State to hold active legs
 let activeLegs = [];
 let currentMatrix = [];
-
-// Helper to convert probability to odds
-function probToOdds(p) {
-    if (p <= 0) return "---";
-    return (1 / p).toFixed(2);
-}
 
 // 1. Core Logic: Check if a score (h, a) satisfies a specific condition
 function checkLeg(h, a, leg) {

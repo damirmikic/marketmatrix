@@ -9,23 +9,7 @@ import {
     setRunModelCallback
 } from './js/table_tennis_api.js';
 
-// --- Utility Functions ---
-function probToOdds(p) {
-    if (p <= 0) return "---";
-    if (p >= 1) return "1.00";
-    return (1 / p).toFixed(2);
-}
-
-function solveShin(odds) {
-    // Simple Shin method for 2-way market
-    const impliedProbs = odds.map(o => 1 / o);
-    const total = impliedProbs.reduce((a, b) => a + b, 0);
-    const margin = total - 1;
-
-    // For 2-way, simple proportional adjustment
-    const fairProbs = impliedProbs.map(p => p / total);
-    return fairProbs;
-}
+import { probToOdds, solveShin } from './js/core/math_utils.js';
 
 // --- Main Controller ---
 function runModel() {
