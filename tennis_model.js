@@ -7,18 +7,72 @@ window.runModel = function (surface = 'Hard') {
     try {
         const odds1 = parseFloat(document.getElementById('player1Odds').value);
         const odds2 = parseFloat(document.getElementById('player2Odds').value);
-        const totalLine = parseFloat(document.getElementById('totalGamesLine').value);
+        let totalLine = parseFloat(document.getElementById('totalGamesLine').value);
+
+        // Read Over/Under odds if present
+        const oddsOver = parseFloat(document.getElementById('oddsOver')?.value);
+        const oddsUnder = parseFloat(document.getElementById('oddsUnder')?.value);
 
         if (surface) document.getElementById('surfaceBadge').textContent = surface;
 
-        if (!odds1 || !odds2 || !totalLine) return;
+        if (!odds1 || !odds2) return;
+
+        // PHASE 2: Handle Synthetic Total and Fair Total Adjustment
+        let isSynthetic = false;
+        let isAdjusted = false;
+        let targetTotal = totalLine;
+
+        const totalLineInput = document.getElementById('totalGamesLine');
+
+        // Step 1: Check if Total Line is missing -> Generate Synthetic Total
+        if (!totalLine || isNaN(totalLine)) {
+            targetTotal = engine.estimateSyntheticTotal(odds1, odds2, surface);
+            totalLineInput.value = targetTotal.toFixed(1);
+            isSynthetic = true;
+
+            // Visual feedback for synthetic data
+            totalLineInput.style.borderColor = '#f97316'; // Orange
+            totalLineInput.style.borderWidth = '2px';
+            totalLineInput.title = 'Estimated based on Match Odds & Surface';
+        }
+        // Step 2: If Over/Under odds are present -> Calculate Fair Total
+        else if (oddsOver && oddsUnder && !isNaN(oddsOver) && !isNaN(oddsUnder)) {
+            targetTotal = engine.calculateExpectedTotalFromOdds(totalLine, oddsOver, oddsUnder);
+            isAdjusted = true;
+
+            // Visual feedback for adjusted data
+            totalLineInput.style.borderColor = '#3b82f6'; // Blue
+            totalLineInput.style.borderWidth = '2px';
+            totalLineInput.title = `Fair Total: ${targetTotal.toFixed(2)} (Adjusted from ${totalLine} using O/U odds)`;
+        }
+        // Step 3: Normal case - use raw line
+        else {
+            // Reset styling for normal input
+            totalLineInput.style.borderColor = '';
+            totalLineInput.style.borderWidth = '';
+            totalLineInput.title = '';
+        }
+
+        // Display total info
+        const totalInfoEl = document.getElementById('totalInfo');
+        if (totalInfoEl) {
+            if (isSynthetic) {
+                totalInfoEl.textContent = `(Est)`;
+                totalInfoEl.style.color = '#f97316';
+            } else if (isAdjusted) {
+                totalInfoEl.textContent = `(Fair: ${targetTotal.toFixed(2)})`;
+                totalInfoEl.style.color = '#3b82f6';
+            } else {
+                totalInfoEl.textContent = '';
+            }
+        }
 
         // 1. De-vig
         const fairParams = engine.removeVigorish(odds1, odds2);
         displayFairValue(fairParams);
 
-        // 2. Solve
-        const result = engine.solveParameters(fairParams.p1, totalLine, surface);
+        // 2. Solve (with adjusted/synthetic total)
+        const result = engine.solveParameters(fairParams.p1, targetTotal, surface);
         displayParameters(result);
 
         // 3. Derivatives

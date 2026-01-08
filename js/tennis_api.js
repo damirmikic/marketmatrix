@@ -270,15 +270,43 @@ function populateInputs(odds) {
     if (odds.totalGames.line) {
         document.getElementById('totalGamesLine').value = odds.totalGames.line.toFixed(1);
     }
+
+    // PHASE 2: Populate Over/Under odds for Fair Total calculation
+    if (odds.totalGames.over) {
+        const oddsOverEl = document.getElementById('oddsOver');
+        if (oddsOverEl) {
+            oddsOverEl.value = odds.totalGames.over.toFixed(2);
+        }
+    }
+    if (odds.totalGames.under) {
+        const oddsUnderEl = document.getElementById('oddsUnder');
+        if (oddsUnderEl) {
+            oddsUnderEl.value = odds.totalGames.under.toFixed(2);
+        }
+    }
 }
 
 // Clear all input fields
 function clearInputs() {
-    const inputs = ['player1Odds', 'player2Odds', 'totalGamesLine'];
+    const inputs = ['player1Odds', 'player2Odds', 'totalGamesLine', 'oddsOver', 'oddsUnder'];
 
     inputs.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.value = '';
     });
+
+    // Reset total line styling
+    const totalLineInput = document.getElementById('totalGamesLine');
+    if (totalLineInput) {
+        totalLineInput.style.borderColor = '';
+        totalLineInput.style.borderWidth = '';
+        totalLineInput.title = '';
+    }
+
+    // Clear total info label
+    const totalInfoEl = document.getElementById('totalInfo');
+    if (totalInfoEl) {
+        totalInfoEl.textContent = '';
+    }
 }
 
