@@ -179,21 +179,37 @@ Displays when a match is selected:
 
 ## CORS Handling
 
-Tennis Abstract may block direct browser requests due to CORS policies. Solutions:
+Tennis Abstract blocks direct browser requests due to CORS policies. **This has been solved using a Netlify serverless function proxy.**
 
-### Option 1: Browser Extension (Development)
+### ✅ Implemented Solution: Netlify Serverless Function
+
+The application uses a Netlify serverless function (`netlify/functions/fetch-elo.js`) to proxy requests to Tennis Abstract, bypassing CORS restrictions.
+
+**How it works:**
+1. Browser requests Elo data from `/.netlify/functions/fetch-elo`
+2. Netlify function fetches data from Tennis Abstract server-side
+3. Function returns data with CORS headers enabled
+4. Browser receives data without CORS errors
+
+**Files:**
+- `netlify/functions/fetch-elo.js` - Proxy function
+- `netlify.toml` - Netlify configuration
+- `package.json` - Dependencies (node-fetch)
+- `js/tennis_elo_service.js` - Updated to use proxy endpoint
+
+**Endpoint:**
+```javascript
+this.ELO_API_URL = '/.netlify/functions/fetch-elo';
+```
+
+### Alternative Solutions (Not Used)
+
+#### Option 1: Browser Extension (Development Only)
 Use a CORS proxy extension for local testing:
 - [CORS Unblock](https://chrome.google.com/webstore/detail/cors-unblock) (Chrome)
 - [CORS Everywhere](https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/) (Firefox)
 
-### Option 2: Server Proxy (Production)
-Route requests through your server:
-```javascript
-// Update ELO_API_URL in tennis_elo_service.js
-this.ELO_API_URL = '/api/proxy/tennis-abstract/elo';
-```
-
-### Option 3: Manual JSON Data
+#### Option 2: Manual JSON Data
 Pre-download Elo data and serve as static JSON:
 ```javascript
 // Fetch from local file instead

@@ -1,0 +1,16 @@
+{
+  "name": "marketmatrix",
+  "version": "1.0.0",
+  "description": "Sports betting market analysis and odds calculation",
+  "main": "index.html",
+  "scripts": {
+    "test": "node test_tennis_engine.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {},
+  "keywords": ["sports", "betting", "odds", "tennis", "basketball"],
+  "author": "MarketMatrix Team",
+  "license": "MIT"
+}

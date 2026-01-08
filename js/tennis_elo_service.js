@@ -8,7 +8,8 @@ class TennisEloService {
         this.eloCache = new Map(); // Cache player Elo data
         this.lastFetchTime = null;
         this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-        this.ELO_API_URL = 'https://www.tennisabstract.com/reports/atp_elo_ratings.html';
+        // Use Netlify serverless function to bypass CORS
+        this.ELO_API_URL = '/.netlify/functions/fetch-elo';
     }
 
     /**
