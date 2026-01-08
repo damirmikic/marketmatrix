@@ -9,21 +9,9 @@ import {
     setRunModelCallback
 } from './js/ice_hockey_api.js';
 
+import { factorial, probToOdds } from './js/core/math_utils.js';
+
 // --- Statistical Helper Functions ---
-
-// Memoized factorial function
-const factorialCache = {};
-function factorial(n) {
-    if (n === 0 || n === 1) return 1;
-    if (factorialCache[n]) return factorialCache[n];
-
-    let result = 1;
-    for (let i = 2; i <= n; i++) {
-        result *= i;
-    }
-    factorialCache[n] = result;
-    return result;
-}
 
 // Poisson Probability Mass Function
 function poissonPMF(k, lambda) {
@@ -36,12 +24,6 @@ function poissonPMF(k, lambda) {
 }
 
 // --- Probability Functions ---
-
-function probToOdds(p) {
-    if (p <= 0) return "---";
-    if (p >= 1) return "1.00";
-    return (1 / p).toFixed(2);
-}
 
 // Remove vig (bookmaker margin) - proportional method
 function removeVig(odds) {

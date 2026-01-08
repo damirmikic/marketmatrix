@@ -1,9 +1,5 @@
-import {
-    solveShin,
-    solveParameters,
-    calculateMatrix,
-    probToOdds
-} from './js/math.js';
+import { solveShin, probToOdds } from './js/core/math_utils.js';
+import { solveParameters, calculateMatrix } from './js/math.js';
 
 import {
     populateHalfDetailed,
