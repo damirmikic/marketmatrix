@@ -123,7 +123,7 @@ export class TennisEngine {
     // PHASE 2: THE SOLVER (REVERSE ENGINEERING)
     // ==========================================
 
-    solveParameters(targetPMatch, targetTotalGames, surface = 'Hard') {
+    solveParameters(targetPMatch, targetTotalGames, surface = 'Hard', eloHoldProbs = null) {
         // PHASE 2.2: Surface-Dependent Hold Priors
         // Bias the solver's initial guess based on surface to ensure convergence
         // on the correct "style" of match (Serve-bot vs. Grinder)
@@ -136,9 +136,25 @@ export class TennisEngine {
 
         const basePrior = SURFACE_PRIORS[surface] || 0.68;
 
-        // Initialize with surface-specific priors adjusted by match winner expectation
-        let pa = basePrior + (targetPMatch - 0.5) * 0.2;
-        let pb = basePrior - (targetPMatch - 0.5) * 0.2;
+        // PHASE 2.2.1: Elo-Enhanced Initialization
+        // If Elo data is available, blend it with surface priors for better starting point
+        let pa, pb;
+
+        if (eloHoldProbs && eloHoldProbs.pa && eloHoldProbs.pb) {
+            // Blend Elo-based holds (70%) with surface-adjusted priors (30%)
+            const ELO_WEIGHT = 0.70;
+            const SURFACE_WEIGHT = 0.30;
+
+            const surfaceAdjustedPa = basePrior + (targetPMatch - 0.5) * 0.2;
+            const surfaceAdjustedPb = basePrior - (targetPMatch - 0.5) * 0.2;
+
+            pa = ELO_WEIGHT * eloHoldProbs.pa + SURFACE_WEIGHT * surfaceAdjustedPa;
+            pb = ELO_WEIGHT * eloHoldProbs.pb + SURFACE_WEIGHT * surfaceAdjustedPb;
+        } else {
+            // Fallback to pure surface-based priors
+            pa = basePrior + (targetPMatch - 0.5) * 0.2;
+            pb = basePrior - (targetPMatch - 0.5) * 0.2;
+        }
 
         // Constrain to valid probability range
         pa = Math.max(0.40, Math.min(0.99, pa));

@@ -1,7 +1,13 @@
 import * as TennisAPI from './js/tennis_api.js';
 import { TennisEngine } from './tennis_engine.js';
+import { tennisEloService } from './js/tennis_elo_service.js';
 
 const engine = new TennisEngine();
+
+// Store current match players for Elo lookup
+let currentPlayer1 = null;
+let currentPlayer2 = null;
+let currentSurface = 'Hard';
 
 window.runModel = function (surface = 'Hard') {
     try {
@@ -13,9 +19,26 @@ window.runModel = function (surface = 'Hard') {
         const oddsOver = parseFloat(document.getElementById('oddsOver')?.value);
         const oddsUnder = parseFloat(document.getElementById('oddsUnder')?.value);
 
-        if (surface) document.getElementById('surfaceBadge').textContent = surface;
+        if (surface) {
+            document.getElementById('surfaceBadge').textContent = surface;
+            currentSurface = surface;
+        }
 
         if (!odds1 || !odds2) return;
+
+        // Fetch Elo-based hold probabilities if player names are available
+        let eloHoldProbs = null;
+        if (currentPlayer1 && currentPlayer2) {
+            eloHoldProbs = tennisEloService.getEloAdjustedHoldProbs(
+                currentPlayer1,
+                currentPlayer2,
+                surface
+            );
+
+            if (eloHoldProbs) {
+                console.log('Using Elo-enhanced priors:', eloHoldProbs);
+            }
+        }
 
         // PHASE 2: Handle Synthetic Total and Fair Total Adjustment
         let isSynthetic = false;
@@ -71,14 +94,15 @@ window.runModel = function (surface = 'Hard') {
         const fairParams = engine.removeVigorish(odds1, odds2);
         displayFairValue(fairParams);
 
-        // 2. Solve (with adjusted/synthetic total)
-        const result = engine.solveParameters(fairParams.p1, targetTotal, surface);
-        displayParameters(result);
+        // 2. Solve (with adjusted/synthetic total and Elo-enhanced priors)
+        const result = engine.solveParameters(fairParams.p1, targetTotal, surface, eloHoldProbs);
+        displayParameters(result, eloHoldProbs);
 
         // 3. Derivatives
         const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration);
         displayDerivatives(derivatives);
 
+        // Show all result cards including Elo card
         document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
 
     } catch (e) {
@@ -91,7 +115,7 @@ function displayFairValue(fair) {
     document.getElementById('fairP2').textContent = (1 / fair.p2).toFixed(2);
 }
 
-function displayParameters(result) {
+function displayParameters(result, eloHoldProbs = null) {
     document.getElementById('p1Hold').textContent = (result.pa * 100).toFixed(1) + '%';
     document.getElementById('p2Hold').textContent = (result.pb * 100).toFixed(1) + '%';
     document.getElementById('modelTotal').textContent = result.calibration.expTotal.toFixed(2);
@@ -104,7 +128,80 @@ function displayParameters(result) {
     if (result.calibration.expGamesPlayer2 !== undefined) {
         document.getElementById('p2Games').textContent = result.calibration.expGamesPlayer2.toFixed(1);
     }
+
+    // Display Elo ratings if available
+    displayEloRatings(eloHoldProbs);
 }
+
+/**
+ * Display Elo ratings and related data
+ */
+function displayEloRatings(eloHoldProbs) {
+    const eloInfoEl = document.getElementById('eloInfo');
+    if (!eloInfoEl) return;
+
+    if (!currentPlayer1 || !currentPlayer2) {
+        eloInfoEl.innerHTML = '<p class="text-sm text-gray-500">Select a match to see Elo ratings</p>';
+        return;
+    }
+
+    const player1Data = tennisEloService.getPlayerData(currentPlayer1);
+    const player2Data = tennisEloService.getPlayerData(currentPlayer2);
+
+    if (!player1Data || !player2Data) {
+        eloInfoEl.innerHTML = '<p class="text-sm text-yellow-600">⚠️ Elo data not available for these players</p>';
+        return;
+    }
+
+    // Get surface-specific Elo
+    const player1Elo = tennisEloService.getPlayerElo(currentPlayer1, currentSurface);
+    const player2Elo = tennisEloService.getPlayerElo(currentPlayer2, currentSurface);
+
+    // Calculate Elo-based win probability
+    const eloWinProb = tennisEloService.calculateWinProbability(currentPlayer1, currentPlayer2, currentSurface);
+
+    const eloEnhanced = eloHoldProbs ? '✓ Elo-Enhanced' : '';
+
+    eloInfoEl.innerHTML = `
+        <div class="space-y-2">
+            <div class="flex justify-between items-center">
+                <h4 class="font-semibold text-sm">Elo Ratings (${currentSurface})</h4>
+                ${eloEnhanced ? '<span class="text-xs text-green-600 font-medium">' + eloEnhanced + '</span>' : ''}
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <div class="font-medium text-gray-700">${player1Data.name}</div>
+                    <div class="text-gray-600">Elo: <span class="font-mono">${player1Elo.toFixed(0)}</span></div>
+                    <div class="text-gray-600">ATP: #${player1Data.atpRank || 'N/A'}</div>
+                </div>
+                <div>
+                    <div class="font-medium text-gray-700">${player2Data.name}</div>
+                    <div class="text-gray-600">Elo: <span class="font-mono">${player2Elo.toFixed(0)}</span></div>
+                    <div class="text-gray-600">ATP: #${player2Data.atpRank || 'N/A'}</div>
+                </div>
+            </div>
+            ${eloWinProb ? `
+                <div class="mt-2 pt-2 border-t">
+                    <div class="text-xs text-gray-600">
+                        Elo Win Probability:
+                        <span class="font-mono font-semibold">${(eloWinProb * 100).toFixed(1)}%</span> -
+                        <span class="font-mono font-semibold">${((1 - eloWinProb) * 100).toFixed(1)}%</span>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+/**
+ * Update current match players (called from tennis_api.js)
+ */
+window.setCurrentPlayers = function(player1, player2, surface = 'Hard') {
+    currentPlayer1 = player1;
+    currentPlayer2 = player2;
+    currentSurface = surface;
+    console.log('Players set:', player1, 'vs', player2, 'on', surface);
+};
 
 function displayDerivatives(d) {
     // Set Betting
@@ -144,6 +241,16 @@ function displayDerivatives(d) {
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize Elo service
+    try {
+        await tennisEloService.fetchEloRatings();
+        console.log('Elo ratings loaded successfully');
+    } catch (error) {
+        console.warn('Failed to load Elo ratings:', error);
+        // Continue even if Elo data fails to load
+    }
+
+    // Initialize Tennis API
     TennisAPI.setRunModelCallback(window.runModel);
     await TennisAPI.initLoader();
 

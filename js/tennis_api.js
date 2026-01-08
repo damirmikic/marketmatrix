@@ -228,6 +228,20 @@ export async function handleMatchChange() {
         return;
     }
 
+    // Get player names from selected event
+    let player1 = null;
+    let player2 = null;
+    if (tournamentId) {
+        const tournament = tennisData.tournaments.find(t => t.id == tournamentId);
+        if (tournament) {
+            const event = tournament.events.find(e => e.id == eventId);
+            if (event) {
+                player1 = event.homeName;
+                player2 = event.awayName;
+            }
+        }
+    }
+
     const eventData = await fetchEventOdds(eventId);
     if (!eventData || !eventData.betOffers) {
         console.error('No odds data available');
@@ -245,6 +259,11 @@ export async function handleMatchChange() {
             surface = detectSurface(tournament.name);
             console.log(`Verified Tournament: ${tournament.name} -> Surface: ${surface}`);
         }
+    }
+
+    // Set current players for Elo lookup
+    if (player1 && player2 && window.setCurrentPlayers) {
+        window.setCurrentPlayers(player1, player2, surface);
     }
 
     // Trigger model calculation with detected surface
