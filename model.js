@@ -124,16 +124,21 @@ function runModel() {
     const ratio2H = ratio2HEl ? parseFloat(ratio2HEl.value) / 100 : 0.55;
 
     const matrixFT = calculateMatrix(params.lambda, params.mu, params.omega);
-    const matrixFH = calculateMatrix(params.lambda * ratio1H, params.mu * ratio1H, params.omega * ratio1H);
-    // ZIP usually applies to the *event* count. Zero goals in half is different.
-    // Standard ZIP for half-time is complex. 
-    // HEURISTIC: We will scale Omega linearly with time for simplicity or keep it constant?
-    // Let's keep it simple: The "Zero Bonus" is a property of the match defensiveness.
-    // However, P(0) in half is naturally Check.
-    // Let's use scaled Lambda/Mu but keep Omega constant (or scaled down?).
-    // A smaller time interval naturally has more zeros. A fixed additive zero-prob might be too strong for a half.
-    // Let's scale Omega by half ratio for halves as a reasonable heuristic for now.
-    const matrixSH = calculateMatrix(params.lambda * ratio2H, params.mu * ratio2H, params.omega * ratio2H);
+
+    // First Half: Boost zero-inflation to account for "feeling out" process
+    // First halves have disproportionately more 0-0 scorelines than pure Poisson predicts
+    const matrixFH = calculateMatrix(
+        params.lambda * ratio1H,
+        params.mu * ratio1H,
+        params.omega * 1.5  // Boost zero-inflation for 1H
+    );
+
+    // Second Half: Use standard scaling
+    const matrixSH = calculateMatrix(
+        params.lambda * ratio2H,
+        params.mu * ratio2H,
+        params.omega * ratio2H
+    );
 
     // --- MARKET GENERATION ---
 

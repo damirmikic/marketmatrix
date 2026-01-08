@@ -43,11 +43,23 @@ export class TennisEngine {
     // ==========================================
 
     solveParameters(targetPMatch, targetTotalGames, surface = 'Hard') {
-        let pa = 0.60 + (targetPMatch - 0.5) * 0.2;
-        let pb = 0.60 - (targetPMatch - 0.5) * 0.2;
+        // Surface-dependent modifiers for hold probability
+        // Faster surfaces = higher hold rates, slower surfaces = lower hold rates
+        const SURFACE_MODIFIERS = {
+            'Grass': 1.08,
+            'Hard': 1.0,
+            'Clay': 0.92
+        };
 
-        pa = Math.max(0.40, Math.min(0.95, pa));
-        pb = Math.max(0.40, Math.min(0.95, pb));
+        const surfaceFactor = SURFACE_MODIFIERS[surface] || 1.0;
+
+        // Initialize with surface adjustment
+        let pa = (0.60 + (targetPMatch - 0.5) * 0.2) * surfaceFactor;
+        let pb = (0.60 - (targetPMatch - 0.5) * 0.2) * surfaceFactor;
+
+        // Constrain to valid probability range
+        pa = Math.max(0.40, Math.min(0.99, pa));
+        pb = Math.max(0.40, Math.min(0.99, pb));
 
         let bestPa = pa;
         let bestPb = pb;

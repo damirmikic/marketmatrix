@@ -16,6 +16,18 @@ export function zipPoisson(k, lambda, omega) {
 
 // Dixon-Coles Factor
 const RHO = -0.13;
+
+// Dynamic Dixon-Coles Correlation
+// Adjusts rho based on expected total goals to better model low/high-scoring games
+export function calculateDynamicRho(lambda, mu) {
+    const total = lambda + mu;
+    // Linear interpolation between bounds
+    if (total <= 1.5) return -0.18;
+    if (total >= 4.0) return -0.05;
+    // Slope m = (-0.05 - (-0.18)) / (4.0 - 1.5) = 0.13 / 2.5 = 0.052
+    return -0.18 + (total - 1.5) * 0.052;
+}
+
 export function correction(x, y, lambda, mu, rho = RHO) {
     if (x === 0 && y === 0) return 1 - (lambda * mu * rho);
     if (x === 0 && y === 1) return 1 + (lambda * rho);
@@ -24,14 +36,16 @@ export function correction(x, y, lambda, mu, rho = RHO) {
     return 1;
 }
 
-// Updated to use ZIP by default
+// Updated to use ZIP and dynamic Dixon-Coles by default
 export function getScoreProb(x, y, lambda, mu, omega = 0) {
     // We treat Home/Away independent ZIP, sharing same Omega for simplicity or split if needed.
     // Standard approach: Apply Omega to both sides symmetrically or weighted.
     // For this implementation: We apply the same Omega to both Home and Away distributions.
 
     let base = zipPoisson(x, lambda, omega) * zipPoisson(y, mu, omega);
-    let adj = correction(x, y, lambda, mu, RHO);
+    // Use dynamic rho based on expected goals
+    const rho = calculateDynamicRho(lambda, mu);
+    let adj = correction(x, y, lambda, mu, rho);
     return base * adj;
 }
 

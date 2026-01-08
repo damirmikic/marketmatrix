@@ -92,7 +92,15 @@ function calcTotalFromMatrix(matrix, line) {
     return { over, under: 1 - over };
 }
 
-function calcHandicap(matrix, line) {
+// Dynamic Empty Net Factor
+// Adjusts based on league scoring environment (total line)
+function getEmptyNetFactor(totalLine) {
+    // Base 15% at 5.5 line
+    // Increase by 2% for every 1.0 increase in line
+    return 0.15 + (totalLine - 5.5) * 0.02;
+}
+
+function calcHandicap(matrix, line, totalLine = 5.5) {
     // line is from home team perspective (negative means home is favorite)
     // Home covers if: homeScore + line > awayScore
     let homeCovers = 0;
@@ -109,8 +117,8 @@ function calcHandicap(matrix, line) {
 
     // 2. EMPTY NET ADJUSTMENT (The "Hockey Factor")
     // When leading by 1 goal late, losing team pulls goalie
-    // ~15% of 1-goal leads turn into 2-goal wins via empty net
-    const EN_FACTOR = 0.15;
+    // Dynamic factor based on league scoring environment
+    const EN_FACTOR = getEmptyNetFactor(totalLine);
 
     // Calculate probability of exactly 1-goal win for Home and Away
     let probHomeWinBy1 = 0;
@@ -319,7 +327,7 @@ function runModel() {
 
     let puckLineHtml = '';
     puckLines.forEach(line => {
-        const result = calcHandicap(matrixFT, line);
+        const result = calcHandicap(matrixFT, line, totalGoalsLine);
         puckLineHtml += `<tr>
             <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
             <td class="num-col">${probToOdds(result.homeCovers)}</td>

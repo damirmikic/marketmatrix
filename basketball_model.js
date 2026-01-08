@@ -296,7 +296,7 @@ function runModel() {
         { ratio: q4Ratio, name: 'Q4', spreadTableId: 'q4SpreadTable', totalTableId: 'q4TotalTable', dnbHomeId: 'dnbQ4Home', dnbAwayId: 'dnbQ4Away' }
     ];
 
-    quarters.forEach(quarter => {
+    quarters.forEach((quarter, index) => {
         // Expected spread and total for this quarter
         const spreadQ = roundedBaseSpread * quarter.ratio;
         const totalQ = expectedTotal * quarter.ratio;
@@ -305,12 +305,18 @@ function runModel() {
         const spreadQBase = Math.floor(spreadQ) + 0.5;
         const totalQBase = Math.floor(totalQ) + 0.5;
 
+        // Q4 has higher variance due to fouling/garbage time strategies
+        // Lower coefficients = less probability change per line = higher variance
+        const isQ4 = (index === 3);  // Q4 is the 4th quarter (index 3)
+        const spreadCoef = isQ4 ? 0.06 : 0.08;  // Lower for Q4 (higher variance)
+        const totalCoef = isQ4 ? 0.045 : 0.06;  // Lower for Q4 (higher variance)
+
         // Generate Quarter Spread table (5 lines on half points), exclude 0.0, ±0.5
         const spreadQLines = [spreadQBase - 2, spreadQBase - 1, spreadQBase, spreadQBase + 1, spreadQBase + 2]
             .filter(l => l !== 0.0 && Math.abs(l) !== 0.5);
         let spreadQHtml = '';
         spreadQLines.forEach(line => {
-            const probShift = (line - spreadQBase) * 0.08;
+            const probShift = (line - spreadQBase) * spreadCoef;
             let pHome = Math.max(0.05, Math.min(0.95, fairSpreadH + probShift));
             spreadQHtml += `<tr>
                 <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
@@ -324,7 +330,7 @@ function runModel() {
         const totalQLines = [totalQBase - 1, totalQBase, totalQBase + 1, totalQBase + 2];
         let totalQHtml = '';
         totalQLines.forEach(line => {
-            const probShift = (line - totalQBase) * 0.06;
+            const probShift = (line - totalQBase) * totalCoef;
             let pOverQ = Math.max(0.05, Math.min(0.95, 0.5 - probShift));
             totalQHtml += `<tr>
                 <td class="line-col">${line.toFixed(1)}</td>
@@ -335,7 +341,7 @@ function runModel() {
         document.getElementById(quarter.totalTableId).innerHTML = totalQHtml;
 
         // Quarter DNB - who wins the quarter (excluding ties)
-        const pHomeQWins = Math.max(0.1, Math.min(0.9, fairSpreadH + (0 - spreadQBase) * 0.08));
+        const pHomeQWins = Math.max(0.1, Math.min(0.9, fairSpreadH + (0 - spreadQBase) * spreadCoef));
         document.getElementById(quarter.dnbHomeId).textContent = probToOdds(pHomeQWins);
         document.getElementById(quarter.dnbAwayId).textContent = probToOdds(1 - pHomeQWins);
     });
@@ -486,10 +492,11 @@ function runModel() {
 }
 
 // Helper function to estimate margin probability bands
-function estimateMarginProbs(homeWinProb, expectedMargin) {
+function estimateMarginProbs(homeWinProb, expectedMargin, stdDev = 12) {
     // Rough estimation based on normal distribution
+    // stdDev varies by period: Q1-Q3 use ~5.0, Q4 uses ~8.0 (garbage time/fouling)
+    // Full game uses ~12.0
     const probs = [];
-    const stdDev = 12; // typical basketball game std
 
     // Home margins
     if (homeWinProb > 0) {
