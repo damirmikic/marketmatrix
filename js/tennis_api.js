@@ -43,7 +43,8 @@ function buildHierarchy(events) {
             homeName: event.homeName,
             awayName: event.awayName,
             start: event.start,
-            path: event.path // Store path for surface detection later if needed per event
+            path: event.path, // Store path for surface detection later if needed per event
+            tour: detectTour(event.path) // Detect and store tour (ATP/WTA)
         });
 
         // Store full event data
@@ -96,6 +97,25 @@ function detectSurface(tournamentName) {
     }
     // Default to Hard Court
     return 'Hard';
+}
+
+// Detect tour (ATP or WTA) from event path
+function detectTour(path) {
+    if (!path || path.length === 0) return 'ATP'; // Default to ATP
+
+    // Look through path elements for tour indicators
+    for (const pathElement of path) {
+        const name = pathElement.name.toLowerCase();
+        if (name.includes('wta') || name.includes('women')) {
+            return 'WTA';
+        }
+        if (name.includes('atp') || name.includes('men')) {
+            return 'ATP';
+        }
+    }
+
+    // Default to ATP if no clear indicator
+    return 'ATP';
 }
 
 // Handle tournament selection
@@ -228,9 +248,10 @@ export async function handleMatchChange() {
         return;
     }
 
-    // Get player names from selected event
+    // Get player names and tour from selected event
     let player1 = null;
     let player2 = null;
+    let tour = 'ATP'; // Default to ATP
     if (tournamentId) {
         const tournament = tennisData.tournaments.find(t => t.id == tournamentId);
         if (tournament) {
@@ -238,6 +259,7 @@ export async function handleMatchChange() {
             if (event) {
                 player1 = event.homeName;
                 player2 = event.awayName;
+                tour = event.tour || 'ATP';
             }
         }
     }
@@ -263,7 +285,7 @@ export async function handleMatchChange() {
 
     // Set current players for Elo lookup
     if (player1 && player2 && window.setCurrentPlayers) {
-        window.setCurrentPlayers(player1, player2, surface);
+        window.setCurrentPlayers(player1, player2, surface, tour);
     }
 
     // Trigger model calculation with detected surface
