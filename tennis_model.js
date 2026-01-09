@@ -1,6 +1,7 @@
 import * as TennisAPI from './js/tennis_api.js';
 import { TennisEngine } from './tennis_engine.js';
 import { tennisEloService } from './js/tennis_elo_service.js';
+import { tennisWtaEloService } from './js/tennis_wta_elo_service.js';
 
 const engine = new TennisEngine();
 
@@ -8,6 +9,7 @@ const engine = new TennisEngine();
 let currentPlayer1 = null;
 let currentPlayer2 = null;
 let currentSurface = 'Hard';
+let currentTour = 'ATP'; // Default to ATP
 
 window.runModel = function (surface = 'Hard') {
     try {
@@ -29,14 +31,16 @@ window.runModel = function (surface = 'Hard') {
         // Fetch Elo-based hold probabilities if player names are available
         let eloHoldProbs = null;
         if (currentPlayer1 && currentPlayer2) {
-            eloHoldProbs = tennisEloService.getEloAdjustedHoldProbs(
+            // Use appropriate Elo service based on tour
+            const eloService = currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
+            eloHoldProbs = eloService.getEloAdjustedHoldProbs(
                 currentPlayer1,
                 currentPlayer2,
                 surface
             );
 
             if (eloHoldProbs) {
-                console.log('Using Elo-enhanced priors:', eloHoldProbs);
+                console.log(`Using ${currentTour} Elo-enhanced priors:`, eloHoldProbs);
             }
         }
 
@@ -145,39 +149,47 @@ function displayEloRatings(eloHoldProbs) {
         return;
     }
 
-    const player1Data = tennisEloService.getPlayerData(currentPlayer1);
-    const player2Data = tennisEloService.getPlayerData(currentPlayer2);
+    // Use appropriate Elo service based on tour
+    const eloService = currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
+
+    const player1Data = eloService.getPlayerData(currentPlayer1);
+    const player2Data = eloService.getPlayerData(currentPlayer2);
 
     if (!player1Data || !player2Data) {
-        eloInfoEl.innerHTML = '<p class="text-sm text-yellow-600">⚠️ Elo data not available for these players</p>';
+        eloInfoEl.innerHTML = `<p class="text-sm text-yellow-600">⚠️ ${currentTour} Elo data not available for these players</p>`;
         return;
     }
 
     // Get surface-specific Elo
-    const player1Elo = tennisEloService.getPlayerElo(currentPlayer1, currentSurface);
-    const player2Elo = tennisEloService.getPlayerElo(currentPlayer2, currentSurface);
+    const player1Elo = eloService.getPlayerElo(currentPlayer1, currentSurface);
+    const player2Elo = eloService.getPlayerElo(currentPlayer2, currentSurface);
 
     // Calculate Elo-based win probability
-    const eloWinProb = tennisEloService.calculateWinProbability(currentPlayer1, currentPlayer2, currentSurface);
+    const eloWinProb = eloService.calculateWinProbability(currentPlayer1, currentPlayer2, currentSurface);
 
     const eloEnhanced = eloHoldProbs ? '✓ Elo-Enhanced' : '';
+
+    // Get appropriate ranking field name based on tour
+    const rankLabel = currentTour === 'WTA' ? 'WTA' : 'ATP';
+    const player1Rank = currentTour === 'WTA' ? player1Data.wtaRank : player1Data.atpRank;
+    const player2Rank = currentTour === 'WTA' ? player2Data.wtaRank : player2Data.atpRank;
 
     eloInfoEl.innerHTML = `
         <div class="space-y-2">
             <div class="flex justify-between items-center">
-                <h4 class="font-semibold text-sm">Elo Ratings (${currentSurface})</h4>
+                <h4 class="font-semibold text-sm">${currentTour} Elo Ratings (${currentSurface})</h4>
                 ${eloEnhanced ? '<span class="text-xs text-green-600 font-medium">' + eloEnhanced + '</span>' : ''}
             </div>
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
                     <div class="font-medium text-gray-700">${player1Data.name}</div>
                     <div class="text-gray-600">Elo: <span class="font-mono">${player1Elo.toFixed(0)}</span></div>
-                    <div class="text-gray-600">ATP: #${player1Data.atpRank || 'N/A'}</div>
+                    <div class="text-gray-600">${rankLabel}: #${player1Rank || 'N/A'}</div>
                 </div>
                 <div>
                     <div class="font-medium text-gray-700">${player2Data.name}</div>
                     <div class="text-gray-600">Elo: <span class="font-mono">${player2Elo.toFixed(0)}</span></div>
-                    <div class="text-gray-600">ATP: #${player2Data.atpRank || 'N/A'}</div>
+                    <div class="text-gray-600">${rankLabel}: #${player2Rank || 'N/A'}</div>
                 </div>
             </div>
             ${eloWinProb ? `
@@ -196,11 +208,12 @@ function displayEloRatings(eloHoldProbs) {
 /**
  * Update current match players (called from tennis_api.js)
  */
-window.setCurrentPlayers = function(player1, player2, surface = 'Hard') {
+window.setCurrentPlayers = function(player1, player2, surface = 'Hard', tour = 'ATP') {
     currentPlayer1 = player1;
     currentPlayer2 = player2;
     currentSurface = surface;
-    console.log('Players set:', player1, 'vs', player2, 'on', surface);
+    currentTour = tour;
+    console.log('Players set:', player1, 'vs', player2, 'on', surface, '(' + tour + ')');
 };
 
 function displayDerivatives(d) {
@@ -241,10 +254,13 @@ function displayDerivatives(d) {
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize Elo service
+    // Initialize both ATP and WTA Elo services
     try {
-        await tennisEloService.fetchEloRatings();
-        console.log('Elo ratings loaded successfully');
+        await Promise.all([
+            tennisEloService.fetchEloRatings(),
+            tennisWtaEloService.fetchEloRatings()
+        ]);
+        console.log('ATP and WTA Elo ratings loaded successfully');
     } catch (error) {
         console.warn('Failed to load Elo ratings:', error);
         // Continue even if Elo data fails to load
