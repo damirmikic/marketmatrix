@@ -198,16 +198,36 @@ function parseOdds(betOffers) {
             });
         }
 
-        // Total Games
+        // Total Games - Smart Main Line Selection
         if (criterionId === 1001159891) {
+            // Extract Over/Under odds for this offer
+            let overOdds = null;
+            let underOdds = null;
+            let line = null;
+
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_OVER') {
-                    odds.totalGames.over = outcome.odds / 1000;
-                    odds.totalGames.line = outcome.line / 1000;
+                    overOdds = outcome.odds / 1000;
+                    line = outcome.line / 1000;
                 } else if (outcome.type === 'OT_UNDER') {
-                    odds.totalGames.under = outcome.odds / 1000;
+                    underOdds = outcome.odds / 1000;
                 }
             });
+
+            // Only process if we have both Over and Under
+            if (overOdds && underOdds && line) {
+                // Calculate balance: how close the odds are to 2.00 (50/50)
+                // Lower balance score = more balanced line
+                const balance = Math.abs(overOdds - 2.0) + Math.abs(underOdds - 2.0);
+
+                // Initialize or update if this is more balanced than current best
+                if (odds.totalGames.line === null || balance < odds.totalGames._balance) {
+                    odds.totalGames.over = overOdds;
+                    odds.totalGames.under = underOdds;
+                    odds.totalGames.line = line;
+                    odds.totalGames._balance = balance; // Track balance score
+                }
+            }
         }
 
         // Set Handicap (Set Spread)
@@ -234,6 +254,9 @@ function parseOdds(betOffers) {
             });
         }
     });
+
+    // Clean up temporary tracking properties
+    delete odds.totalGames._balance;
 
     return odds;
 }
