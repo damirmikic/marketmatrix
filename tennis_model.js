@@ -98,9 +98,17 @@ window.runModel = function (surface = 'Hard') {
         const fairParams = engine.removeVigorish(odds1, odds2);
         displayFairValue(fairParams);
 
-        // 2. Solve (with adjusted/synthetic total and Elo-enhanced priors)
+        // 2. Calculate Direct Player Expected Games (market-driven, bypasses simulation)
+        let directPlayerGames = null;
+        if (targetTotal && oddsOver && oddsUnder && !isNaN(oddsOver) && !isNaN(oddsUnder)) {
+            // Use the fair total already calculated (or targetTotal if not adjusted)
+            directPlayerGames = engine.getDirectPlayerGames(fairParams.p1, targetTotal);
+            console.log('Direct Player Games (market-driven):', directPlayerGames);
+        }
+
+        // 3. Solve (with adjusted/synthetic total and Elo-enhanced priors)
         const result = engine.solveParameters(fairParams.p1, targetTotal, surface, eloHoldProbs);
-        displayParameters(result, eloHoldProbs);
+        displayParameters(result, eloHoldProbs, directPlayerGames);
 
         // 3. Derivatives
         const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration);
@@ -119,18 +127,37 @@ function displayFairValue(fair) {
     document.getElementById('fairP2').textContent = (1 / fair.p2).toFixed(2);
 }
 
-function displayParameters(result, eloHoldProbs = null) {
+function displayParameters(result, eloHoldProbs = null, directPlayerGames = null) {
     document.getElementById('p1Hold').textContent = (result.pa * 100).toFixed(1) + '%';
     document.getElementById('p2Hold').textContent = (result.pb * 100).toFixed(1) + '%';
     document.getElementById('modelTotal').textContent = result.calibration.expTotal.toFixed(2);
     document.getElementById('fairWin').textContent = (result.calibration.pMatch * 100).toFixed(1) + '%';
 
     // Display expected games per player
-    if (result.calibration.expGamesPlayer1 !== undefined) {
+    // Prioritize direct market-driven calculation if available, otherwise use simulation
+    if (directPlayerGames) {
+        // Use direct statistical calculation (bypasses solver/simulation)
+        document.getElementById('p1Games').textContent = directPlayerGames.p1.toFixed(1);
+        document.getElementById('p2Games').textContent = directPlayerGames.p2.toFixed(1);
+
+        // Visual indicator that this is using direct calculation
+        const p1GamesEl = document.getElementById('p1Games');
+        const p2GamesEl = document.getElementById('p2Games');
+        if (p1GamesEl && p2GamesEl) {
+            p1GamesEl.title = `Direct calculation from market odds (Spread: ${directPlayerGames.spread > 0 ? '+' : ''}${directPlayerGames.spread.toFixed(1)})`;
+            p2GamesEl.title = `Direct calculation from market odds (Spread: ${directPlayerGames.spread > 0 ? '+' : ''}${directPlayerGames.spread.toFixed(1)})`;
+        }
+    } else if (result.calibration.expGamesPlayer1 !== undefined) {
+        // Fallback to simulation-based calculation
         document.getElementById('p1Games').textContent = result.calibration.expGamesPlayer1.toFixed(1);
-    }
-    if (result.calibration.expGamesPlayer2 !== undefined) {
         document.getElementById('p2Games').textContent = result.calibration.expGamesPlayer2.toFixed(1);
+
+        const p1GamesEl = document.getElementById('p1Games');
+        const p2GamesEl = document.getElementById('p2Games');
+        if (p1GamesEl && p2GamesEl) {
+            p1GamesEl.title = 'Simulation-based calculation';
+            p2GamesEl.title = 'Simulation-based calculation';
+        }
     }
 
     // Display Elo ratings if available
