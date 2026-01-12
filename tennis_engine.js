@@ -72,6 +72,44 @@ export class TennisEngine {
         }
     }
 
+    /**
+     * Calculate the implied game spread from match win probability
+     * @param {number} pMatch - Player 1's fair win probability (0-1)
+     * @returns {number} Implied game spread (positive favors P1, negative favors P2)
+     */
+    getImpliedSpread(pMatch) {
+        // Formula: Spread = 14.0 * (pMatch - 0.5)
+        // Example: P(Win) = 0.80 → Spread ≈ 4.2 games
+        // Example: P(Win) = 0.50 → Spread = 0 (even match)
+        // Example: P(Win) = 0.20 → Spread ≈ -4.2 games
+        const SPREAD_FACTOR = 14.0;
+        return SPREAD_FACTOR * (pMatch - 0.5);
+    }
+
+    /**
+     * Calculate expected games for each player using direct statistical method
+     * Bypasses the solver/simulation loop for a market-driven approach
+     * @param {number} pMatch - Player 1's fair win probability (0-1)
+     * @param {number} fairTotal - Market-implied fair total games
+     * @returns {object} {p1: expectedGamesP1, p2: expectedGamesP2}
+     */
+    getDirectPlayerGames(pMatch, fairTotal) {
+        // 1. Get the implied spread (positive if P1 favorite, negative if P2)
+        const spread = this.getImpliedSpread(pMatch);
+
+        // 2. Split the total using the spread
+        // P1 gets half the total PLUS half the spread
+        // P2 gets half the total MINUS half the spread
+        const p1Exp = (fairTotal + spread) / 2;
+        const p2Exp = (fairTotal - spread) / 2;
+
+        return {
+            p1: p1Exp,
+            p2: p2Exp,
+            spread: spread  // Include spread for reference
+        };
+    }
+
     // ==========================================
     // PHASE 2.3: SYNTHETIC TOTAL GENERATOR
     // ==========================================
