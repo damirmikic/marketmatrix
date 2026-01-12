@@ -326,7 +326,15 @@ export class TennisEngine {
     // PHASE 3: DERIVATIVE CONSTRUCTION
     // ==========================================
 
-    generateDerivatives(pa, pb, calibration) {
+    /**
+     * Generate derivative markets (Set Betting, Game Handicap, Player Totals, etc.)
+     * @param {number} pa - Player A service hold probability
+     * @param {number} pb - Player B service hold probability
+     * @param {object} calibration - Calibration results from solver
+     * @param {object} directPlayerGames - Direct calculation results {p1, p2, spread}
+     * @returns {object} All derivative market probabilities and odds
+     */
+    generateDerivatives(pa, pb, calibration, directPlayerGames = null) {
         // 1. Set Betting (Correct Score) - RAW ODDS
         const pSetA = calibration.pSetA;
         const pSetB = calibration.pSetB;
@@ -350,21 +358,36 @@ export class TennisEngine {
             player2: this.rawOdds(pSetB)
         };
 
-        // 3. Game Handicap (Normal Approximation) - 2-Way Odds
-        const simStats = this.runFullSim(pa, pb, 5000);
-        const mu = simStats.avgMargin;
-        const sigma = simStats.stdMargin;
+        // 3. Both to Win Set (Match goes to 3 sets)
+        const pBothWinSet = p21 + p12;
+        const bothToWinSet = this.rawOdds(pBothWinSet);
+
+        // 4. Game Handicap - Use Direct Calculation if available
+        let mu, sigma;
+        let avgGamesA, avgGamesB;
+
+        if (directPlayerGames) {
+            // Use market-driven expected games
+            avgGamesA = directPlayerGames.p1;
+            avgGamesB = directPlayerGames.p2;
+            mu = directPlayerGames.spread; // Already calculated as p1 - p2
+
+            // Estimate standard deviation based on match competitiveness
+            // More competitive matches have higher variance
+            // Base sigma around 3.5-4.5 games for typical matches
+            const competitiveness = Math.min(calibration.pMatch, 1 - calibration.pMatch);
+            sigma = 3.0 + (competitiveness * 3.0); // Range: 3.0 to 4.5
+        } else {
+            // Fallback to simulation
+            const simStats = this.runFullSim(pa, pb, 5000);
+            mu = simStats.avgMargin;
+            sigma = simStats.stdMargin;
+            avgGamesA = simStats.avgGamesA;
+            avgGamesB = simStats.avgGamesB;
+        }
 
         const handicaps = {};
         [-5.5, -4.5, -3.5, -2.5, -1.5, 1.5, 2.5, 3.5, 4.5, 5.5].forEach(line => {
-            // For handicap 'line' (e.g. -1.5), P1 covers if Margin > -line (e.g. 1.5)
-            // No, wait. Spread is "Home - Away".
-            // If P1 wins 6-4, 6-4. Margin = +4. 
-            // Line -1.5. Result = 4 - 1.5 = 2.5 > 0. Cover.
-            // Line +1.5. Result = 4 + 1.5 = 5.5 > 0. Cover.
-            // So we need Probability(Margin + Line > 0) -> Prob(Margin > -Line)
-            // z = (-line - mu) / sigma
-
             const z = (-line - mu) / sigma;
             const probP1 = 1 - this.normalCDF(z);
             const probP2 = 1 - probP1;
@@ -375,16 +398,85 @@ export class TennisEngine {
             };
         });
 
-        // 4. Tie-Break Probabilities
-        const pTieBreak = simStats.tieBreakCount / (simStats.totalSets || 1);
+        // 5. Player Total Games (Individual Over/Under)
+        // Use normal distribution centered on expected games for each player
+        const playerTotals = this.generatePlayerTotals(avgGamesA, avgGamesB, sigma);
+
+        // 6. Tie-Break Probabilities (still needs simulation)
+        let pTieBreak = 0.15; // Default estimate
+        if (!directPlayerGames) {
+            const simStats = this.runFullSim(pa, pb, 5000);
+            pTieBreak = simStats.tieBreakCount / (simStats.totalSets || 1);
+        }
 
         return {
             setBetting: prices,
             setWinner: setWinner,
+            bothToWinSet: bothToWinSet,
             gameHandicap: handicaps,
+            playerTotals: playerTotals,
             tieBreakProb: pTieBreak,
             mu,
-            sigma
+            sigma,
+            avgGamesA,
+            avgGamesB
+        };
+    }
+
+    /**
+     * Generate Player Total Games markets (Over/Under for each player)
+     * @param {number} avgGamesA - Expected games for Player A
+     * @param {number} avgGamesB - Expected games for Player B
+     * @param {number} sigma - Standard deviation of margin
+     * @returns {object} Player totals markets with odds
+     */
+    generatePlayerTotals(avgGamesA, avgGamesB, sigma) {
+        // Individual player game totals have less variance than margin
+        // Estimate player-specific sigma as ~70% of margin sigma
+        const playerSigma = sigma * 0.7;
+
+        const player1Totals = {};
+        const player2Totals = {};
+
+        // Generate lines around each player's expected games
+        // Typically: expected - 2.5, expected - 1.5, expected - 0.5, expected + 0.5, expected + 1.5, expected + 2.5
+        const generateLinesAround = (expected) => {
+            const base = Math.round(expected);
+            return [base - 2.5, base - 1.5, base - 0.5, base + 0.5, base + 1.5, base + 2.5];
+        };
+
+        const linesP1 = generateLinesAround(avgGamesA);
+        const linesP2 = generateLinesAround(avgGamesB);
+
+        linesP1.forEach(line => {
+            if (line > 0) {
+                const z = (line - avgGamesA) / playerSigma;
+                const probOver = 1 - this.normalCDF(z);
+                const probUnder = 1 - probOver;
+
+                player1Totals[line] = {
+                    over: this.rawOdds(probOver),
+                    under: this.rawOdds(probUnder)
+                };
+            }
+        });
+
+        linesP2.forEach(line => {
+            if (line > 0) {
+                const z = (line - avgGamesB) / playerSigma;
+                const probOver = 1 - this.normalCDF(z);
+                const probUnder = 1 - probOver;
+
+                player2Totals[line] = {
+                    over: this.rawOdds(probOver),
+                    under: this.rawOdds(probUnder)
+                };
+            }
+        });
+
+        return {
+            player1: player1Totals,
+            player2: player2Totals
         };
     }
 

@@ -110,8 +110,8 @@ window.runModel = function (surface = 'Hard') {
         const result = engine.solveParameters(fairParams.p1, targetTotal, surface, eloHoldProbs);
         displayParameters(result, eloHoldProbs, directPlayerGames);
 
-        // 3. Derivatives
-        const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration);
+        // 4. Derivatives (pass directPlayerGames for market-driven handicap calculation)
+        const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration, directPlayerGames);
         displayDerivatives(derivatives);
 
         // Show all result cards including Elo card
@@ -263,6 +263,12 @@ function displayDerivatives(d) {
         `;
     }
 
+    // Both to Win Set
+    const btwsEl = document.getElementById('bothToWinSetProb');
+    if (btwsEl && d.bothToWinSet) {
+        btwsEl.textContent = `${d.bothToWinSet.prob} (${d.bothToWinSet.odds})`;
+    }
+
     // Game Handicap
     const gh = d.gameHandicap;
     let ghHtml = '';
@@ -275,8 +281,40 @@ function displayDerivatives(d) {
     });
     document.getElementById('gameHandicapTable').innerHTML = ghHtml;
 
+    // Player Total Games
+    if (d.playerTotals) {
+        displayPlayerTotals(d.playerTotals);
+    }
+
     // Tie Break
     document.getElementById('tbProb').textContent = (d.tieBreakProb * 100).toFixed(1) + '%';
+}
+
+/**
+ * Display Player Total Games markets
+ */
+function displayPlayerTotals(playerTotals) {
+    // Player 1 Totals
+    const p1Table = document.getElementById('player1TotalsTable');
+    if (p1Table && playerTotals.player1) {
+        let html = '';
+        Object.keys(playerTotals.player1).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(line => {
+            const market = playerTotals.player1[line];
+            html += `<tr><td>${line}</td><td>${market.over.odds}</td><td>${market.under.odds}</td></tr>`;
+        });
+        p1Table.innerHTML = html;
+    }
+
+    // Player 2 Totals
+    const p2Table = document.getElementById('player2TotalsTable');
+    if (p2Table && playerTotals.player2) {
+        let html = '';
+        Object.keys(playerTotals.player2).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(line => {
+            const market = playerTotals.player2[line];
+            html += `<tr><td>${line}</td><td>${market.over.odds}</td><td>${market.under.odds}</td></tr>`;
+        });
+        p2Table.innerHTML = html;
+    }
 }
 
 // Init
