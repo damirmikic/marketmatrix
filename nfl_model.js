@@ -206,8 +206,8 @@ function runModel() {
     const spread1HBase = Math.round(spread1H * 2) / 2;
     const total1HBase = Math.round(total1H * 2) / 2;
 
-    const spread1HLines = [spread1HBase - 3.5, spread1HBase - 2.5, spread1HBase - 1.5, spread1HBase - 0.5,
-                           spread1HBase + 0.5, spread1HBase + 1.5, spread1HBase + 2.5]
+    const spread1HLines = [spread1HBase - 3, spread1HBase - 2, spread1HBase - 1,
+                           spread1HBase, spread1HBase + 1, spread1HBase + 2, spread1HBase + 3]
         .filter(l => l !== 0.0 && Math.abs(l) !== 0.5);
     let spread1HHtml = '';
     spread1HLines.forEach(line => {
@@ -221,8 +221,8 @@ function runModel() {
     });
     document.getElementById('firstHalfSpreadTable').innerHTML = spread1HHtml;
 
-    const total1HLines = [total1HBase - 2.5, total1HBase - 1.5, total1HBase - 0.5,
-                          total1HBase + 0.5, total1HBase + 1.5];
+    const total1HLines = [total1HBase - 2, total1HBase - 1, total1HBase,
+                          total1HBase + 1, total1HBase + 2];
     let total1HHtml = '';
     total1HLines.forEach(line => {
         const probShift = (line - total1HBase) * 0.06;
@@ -242,8 +242,8 @@ function runModel() {
     const spread2HBase = Math.round(spread2H * 2) / 2;
     const total2HBase = Math.round(total2H * 2) / 2;
 
-    const spread2HLines = [spread2HBase - 3.5, spread2HBase - 2.5, spread2HBase - 1.5, spread2HBase - 0.5,
-                           spread2HBase + 0.5, spread2HBase + 1.5, spread2HBase + 2.5]
+    const spread2HLines = [spread2HBase - 3, spread2HBase - 2, spread2HBase - 1,
+                           spread2HBase, spread2HBase + 1, spread2HBase + 2, spread2HBase + 3]
         .filter(l => l !== 0.0 && Math.abs(l) !== 0.5);
     let spread2HHtml = '';
     spread2HLines.forEach(line => {
@@ -257,8 +257,8 @@ function runModel() {
     });
     document.getElementById('secondHalfSpreadTable').innerHTML = spread2HHtml;
 
-    const total2HLines = [total2HBase - 2.5, total2HBase - 1.5, total2HBase - 0.5,
-                          total2HBase + 0.5, total2HBase + 1.5];
+    const total2HLines = [total2HBase - 2, total2HBase - 1, total2HBase,
+                          total2HBase + 1, total2HBase + 2];
     let total2HHtml = '';
     total2HLines.forEach(line => {
         const probShift = (line - total2HBase) * 0.06;
@@ -290,8 +290,8 @@ function runModel() {
         const spreadCoef = 0.09;
         const totalCoef = 0.07;
 
-        const spreadQLines = [spreadQBase - 2.5, spreadQBase - 1.5, spreadQBase - 0.5,
-                              spreadQBase + 0.5, spreadQBase + 1.5]
+        const spreadQLines = [spreadQBase - 2, spreadQBase - 1, spreadQBase,
+                              spreadQBase + 1, spreadQBase + 2]
             .filter(l => l !== 0.0 && Math.abs(l) !== 0.5);
         let spreadQHtml = '';
         spreadQLines.forEach(line => {
@@ -305,7 +305,7 @@ function runModel() {
         });
         document.getElementById(quarter.spreadTableId).innerHTML = spreadQHtml;
 
-        const totalQLines = [totalQBase - 1.5, totalQBase - 0.5, totalQBase + 0.5, totalQBase + 1.5];
+        const totalQLines = [totalQBase - 1, totalQBase, totalQBase + 1, totalQBase + 2];
         let totalQHtml = '';
         totalQLines.forEach(line => {
             const probShift = (line - totalQBase) * totalCoef;
