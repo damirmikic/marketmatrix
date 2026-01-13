@@ -272,32 +272,17 @@ function loadMatchData(data) {
             if (away) document.getElementById('awayOdds').value = (away.odds / 1000).toFixed(2);
         }
 
-        // 2. Find Point Spread (Handicap) - Try MAIN_LINE first, then fallback to any spread market
-        let spreadOffer = offers.find(bo => {
+        // 2. Find Point Spread (Handicap - Including Overtime)
+        const spreadOffer = offers.find(bo => {
             const crit = bo.criterion || {};
             const label = (crit.englishLabel || crit.label || "").toLowerCase();
-            const isMain = bo.tags && bo.tags.includes("MAIN_LINE");
-            return (label.includes("point spread") ||
-                    label.includes("spread") ||
-                    label.includes("handicap")) &&
-                   isMain &&
+            const lifetime = crit.lifetime || "";
+            return (label.includes("handicap") && label.includes("including overtime")) &&
+                   lifetime === "FULL_TIME_OVERTIME" &&
                    bo.outcomes &&
-                   bo.outcomes.length === 2;
+                   bo.outcomes.length === 2 &&
+                   bo.outcomes.some(o => o.line !== undefined);
         });
-
-        // Fallback: If no MAIN_LINE spread found, get any spread/handicap market
-        if (!spreadOffer) {
-            spreadOffer = offers.find(bo => {
-                const crit = bo.criterion || {};
-                const label = (crit.englishLabel || crit.label || "").toLowerCase();
-                return (label.includes("point spread") ||
-                        label.includes("spread") ||
-                        (label.includes("handicap") && label.includes("including overtime"))) &&
-                       bo.outcomes &&
-                       bo.outcomes.length === 2 &&
-                       bo.outcomes.some(o => o.line !== undefined);
-            });
-        }
 
         if (spreadOffer) {
             console.log("Spread Market:", spreadOffer.criterion.label);
@@ -313,31 +298,19 @@ function loadMatchData(data) {
             }
         }
 
-        // 3. Find Total Points (Over/Under) - Try MAIN_LINE first, then fallback to any total market
-        let totalOffer = offers.find(bo => {
+        // 3. Find Total Points - Including Overtime
+        const totalOffer = offers.find(bo => {
+            const betOfferType = bo.betOfferType || {};
             const crit = bo.criterion || {};
             const label = (crit.englishLabel || crit.label || "").toLowerCase();
-            const isMain = bo.tags && bo.tags.includes("MAIN_LINE");
-            return (label.includes("total points") ||
-                    label.includes("total") ||
-                    label.includes("over/under")) &&
-                   isMain &&
+            const lifetime = crit.lifetime || "";
+            return betOfferType.name === "Over/Under" &&
+                   label.includes("total points") &&
+                   label.includes("including overtime") &&
+                   lifetime === "FULL_TIME_OVERTIME" &&
                    bo.outcomes &&
                    bo.outcomes.length === 2;
         });
-
-        // Fallback: If no MAIN_LINE total found, get any total points market
-        if (!totalOffer) {
-            totalOffer = offers.find(bo => {
-                const crit = bo.criterion || {};
-                const label = (crit.englishLabel || crit.label || "").toLowerCase();
-                return (label.includes("total points") ||
-                        (label.includes("total") && label.includes("including overtime"))) &&
-                       bo.outcomes &&
-                       bo.outcomes.length === 2 &&
-                       bo.outcomes.some(o => o.type === "OT_OVER" || o.type === "OT_UNDER");
-            });
-        }
 
         if (totalOffer) {
             console.log("Total Points Market:", totalOffer.criterion.label);
