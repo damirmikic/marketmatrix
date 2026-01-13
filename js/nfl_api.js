@@ -245,6 +245,11 @@ export async function handleMatchChange() {
     }
 }
 
+// Helper function to ensure lines are always half-point values
+function toHalfPoint(value) {
+    return (Math.round(value * 2) / 2).toFixed(1);
+}
+
 function loadMatchData(data) {
     try {
         const offers = data.betOffers || [];
@@ -304,7 +309,7 @@ function loadMatchData(data) {
             const away = spreadOffer.outcomes.find(o => o.type === "OT_TWO");
 
             if (home && home.line !== undefined) {
-                const spreadLine = (home.line / 1000).toFixed(1);
+                const spreadLine = toHalfPoint(home.line / 1000);
                 console.log(`Point Spread detected: ${spreadLine} (raw: ${home.line})`);
                 console.log(`Home odds: ${(home.odds / 1000).toFixed(2)} (raw: ${home.odds})`);
                 document.getElementById('spreadLine').value = spreadLine;
@@ -346,7 +351,7 @@ function loadMatchData(data) {
             const under = totalOffer.outcomes.find(o => o.type === "OT_UNDER");
 
             if (over && over.line !== undefined) {
-                document.getElementById('totalLine').value = (over.line / 1000).toFixed(1);
+                document.getElementById('totalLine').value = toHalfPoint(over.line / 1000);
                 document.getElementById('overOdds').value = (over.odds / 1000).toFixed(2);
             }
             if (under && under.odds !== undefined) {
