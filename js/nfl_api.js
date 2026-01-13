@@ -273,12 +273,25 @@ function loadMatchData(data) {
         }
 
         // 2. Find Point Spread (Handicap - Including Overtime)
+        // Match on: betOfferType="Handicap" + criterion with "point spread" or "handicap" + lifetime=FULL_TIME_OVERTIME
         const spreadOffer = offers.find(bo => {
             const crit = bo.criterion || {};
+            const betOfferType = bo.betOfferType || {};
             const label = (crit.englishLabel || crit.label || "").toLowerCase();
             const lifetime = crit.lifetime || "";
-            return (label.includes("handicap") && label.includes("including overtime")) &&
+            const betOfferTypeName = (betOfferType.name || "").toLowerCase();
+
+            // Match criteria:
+            // 1. betOfferType is "Handicap" OR label contains "handicap"/"point spread"
+            // 2. Criterion lifetime is FULL_TIME_OVERTIME
+            // 3. Label contains "including overtime" OR criterion ID matches known point spread IDs
+            const isHandicapType = betOfferTypeName === "handicap" || betOfferType.id === 1;
+            const hasSpreadLabel = label.includes("point spread") || label.includes("handicap");
+            const hasOvertimeLabel = label.includes("including overtime");
+
+            return (isHandicapType || hasSpreadLabel) &&
                    lifetime === "FULL_TIME_OVERTIME" &&
+                   (hasOvertimeLabel || crit.id === 1001159928) &&
                    bo.outcomes &&
                    bo.outcomes.length === 2 &&
                    bo.outcomes.some(o => o.line !== undefined);
@@ -286,16 +299,31 @@ function loadMatchData(data) {
 
         if (spreadOffer) {
             console.log("Spread Market:", spreadOffer.criterion.label);
+            console.log("Spread Bet Offer Type:", spreadOffer.betOfferType);
             const home = spreadOffer.outcomes.find(o => o.type === "OT_ONE");
             const away = spreadOffer.outcomes.find(o => o.type === "OT_TWO");
 
             if (home && home.line !== undefined) {
-                document.getElementById('spreadLine').value = (home.line / 1000).toFixed(1);
+                const spreadLine = (home.line / 1000).toFixed(1);
+                console.log(`Point Spread detected: ${spreadLine} (raw: ${home.line})`);
+                console.log(`Home odds: ${(home.odds / 1000).toFixed(2)} (raw: ${home.odds})`);
+                document.getElementById('spreadLine').value = spreadLine;
                 document.getElementById('spreadHomeOdds').value = (home.odds / 1000).toFixed(2);
             }
             if (away && away.odds !== undefined) {
+                console.log(`Away odds: ${(away.odds / 1000).toFixed(2)} (raw: ${away.odds})`);
                 document.getElementById('spreadAwayOdds').value = (away.odds / 1000).toFixed(2);
             }
+        } else {
+            console.warn("No Point Spread market found. Available markets:",
+                offers.filter(bo => bo.betOfferType?.name === "Handicap" ||
+                                   (bo.criterion?.label || "").toLowerCase().includes("spread"))
+                      .map(o => ({
+                          betOfferType: o.betOfferType?.name,
+                          criterion: o.criterion?.label,
+                          lifetime: o.criterion?.lifetime,
+                          hasLines: o.outcomes?.some(out => out.line !== undefined)
+                      })));
         }
 
         // 3. Find Total Points - Including Overtime
