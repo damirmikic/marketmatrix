@@ -272,8 +272,8 @@ function loadMatchData(data) {
             if (away) document.getElementById('awayOdds').value = (away.odds / 1000).toFixed(2);
         }
 
-        // 2. Find Point Spread (Handicap) - MAIN_LINE tag
-        const spreadOffer = offers.find(bo => {
+        // 2. Find Point Spread (Handicap) - Try MAIN_LINE first, then fallback to any spread market
+        let spreadOffer = offers.find(bo => {
             const crit = bo.criterion || {};
             const label = (crit.englishLabel || crit.label || "").toLowerCase();
             const isMain = bo.tags && bo.tags.includes("MAIN_LINE");
@@ -285,6 +285,20 @@ function loadMatchData(data) {
                    bo.outcomes.length === 2;
         });
 
+        // Fallback: If no MAIN_LINE spread found, get any spread/handicap market
+        if (!spreadOffer) {
+            spreadOffer = offers.find(bo => {
+                const crit = bo.criterion || {};
+                const label = (crit.englishLabel || crit.label || "").toLowerCase();
+                return (label.includes("point spread") ||
+                        label.includes("spread") ||
+                        (label.includes("handicap") && label.includes("including overtime"))) &&
+                       bo.outcomes &&
+                       bo.outcomes.length === 2 &&
+                       bo.outcomes.some(o => o.line !== undefined);
+            });
+        }
+
         if (spreadOffer) {
             console.log("Spread Market:", spreadOffer.criterion.label);
             const home = spreadOffer.outcomes.find(o => o.type === "OT_ONE");
@@ -294,13 +308,13 @@ function loadMatchData(data) {
                 document.getElementById('spreadLine').value = (home.line / 1000).toFixed(1);
                 document.getElementById('spreadHomeOdds').value = (home.odds / 1000).toFixed(2);
             }
-            if (away) {
+            if (away && away.odds !== undefined) {
                 document.getElementById('spreadAwayOdds').value = (away.odds / 1000).toFixed(2);
             }
         }
 
-        // 3. Find Total Points (Over/Under) - MAIN_LINE tag
-        const totalOffer = offers.find(bo => {
+        // 3. Find Total Points (Over/Under) - Try MAIN_LINE first, then fallback to any total market
+        let totalOffer = offers.find(bo => {
             const crit = bo.criterion || {};
             const label = (crit.englishLabel || crit.label || "").toLowerCase();
             const isMain = bo.tags && bo.tags.includes("MAIN_LINE");
@@ -312,6 +326,19 @@ function loadMatchData(data) {
                    bo.outcomes.length === 2;
         });
 
+        // Fallback: If no MAIN_LINE total found, get any total points market
+        if (!totalOffer) {
+            totalOffer = offers.find(bo => {
+                const crit = bo.criterion || {};
+                const label = (crit.englishLabel || crit.label || "").toLowerCase();
+                return (label.includes("total points") ||
+                        (label.includes("total") && label.includes("including overtime"))) &&
+                       bo.outcomes &&
+                       bo.outcomes.length === 2 &&
+                       bo.outcomes.some(o => o.type === "OT_OVER" || o.type === "OT_UNDER");
+            });
+        }
+
         if (totalOffer) {
             console.log("Total Points Market:", totalOffer.criterion.label);
             const over = totalOffer.outcomes.find(o => o.type === "OT_OVER");
@@ -321,7 +348,7 @@ function loadMatchData(data) {
                 document.getElementById('totalLine').value = (over.line / 1000).toFixed(1);
                 document.getElementById('overOdds').value = (over.odds / 1000).toFixed(2);
             }
-            if (under) {
+            if (under && under.odds !== undefined) {
                 document.getElementById('underOdds').value = (under.odds / 1000).toFixed(2);
             }
         }
