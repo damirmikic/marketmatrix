@@ -161,8 +161,9 @@ function runModel() {
     const homeExpected = (expectedTotal / 2) + marginAdj;
     const awayExpected = (expectedTotal / 2) - marginAdj;
 
-    const homeBase = Math.floor(homeExpected) + 0.5;
-    const awayBase = Math.floor(awayExpected) + 0.5;
+    // Round to nearest half point
+    const homeBase = Math.round(homeExpected * 2) / 2;
+    const awayBase = Math.round(awayExpected * 2) / 2;
 
     function generateTeamTotalLines(base) {
         return [base - 1.5, base - 0.5, base + 0.5, base + 1.5];
@@ -201,8 +202,9 @@ function runModel() {
     // --- HALF MARKETS ---
     const spread1H = roundedBaseSpread * halfRatio1H;
     const total1H = expectedTotal * halfRatio1H;
-    const spread1HBase = Math.floor(spread1H) + 0.5;
-    const total1HBase = Math.floor(total1H) + 0.5;
+    // Round to nearest half point
+    const spread1HBase = Math.round(spread1H * 2) / 2;
+    const total1HBase = Math.round(total1H * 2) / 2;
 
     const spread1HLines = [spread1HBase - 3.5, spread1HBase - 2.5, spread1HBase - 1.5, spread1HBase - 0.5,
                            spread1HBase + 0.5, spread1HBase + 1.5, spread1HBase + 2.5]
@@ -236,8 +238,9 @@ function runModel() {
     // 2H markets
     const spread2H = roundedBaseSpread * halfRatio2H;
     const total2H = expectedTotal * halfRatio2H;
-    const spread2HBase = Math.floor(spread2H) + 0.5;
-    const total2HBase = Math.floor(total2H) + 0.5;
+    // Round to nearest half point
+    const spread2HBase = Math.round(spread2H * 2) / 2;
+    const total2HBase = Math.round(total2H * 2) / 2;
 
     const spread2HLines = [spread2HBase - 3.5, spread2HBase - 2.5, spread2HBase - 1.5, spread2HBase - 0.5,
                            spread2HBase + 0.5, spread2HBase + 1.5, spread2HBase + 2.5]
@@ -279,8 +282,9 @@ function runModel() {
     quarters.forEach((quarter, index) => {
         const spreadQ = roundedBaseSpread * quarter.ratio;
         const totalQ = expectedTotal * quarter.ratio;
-        const spreadQBase = Math.floor(spreadQ) + 0.5;
-        const totalQBase = Math.floor(totalQ) + 0.5;
+        // Round to nearest half point
+        const spreadQBase = Math.round(spreadQ * 2) / 2;
+        const totalQBase = Math.round(totalQ * 2) / 2;
 
         // NFL quarters have relatively consistent variance
         const spreadCoef = 0.09;
