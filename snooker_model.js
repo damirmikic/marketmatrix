@@ -42,10 +42,14 @@ function runModel() {
     document.getElementById('fairAway').textContent = probToOdds(awayWinProb);
 
     // --- Calculate Frame Win Probability from Match Probability ---
-    // Formula: P_Frame = 0.5 + 0.75 × (P_Match - 0.5)
-    // Individual frames regress toward 50/50 compared to match probability
-    const frameHomeProb = 0.5 + 0.75 * (homeWinProb - 0.5);
+    // Use reverse solver to find exact frame probability that produces the match probability
+    const frameHomeProb = solveImpliedFrameProb(homeWinProb, bestOf);
     const frameAwayProb = 1 - frameHomeProb;
+
+    // Debug log to verify accuracy
+    console.log(`Market Match %: ${(homeWinProb * 100).toFixed(2)}%`);
+    console.log(`Implied Frame %: ${(frameHomeProb * 100).toFixed(2)}%`);
+    console.log(`Verification Match %: ${(getMatchWinProb(frameHomeProb, bestOf) * 100).toFixed(2)}%`);
 
     // --- Derive Expected Total Frames from Match Probability ---
     // Frames to win = ceil(bestOf / 2)
@@ -217,8 +221,8 @@ function runModel() {
 // Helper function to calculate exact score probabilities
 function calculateExactScores(frameWinProb, framesToWin, bestOf) {
     // Calculate all possible exact scores in a best-of-X match
-    // Uses frame win probability (not match), calculated via:
-    // P_Frame = 0.5 + 0.75 × (P_Match - 0.5)
+    // Uses frame win probability derived from reverse solver (solveImpliedFrameProb)
+    // which finds the exact p such that getMatchWinProb(p, bestOf) = targetMatchProb
 
     const p = frameWinProb;
     const q = 1 - p;
@@ -282,6 +286,56 @@ function binomialCoefficient(n, k) {
         result *= (n - i + 1) / i;
     }
     return result;
+}
+
+// --- NEW SOLVER FUNCTIONS ---
+
+// 1. Forward Function: Calculate Match Win % given Frame Win %
+function getMatchWinProb(p, bestOf) {
+    if (bestOf % 2 === 0) bestOf++; // Handle edge case if even
+    const framesToWin = Math.ceil(bestOf / 2);
+    const q = 1 - p;
+    let matchWinProb = 0;
+
+    // Sum probabilities of winning framesToWin-0, framesToWin-1, ... framesToWin-(framesToWin-1)
+    for (let lost = 0; lost < framesToWin; lost++) {
+        // Negative Binomial PDF:
+        // Prob of winning Nth frame exactly at trial (N+lost)
+        // = nCr(N + lost - 1, lost) * p^N * q^lost
+        const framesPlayed = framesToWin + lost;
+        const prob = binomialCoefficient(framesPlayed - 1, lost) * Math.pow(p, framesToWin) * Math.pow(q, lost);
+        matchWinProb += prob;
+    }
+    return matchWinProb;
+}
+
+// 2. Reverse Solver: Find Frame % that outputs Target Match %
+function solveImpliedFrameProb(targetMatchProb, bestOf) {
+    // Binary Search
+    let low = 0.01;
+    let high = 0.99;
+    let mid = 0.5;
+    let iter = 0;
+
+    // Optimization: If target is 50%, frame is 50%
+    if (Math.abs(targetMatchProb - 0.5) < 0.001) return 0.5;
+
+    while (iter < 50) { // 50 iterations is plenty for high precision
+        mid = (low + high) / 2;
+        const calcProb = getMatchWinProb(mid, bestOf);
+
+        if (Math.abs(calcProb - targetMatchProb) < 0.0001) {
+            return mid;
+        }
+
+        if (calcProb < targetMatchProb) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+        iter++;
+    }
+    return mid;
 }
 
 // Make global
