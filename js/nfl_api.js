@@ -201,8 +201,8 @@ export function handleLeagueChange() {
         competition.events.forEach((item) => {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            // NFL display: Away @ Home format (standard American football notation)
-            const displayName = `${e.awayName} @ ${e.homeName}`;
+            // NFL display: Home vs Away format (API sends as AWAY@HOME, we display HOME vs AWAY)
+            const displayName = `${e.homeName} vs ${e.awayName}`;
             html += `<option value="${e.id}">${displayName} (${startTime})</option>`;
         });
         matchSelect.innerHTML = html;
