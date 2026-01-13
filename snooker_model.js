@@ -63,7 +63,7 @@ function runModel() {
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(1);
 
     // --- Show Markets Area ---
-    ['marketsArea', 'exactScoreArea', 'specialsArea', 'winnerTotalArea'].forEach(id => {
+    ['marketsArea', 'exactScoreArea', 'specialsArea', 'winnerTotalArea', 'frameProgressionArea'].forEach(id => {
         document.getElementById(id).classList.remove('hidden');
     });
 
@@ -216,6 +216,40 @@ function runModel() {
         winnerTotalHtml += `<tr><td>Player 2 & Under ${middleTotalLine.toFixed(1)}</td><td class="num-col prob-col">${(awayUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awayUnder)}</td></tr>`;
     }
     document.getElementById('winnerTotalTable').innerHTML = winnerTotalHtml;
+
+    // --- FRAME PROGRESSION MARKETS ---
+
+    // 1. First Frame Winner
+    document.getElementById('firstFrameTable').innerHTML = `
+        <tr><td>Player 1</td><td class="num-col">${probToOdds(frameHomeProb)}</td></tr>
+        <tr><td>Player 2</td><td class="num-col">${probToOdds(frameAwayProb)}</td></tr>
+    `;
+
+    // 2. First to 3 Frames
+    const firstTo3HomeProb = getMatchWinProb(frameHomeProb, 5); // First to 3 = Best of 5
+    const firstTo3AwayProb = 1 - firstTo3HomeProb;
+    document.getElementById('firstTo3Table').innerHTML = `
+        <tr><td>Player 1</td><td class="num-col">${probToOdds(firstTo3HomeProb)}</td></tr>
+        <tr><td>Player 2</td><td class="num-col">${probToOdds(firstTo3AwayProb)}</td></tr>
+    `;
+
+    // 3. Result After 4 Frames
+    const after4 = calculateResultAfterNFrames(frameHomeProb, 4);
+    document.getElementById('after4FramesTable').innerHTML = after4.map(r =>
+        `<tr><td>${r.score}</td><td class="num-col prob-col">${(r.prob * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(r.prob)}</td></tr>`
+    ).join('');
+
+    // 4. Result After 6 Frames
+    const after6 = calculateResultAfterNFrames(frameHomeProb, 6);
+    document.getElementById('after6FramesTable').innerHTML = after6.map(r =>
+        `<tr><td>${r.score}</td><td class="num-col prob-col">${(r.prob * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(r.prob)}</td></tr>`
+    ).join('');
+
+    // 5. Result After 8 Frames
+    const after8 = calculateResultAfterNFrames(frameHomeProb, 8);
+    document.getElementById('after8FramesTable').innerHTML = after8.map(r =>
+        `<tr><td>${r.score}</td><td class="num-col prob-col">${(r.prob * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(r.prob)}</td></tr>`
+    ).join('');
 }
 
 // Helper function to calculate exact score probabilities
@@ -286,6 +320,35 @@ function binomialCoefficient(n, k) {
         result *= (n - i + 1) / i;
     }
     return result;
+}
+
+// Helper function to calculate result distribution after N frames
+function calculateResultAfterNFrames(frameHomeProb, totalFrames) {
+    // Calculate probability of each possible score after exactly N frames
+    // Uses binomial distribution: P(k wins in n trials) = C(n,k) * p^k * (1-p)^(n-k)
+
+    const p = frameHomeProb;
+    const q = 1 - p;
+    const results = [];
+
+    for (let homeWins = 0; homeWins <= totalFrames; homeWins++) {
+        const awayWins = totalFrames - homeWins;
+        const prob = binomialCoefficient(totalFrames, homeWins) *
+                     Math.pow(p, homeWins) *
+                     Math.pow(q, awayWins);
+
+        results.push({
+            score: `${homeWins}-${awayWins}`,
+            prob: prob,
+            homeWins: homeWins,
+            awayWins: awayWins
+        });
+    }
+
+    // Sort by probability descending
+    results.sort((a, b) => b.prob - a.prob);
+
+    return results;
 }
 
 // --- NEW SOLVER FUNCTIONS ---
