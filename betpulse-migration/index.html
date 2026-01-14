@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetPulse</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            --primary: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin: 0 0 10px;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        .sport-card {
+            background: var(--card-bg);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .sport-card:hover {
+            transform: translateY(-4px);
+            background: var(--card-hover);
+            border-color: #475569;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .sport-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+        }
+
+        .sport-card.disabled:hover {
+            transform: none;
+            background: var(--card-bg);
+            box-shadow: none;
+        }
+
+        .icon-box {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 1.8rem;
+        }
+
+        .sport-card.disabled .icon-box {
+            background: rgba(148, 163, 184, 0.1);
+            color: #64748b;
+        }
+
+        .sport-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .sport-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 99px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-live {
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .status-soon {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <h1>BetPulse</h1>
+        <p>Advanced real-time pricing models and probability calculators.</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- FOOTBALL (Active) -->
+        <a href="football.html" class="sport-card">
+            <span class="status-badge status-live">Live</span>
+            <div class="icon-box">⚽</div>
+            <div class="sport-title">Football</div>
+            <div class="sport-desc">Poisson & ZIP models, Half-time correlations, and Player Props.</div>
+        </a>
+
+        <!-- TENNIS (Active) -->
+        <a href="tennis.html" class="sport-card">
+            <span class="status-badge status-live">Live</span>
+            <div class="icon-box">🎾</div>
+            <div class="sport-title">Tennis</div>
+            <div class="sport-desc">Match Odds, Set & Game Handicaps, Total Games models.</div>
+        </a>
+
+        <!-- BASKETBALL (Active) -->
+        <a href="basketball.html" class="sport-card">
+            <span class="status-badge status-live">Live</span>
+            <div class="icon-box">🏀</div>
+            <div class="sport-title">Basketball</div>
+            <div class="sport-desc">Moneyline, Point Spreads, Total Points and Quarter models.</div>
+        </a>
+
+        <!-- NFL (Active) -->
+        <a href="nfl.html" class="sport-card">
+            <span class="status-badge status-live">Live</span>
+            <div class="icon-box">🏈</div>
+            <div class="sport-title">NFL</div>
+            <div class="sport-desc">Point Spreads, Totals, Team Totals, and Quarter markets.</div>
+        </a>
+
+        <!-- CRICKET -->
+        <div class="sport-card disabled">
+            <span class="status-badge status-soon">Soon</span>
+            <div class="icon-box">🏏</div>
+            <div class="sport-title">Cricket</div>
+            <div class="sport-desc">Duckworth-Lewis, Run lines, and Player boundaries.</div>
+        </div>
+
+        <!-- BASEBALL -->
+        <div class="sport-card disabled">
+            <span class="status-badge status-soon">Soon</span>
+            <div class="icon-box">⚾</div>
+            <div class="sport-title">Baseball</div>
+            <div class="sport-desc">Innings pricing, Pitcher props, and Run lines.</div>
+        </div>
+
+        <!-- ICE HOCKEY (Active) -->
+        <a href="ice_hockey.html" class="sport-card">
+            <span class="status-badge status-live">Live</span>
+            <div class="icon-box">🏒</div>
+            <div class="sport-title">Ice Hockey</div>
+            <div class="sport-desc">Moneyline, Puck Lines, Period betting, and Total Goals.</div>
+        </a>
+
+        <!-- TABLE TENNIS (Active) -->
+        <a href="table_tennis.html" class="sport-card">
+            <span class="status-badge status-live">Live</span>
+            <div class="icon-box">🏓</div>
+            <div class="sport-title">Table Tennis</div>
+            <div class="sport-desc">Match Winner, Set Handicaps, Total Sets and Exact Score models.</div>
+        </a>
+
+        <!-- SNOOKER (Active) -->
+        <a href="snooker.html" class="sport-card">
+            <span class="status-badge status-live">Live</span>
+            <div class="icon-box">🎱</div>
+            <div class="sport-title">Snooker</div>
+            <div class="sport-desc">Frame betting, Century breaks, and Match winner models.</div>
+        </a>
+
+        <!-- DARTS -->
+        <div class="sport-card disabled">
+            <span class="status-badge status-soon">Soon</span>
+            <div class="icon-box">🎯</div>
+            <div class="sport-title">Darts</div>
+            <div class="sport-desc">Leg/Set betting, 180s, and Checkout percentages.</div>
+        </div>
+
+        <!-- RUGBY -->
+        <div class="sport-card disabled">
+            <span class="status-badge status-soon">Soon</span>
+            <div class="icon-box">🏉</div>
+            <div class="sport-title">Rugby</div>
+            <div class="sport-desc">Try scorers, Handicap lines, and Union/League specific models.</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

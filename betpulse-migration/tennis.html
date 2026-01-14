@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis | BetPulse</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- LEFT COLUMN: INPUTS & PARAMETERS -->
+        <div class="sidebar-column">
+            <a href="index.html"
+                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
+                &larr; Home
+            </a>
+
+            <!-- 1. MATCH SELECTION -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>1. Select Match</h2>
+                </div>
+                <div class="card-content">
+                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">TOURNAMENT</label>
+                    <select id="tournamentSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
+
+                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">MATCH</label>
+                    <select id="matchSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;" disabled></select>
+
+                    <div style="font-size: 0.75rem; color: #94a3b8; text-align: right;">
+                        Surface: <span id="surfaceBadge" style="color: #3b82f6; font-weight: bold;">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ODDS INPUT -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>2. Input Odds</h2>
+                </div>
+                <div class="card-content">
+                    <h3>Match Winner</h3>
+                    <div class="input-group">
+                        <label>Player 1</label>
+                        <input type="number" id="player1Odds" step="0.01" placeholder="1.90">
+                    </div>
+                    <div class="input-group">
+                        <label>Player 2</label>
+                        <input type="number" id="player2Odds" step="0.01" placeholder="1.90">
+                    </div>
+
+                    <h3 style="margin-top: 15px;">Total Games</h3>
+                    <div class="input-group">
+                        <label>Line <span id="totalInfo" style="font-size: 0.75rem; font-weight: normal;"></span></label>
+                        <input type="number" id="totalGamesLine" step="0.5" placeholder="22.5 (or leave empty)">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div class="input-group">
+                            <label style="font-size: 0.8rem;">Over Odds</label>
+                            <input type="number" id="oddsOver" step="0.01" placeholder="1.90">
+                        </div>
+                        <div class="input-group">
+                            <label style="font-size: 0.8rem;">Under Odds</label>
+                            <input type="number" id="oddsUnder" step="0.01" placeholder="1.90">
+                        </div>
+                    </div>
+                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 5px; line-height: 1.3;">
+                        <strong>Note:</strong> Leave Total Line empty to auto-generate from match odds.
+                        Add Over/Under odds for fair total adjustment.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PARAMETERS (SIDE) -->
+            <div class="card hidden" id="paramsCard" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>3. Parameters</h2>
+                </div>
+                <div class="card-content">
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-val" id="p1Hold">-</div>
+                            <div class="stat-label">P1 Hold %</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="p2Hold">-</div>
+                            <div class="stat-label">P2 Hold %</div>
+                        </div>
+                    </div>
+                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 10px;">
+                        <div class="stat-box">
+                            <div class="stat-val" id="p1Games">-</div>
+                            <div class="stat-label">P1 Exp Games</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="p2Games">-</div>
+                            <div class="stat-label">P2 Exp Games</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                            <span>Fair Win %</span>
+                            <span id="fairWin" style="font-weight: bold;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span>Exp Total</span>
+                            <span id="modelTotal" style="font-weight: bold;">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: MARKETS -->
+        <div class="main-content">
+            <!-- FAIR VALUE -->
+            <div class="card hidden" id="fairValueCard">
+                <div class="card-header">
+                    <h2>Fair Value (Raw)</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; gap: 20px;">
+                        <div
+                            style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <div style="font-size: 0.8rem; color: #64748b;">Player 1 Fair Odds</div>
+                            <div id="fairP1" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+                        </div>
+                        <div
+                            style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <div style="font-size: 0.8rem; color: #64748b;">Player 2 Fair Odds</div>
+                            <div id="fairP2" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ELO RATINGS -->
+            <div class="card hidden" id="eloCard" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>Elo Ratings (Tennis Abstract)</h2>
+                </div>
+                <div class="card-content">
+                    <div id="eloInfo">
+                        <p style="font-size: 0.875rem; color: #94a3b8;">Select a match to view Elo ratings</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DERIVATIVES -->
+            <div class="card hidden" id="derivativesCard" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>Derivative Markets</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Left Sub-Column -->
+                        <div>
+                            <div id="setWinnerContainer" style="margin-bottom: 20px;">
+                                <h3>Set 1 Winner</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Player</th>
+                                            <th>Prob</th>
+                                            <th>Odds</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="setWinnerTable"></tbody>
+                                </table>
+                            </div>
+
+                            <h3>Set Betting (Correct Score)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Score</th>
+                                        <th>Prob</th>
+                                        <th>Raw Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="correctScoreTable"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Right Sub-Column -->
+                        <div>
+                            <h3>Game Handicap</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th>Home Odds</th>
+                                        <th>Away Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gameHandicapTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <strong>Tie Break Prob (Match):</strong> <span id="tbProb">-</span>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <strong>Both to Win Set:</strong> <span id="bothToWinSetProb">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Total Games Markets -->
+            <div class="card hidden" style="grid-column: span 2;">
+                <div class="card-header">Player Total Games</div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Player 1 Totals -->
+                        <div>
+                            <h4 style="font-weight: 600; margin-bottom: 10px; color: #1f2937;">Player 1 Total Games</h4>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                                <thead style="background: #f3f4f6;">
+                                    <tr>
+                                        <th style="padding: 8px; text-align: left;">Line</th>
+                                        <th style="padding: 8px; text-align: center;">Over</th>
+                                        <th style="padding: 8px; text-align: center;">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="player1TotalsTable"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Player 2 Totals -->
+                        <div>
+                            <h4 style="font-weight: 600; margin-bottom: 10px; color: #1f2937;">Player 2 Total Games</h4>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                                <thead style="background: #f3f4f6;">
+                                    <tr>
+                                        <th style="padding: 8px; text-align: left;">Line</th>
+                                        <th style="padding: 8px; text-align: center;">Over</th>
+                                        <th style="padding: 8px; text-align: center;">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="player2TotalsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="tennis_model.js"></script>
+</body>
+
+</html>
