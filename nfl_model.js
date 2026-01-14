@@ -11,6 +11,12 @@ import {
 
 import { probToOdds, solveShin } from './js/core/math_utils.js';
 
+// Helper function to ensure lines ALWAYS end in .5 (never whole numbers)
+// Rounds to nearest .5 value: 3.0→3.5, 3.2→3.5, 3.8→3.5, 4.3→4.5
+function toHalfPoint(value) {
+    return Math.round(value - 0.5) + 0.5;
+}
+
 // --- Main Controller ---
 function runModel() {
     // Get Inputs
@@ -98,9 +104,9 @@ function runModel() {
     const fairSpreadH = !isNaN(spreadHomeOdds) && !isNaN(spreadAwayOdds) ?
         solveShin([spreadHomeOdds, spreadAwayOdds])[0] : 0.5;
 
-    // Round base spread to nearest half point
-    const baseSpread = !isNaN(spreadLine) ? spreadLine : -3.0;
-    const roundedBaseSpread = Math.round(baseSpread * 2) / 2;
+    // Round base spread to nearest half point (always .5)
+    const baseSpread = !isNaN(spreadLine) ? spreadLine : -3.5;
+    const roundedBaseSpread = toHalfPoint(baseSpread);
 
     // Generate spread lines from -14 to +14 (typical NFL range), half points only
     const spreadLinesClean = [];
@@ -129,7 +135,7 @@ function runModel() {
     document.getElementById('spreadTable').innerHTML = spreadHtml;
 
     // --- Generate Total Points Table ---
-    const roundedBaseTotal = Math.round(totalLine * 2) / 2;
+    const roundedBaseTotal = toHalfPoint(totalLine);
 
     // Generate total lines (NFL typical range: 35-65 points)
     const totalLinesClean = [];
@@ -162,8 +168,8 @@ function runModel() {
     const awayExpected = (expectedTotal / 2) - marginAdj;
 
     // Round to nearest half point
-    const homeBase = Math.round(homeExpected * 2) / 2;
-    const awayBase = Math.round(awayExpected * 2) / 2;
+    const homeBase = toHalfPoint(homeExpected);
+    const awayBase = toHalfPoint(awayExpected);
 
     function generateTeamTotalLines(base) {
         return [base - 1.5, base - 0.5, base + 0.5, base + 1.5];
@@ -202,9 +208,9 @@ function runModel() {
     // --- HALF MARKETS ---
     const spread1H = roundedBaseSpread * halfRatio1H;
     const total1H = expectedTotal * halfRatio1H;
-    // Round to nearest half point
-    const spread1HBase = Math.round(spread1H * 2) / 2;
-    const total1HBase = Math.round(total1H * 2) / 2;
+    // Round to nearest half point (always .5)
+    const spread1HBase = toHalfPoint(spread1H);
+    const total1HBase = toHalfPoint(total1H);
 
     const spread1HLines = [spread1HBase - 3, spread1HBase - 2, spread1HBase - 1,
                            spread1HBase, spread1HBase + 1, spread1HBase + 2, spread1HBase + 3]
@@ -238,9 +244,9 @@ function runModel() {
     // 2H markets
     const spread2H = roundedBaseSpread * halfRatio2H;
     const total2H = expectedTotal * halfRatio2H;
-    // Round to nearest half point
-    const spread2HBase = Math.round(spread2H * 2) / 2;
-    const total2HBase = Math.round(total2H * 2) / 2;
+    // Round to nearest half point (always .5)
+    const spread2HBase = toHalfPoint(spread2H);
+    const total2HBase = toHalfPoint(total2H);
 
     const spread2HLines = [spread2HBase - 3, spread2HBase - 2, spread2HBase - 1,
                            spread2HBase, spread2HBase + 1, spread2HBase + 2, spread2HBase + 3]
@@ -282,9 +288,9 @@ function runModel() {
     quarters.forEach((quarter, index) => {
         const spreadQ = roundedBaseSpread * quarter.ratio;
         const totalQ = expectedTotal * quarter.ratio;
-        // Round to nearest half point
-        const spreadQBase = Math.round(spreadQ * 2) / 2;
-        const totalQBase = Math.round(totalQ * 2) / 2;
+        // Round to nearest half point (always .5)
+        const spreadQBase = toHalfPoint(spreadQ);
+        const totalQBase = toHalfPoint(totalQ);
 
         // NFL quarters have relatively consistent variance
         const spreadCoef = 0.09;
