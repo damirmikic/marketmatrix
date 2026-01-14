@@ -245,9 +245,10 @@ export async function handleMatchChange() {
     }
 }
 
-// Helper function to ensure lines are always half-point values
+// Helper function to ensure lines ALWAYS end in .5 (never whole numbers)
+// Rounds to nearest .5 value: 3.0→3.5, 3.2→3.5, 3.8→3.5, 4.3→4.5
 function toHalfPoint(value) {
-    return (Math.round(value * 2) / 2).toFixed(1);
+    return (Math.round(value - 0.5) + 0.5).toFixed(1);
 }
 
 function loadMatchData(data) {
