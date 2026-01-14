@@ -1,5 +1,5 @@
 {
-  "name": "marketmatrix",
+  "name": "betpulse",
   "version": "1.0.0",
   "description": "Sports betting market analysis and odds calculation",
   "main": "index.html",
@@ -11,6 +11,6 @@
   },
   "devDependencies": {},
   "keywords": ["sports", "betting", "odds", "tennis", "basketball"],
-  "author": "MarketMatrix Team",
+  "author": "BetPulse Team",
   "license": "MIT"
 }

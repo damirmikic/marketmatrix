@@ -2,7 +2,7 @@
 
 ## Overview
 
-The MarketMatrix Tennis Model now integrates live Elo ratings by surface from Tennis Abstract, providing enhanced calculation accuracy and additional player insights.
+The BetPulse Tennis Model now integrates live Elo ratings by surface from Tennis Abstract, providing enhanced calculation accuracy and additional player insights.
 
 ## Features
 
@@ -236,7 +236,7 @@ const response = await fetch('/data/elo-ratings.json');
 ## Credits
 
 - **Elo System**: Created by Jeff Sackmann (Tennis Abstract)
-- **Integration**: MarketMatrix Development Team
+- **Integration**: BetPulse Development Team
 - **Surface Adjustments**: Based on empirical ATP match data (2015-2025)
 
 ## License

@@ -37,7 +37,7 @@ exports.handler = async (event, context) => {
 
         const response = await fetch('https://www.tennisabstract.com/reports/wta_elo_ratings.html', {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; MarketMatrix/1.0)'
+                'User-Agent': 'Mozilla/5.0 (compatible; BetPulse/1.0)'
             }
         });
 
