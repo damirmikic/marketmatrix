@@ -214,7 +214,8 @@ button:hover {
 
 table {
     width: 100%;
-    min-width: 180px;
+    min-width: 240px;
+    table-layout: fixed;
     border-collapse: collapse;
     margin-top: 10px;
     font-size: 0.9rem;
@@ -240,11 +241,14 @@ tr:last-child td {
     text-align: right;
     font-family: 'Courier New', monospace;
     white-space: nowrap;
+    min-width: 70px;
 }
 
 .line-col {
     color: var(--line-color);
     font-weight: bold;
+    white-space: nowrap;
+    min-width: 60px;
 }
 
 .prob-col {
