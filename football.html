@@ -15,44 +15,35 @@
         <!-- LEFT COLUMN: API LOADER & INPUTS -->
         <div class="sidebar-column">
             <!-- CONTROLS -->
-            <a href="index.html"
-                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+            <a href="index.html" class="btn btn-home block w-full mb-2\.5 no-underline">
                 &larr; Home
             </a>
-            <button id="toggleAllBtn" onclick="toggleAllCards()" style="margin-top: 0; margin-bottom: 20px;">Collapse
+            <button id="toggleAllBtn" onclick="toggleAllCards()" class="mt-0 mb-5">Collapse
                 All</button>
 
             <!-- API MATCH LOADER -->
 
-            <div class="card" id="apiMatchLoader" style="margin-bottom: 20px;">
+            <div class="card mb-5" id="apiMatchLoader">
                 <div class="card-header" onclick="toggleCard('apiMatchLoader')">
                     <h2>0. Select Match</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="flex-col gap-3">
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COUNTRY</label>
-                            <select id="apiCountrySelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
+                            <label class="form-label">COUNTRY</label>
+                            <select id="apiCountrySelect" class="form-select">
                                 <option value="">Loading...</option>
                             </select>
                         </div>
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COMPETITION</label>
-                            <select id="apiLeagueSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;"
-                                disabled>
+                            <label class="form-label">COMPETITION</label>
+                            <select id="apiLeagueSelect" class="form-select" disabled>
                                 <option value="">Select country</option>
                             </select>
                         </div>
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
-                            <select id="apiMatchSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;"
-                                disabled>
+                            <label class="form-label">MATCH</label>
+                            <select id="apiMatchSelect" class="form-select-dark" disabled>
                                 <option value="">Select competition</option>
                             </select>
                         </div>
@@ -66,8 +57,7 @@
                     <h2>1. Input Odds</h2>
                 </div>
                 <div class="card-content">
-                    <h3>1x2 Odds <span id="oneWtMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                    <h3>1x2 Odds <span id="oneWtMargin" class="margin-info">Margin:
                             -</span></h3>
                     <div class="input-group">
                         <label>Home</label>
@@ -82,8 +72,7 @@
                         <input type="number" id="awayOdds" step="0.01" value="3.50" oninput="runModel()">
                     </div>
 
-                    <h3>Goal Line <span id="goalsMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                    <h3>Goal Line <span id="goalsMargin" class="margin-info">Margin:
                             -</span></h3>
                     <div class="input-group">
                         <label>Line</label>
@@ -98,23 +87,23 @@
                         <input type="number" id="underOdds" step="0.01" value="1.90" oninput="runModel()">
                     </div>
 
-                    <h3 style="margin-top: 15px; font-size: 0.95rem;">Half Goal Ratios</h3>
-                    <p style="font-size: 0.7rem; color: #64748b; margin-top: -8px; margin-bottom: 10px;">Goal
+                    <h3 class="mt-4 text-xl">Half Goal Ratios</h3>
+                    <p class="text-xs text-slate mt-neg-2 mb-2\.5">Goal
                         distribution per half (default 45/55)</p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div class="input-group" style="margin-bottom: 0;">
+                    <div class="grid grid-cols-2 gap-2\.5">
+                        <div class="input-group mb-0">
                             <label>1st Half %</label>
                             <input type="number" id="ratio1H" step="1" value="45" min="30" max="70"
                                 onchange="syncRatio('1H'); runModel()" oninput="runModel()">
                         </div>
-                        <div class="input-group" style="margin-bottom: 0;">
+                        <div class="input-group mb-0">
                             <label>2nd Half %</label>
                             <input type="number" id="ratio2H" step="1" value="55" min="30" max="70"
                                 onchange="syncRatio('2H'); runModel()" oninput="runModel()">
                         </div>
                     </div>
 
-                    <h3 style="margin-top: 20px;">Reverse λ / μ</h3>
+                    <h3 class="mt-5">Reverse λ / μ</h3>
                     <div class="stat-grid">
                         <div class="stat-box">
                             <div class="stat-val" id="xgHome">-</div>
@@ -140,38 +129,35 @@
                     <h2>2. Full Time Markets</h2>
                 </div>
                 <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Match Result / Double Chance</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <h3 class="text-lg">Match Result / Double Chance</h3>
+                    <div class="stat-grid grid-cols-3">
                         <div class="stat-box">
                             <div class="stat-val prob-val" id="shinHome">-</div>
                             <div class="stat-label">Home %</div>
-                            <div class="stat-sub-val" id="fairOddsHome"
-                                style="font-size: 0.8em; color: #cbd5e1; margin-top: 4px;">-</div>
+                            <div class="stat-sub-val sub-val" id="fairOddsHome">-</div>
                         </div>
                         <div class="stat-box">
                             <div class="stat-val prob-val" id="shinDraw">-</div>
                             <div class="stat-label">Draw %</div>
-                            <div class="stat-sub-val" id="fairOddsDraw"
-                                style="font-size: 0.8em; color: #cbd5e1; margin-top: 4px;">-</div>
+                            <div class="stat-sub-val sub-val" id="fairOddsDraw">-</div>
                         </div>
                         <div class="stat-box">
                             <div class="stat-val prob-val" id="shinAway">-</div>
                             <div class="stat-label">Away %</div>
-                            <div class="stat-sub-val" id="fairOddsAway"
-                                style="font-size: 0.8em; color: #cbd5e1; margin-top: 4px;">-</div>
+                            <div class="stat-sub-val sub-val" id="fairOddsAway">-</div>
                         </div>
                     </div>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="ftDcTable"></tbody>
                     </table></div>
 
-                    <h3 style="margin-top: 20px;">Draw No Bet</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="mt-5">Draw No Bet</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="ftDnbTable"></tbody>
                     </table></div>
 
-                    <h3 style="margin-top: 20px;">BTTS (Yes/No)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="mt-5">BTTS (Yes/No)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="bttsTable"></tbody>
                     </table></div>
 
@@ -187,13 +173,13 @@
                         <tbody id="totalGoalsTable"></tbody>
                     </table></div>
 
-                    <h3 style="margin-top: 20px;">Total Goals Range (FT)</h3>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <h3 class="mt-5">Total Goals Range (FT)</h3>
+                    <div class="table-wrapper"><table class="text-md">
                         <tbody id="totalSpreadTable"></tbody>
                     </table></div>
 
-                    <h3 style="margin-top: 20px;">Result & Totals (2.5)</h3>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <h3 class="mt-5">Result & Totals (2.5)</h3>
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Outcome</th>
@@ -204,8 +190,8 @@
                         <tbody id="comboTable"></tbody>
                     </table></div>
 
-                    <h3 style="margin-top: 20px;">HT / FT</h3>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem; margin-bottom: 20px;">
+                    <h3 class="mt-5">HT / FT</h3>
+                    <div class="table-wrapper"><table class="text-md mb-5">
                         <thead>
                             <tr>
                                 <th>HT/FT</th>
@@ -223,7 +209,7 @@
             </div>
 
             <!-- ASIAN HANDICAP BLOCK -->
-            <div class="card hidden" id="ahArea" style="margin-top: 20px;">
+            <div class="card hidden mt-5" id="ahArea">
                 <div class="card-header" onclick="toggleCard('ahArea')">
                     <h2>Asian Handicap</h2>
                 </div>
@@ -242,15 +228,15 @@
             </div>
 
             <!-- DRAW COMBINATIONS BLOCK -->
-            <div class="card hidden" id="drawComboArea" style="margin-top: 20px;">
+            <div class="card hidden mt-5" id="drawComboArea">
                 <div class="card-header" onclick="toggleCard('drawComboArea')">
                     <h2>8. Draw Combinations</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         Interval Draw correlations
                     </p>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Combination</th>
@@ -264,15 +250,15 @@
             </div>
 
             <!-- DOUBLE CHANCE COMBINATIONS BLOCK -->
-            <div class="card hidden" id="dcComboArea" style="margin-top: 20px;">
+            <div class="card hidden mt-5" id="dcComboArea">
                 <div class="card-header" onclick="toggleCard('dcComboArea')">
                     <h2>9. Double Chance Combinations</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         Join Interval Double Chance outcomes
                     </p>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Combination</th>
@@ -286,15 +272,15 @@
             </div>
 
             <!-- HT/FT COMBINATIONS BLOCK -->
-            <div class="card hidden" id="htftComboArea" style="margin-top: 20px;">
+            <div class="card hidden mt-5" id="htftComboArea">
                 <div class="card-header" onclick="toggleCard('htftComboArea')">
                     <h2>10. HT/FT Combinations</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         HT/FT joint outcome correlations
                     </p>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Combination</th>
@@ -308,15 +294,15 @@
             </div>
 
             <!-- HOME TEAM GOALS COMBINATIONS BLOCK -->
-            <div class="card hidden" id="homeGoalComboArea" style="margin-top: 20px;">
+            <div class="card hidden mt-5" id="homeGoalComboArea">
                 <div class="card-header" onclick="toggleCard('homeGoalComboArea')">
                     <h2>11. Home Team Goals Combinations</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         T1 = Home Team
                     </p>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Combination</th>
@@ -330,15 +316,15 @@
             </div>
 
             <!-- AWAY TEAM GOALS COMBINATIONS BLOCK -->
-            <div class="card hidden" id="awayGoalComboArea" style="margin-top: 20px;">
+            <div class="card hidden mt-5" id="awayGoalComboArea">
                 <div class="card-header" onclick="toggleCard('awayGoalComboArea')">
                     <h2>12. Away Team Goals Combinations</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         T2 = Away Team
                     </p>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Combination</th>
@@ -352,14 +338,14 @@
             </div>
 
             <!-- HOME TEAM BLOCK -->
-            <div class="card hidden" id="homeTeamArea" style="margin-top: 20px;">
+            <div class="card hidden mt-5" id="homeTeamArea">
                 <div class="card-header" onclick="toggleCard('homeTeamArea')">
                     <h2>5. Home Team Markets</h2>
                 </div>
                 <div class="card-content">
                     <div class="two-col-grid">
                         <div>
-                            <h3 style="font-size: 0.9rem;">Team Goals (FT)</h3>
+                            <h3 class="text-lg">Team Goals (FT)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
@@ -372,7 +358,7 @@
                             </table></div>
                         </div>
                         <div>
-                            <h3 style="font-size: 0.9rem;">Team Goals (1H)</h3>
+                            <h3 class="text-lg">Team Goals (1H)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
@@ -383,7 +369,7 @@
                                 </thead>
                                 <tbody id="home1hTable"></tbody>
                             </table></div>
-                            <h3 style="font-size: 0.9rem; margin-top: 15px;">Team Goals (2H)</h3>
+                            <h3 class="text-lg mt-4">Team Goals (2H)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
@@ -397,18 +383,18 @@
                         </div>
                     </div>
 
-                    <h3 style="font-size: 0.9rem;">Exact Goals (FT)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="text-lg">Exact Goals (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="homeExactTable"></tbody>
                     </table></div>
 
-                    <h3 style="font-size: 0.9rem;">Goal Spreads (FT)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="text-lg">Goal Spreads (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="homeSpreadTable"></tbody>
                     </table></div>
 
-                    <h3 style="font-size: 0.9rem;">Win Combinations</h3>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <h3 class="text-lg">Win Combinations</h3>
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Combination</th>
@@ -425,15 +411,13 @@
         <!-- COLUMN 3: INTERVAL MARKETS -->
         <div class="markets-content">
             <!-- BET BUILDER BLOCK -->
-            <div class="card" id="betBuilderArea" style="margin-bottom: 20px; border: 1px solid #3b82f6;">
-                <div class="card-header" onclick="toggleCard('betBuilderArea')"
-                    style="background: rgba(59, 130, 246, 0.1);">
-                    <h2 style="color: #60a5fa;">★ Bet Builder</h2>
+            <div class="card mb-5 border-blue" id="betBuilderArea">
+                <div class="card-header bg-blue-opacity" onclick="toggleCard('betBuilderArea')">
+                    <h2 class="text-blue">★ Bet Builder</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                        <select id="bbMarketSelect"
-                            style="flex: 1; padding: 8px; border-radius: 6px; background: #0f172a; color: white; border: 1px solid var(--border);">
+                    <div class="flex gap-2 mb-3">
+                        <select id="bbMarketSelect" class="form-select-flex">
                             <option value="1">Match Result: Home</option>
                             <option value="X">Match Result: Draw</option>
                             <option value="2">Match Result: Away</option>
@@ -445,35 +429,32 @@
                             <option value="BTTS_Y">BTTS: Yes</option>
                             <option value="BTTS_N">BTTS: No</option>
                         </select>
-                        <button onclick="addBbLeg()"
-                            style="padding: 0 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Add</button>
+                        <button onclick="addBbLeg()" class="btn-add">Add</button>
                     </div>
 
-                    <div id="bbLegsList"
-                        style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 10px;">
+                    <div id="bbLegsList" class="bb-legs-list">
                         <!-- Legs go here -->
-                        <div style="font-size: 0.8rem; color: #64748b; font-style: italic;">No selections added.</div>
+                        <div class="empty-state">No selections added.</div>
                     </div>
 
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 10px; border-radius: 8px;">
-                        <div class="stat-label" style="font-size: 0.9rem;">Combined Odds</div>
-                        <div style="text-align: right;">
-                            <div class="stat-val" id="bbOdds" style="color: #60a5fa;">-</div>
-                            <div class="stat-sub-val" id="bbProb" style="color: #94a3b8;">-</div>
+                    <div class="combined-stats">
+                        <div class="stat-label text-lg">Combined Odds</div>
+                        <div class="text-right">
+                            <div class="stat-val text-blue" id="bbOdds">-</div>
+                            <div class="stat-sub-val text-slate-light" id="bbProb">-</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- 1ST HALF BLOCK -->
-            <div class="card hidden" id="fhArea" style="margin-bottom: 20px;">
+            <div class="card hidden mb-5" id="fhArea">
                 <div class="card-header" onclick="toggleCard('fhArea')">
                     <h2>3. 1st Half Markets</h2>
                 </div>
                 <div class="card-content">
                     <h3>1H 1X2</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
+                    <div class="table-wrapper"><table class="mb-4">
                         <thead>
                             <tr>
                                 <th>Outcome</th>
@@ -485,7 +466,7 @@
                     </table></div>
 
                     <h3>1H Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <div class="table-wrapper"><table class="mb-5">
                         <thead>
                             <tr>
                                 <th>Line</th>
@@ -496,32 +477,32 @@
                         <tbody id="fhGoalsTable"></tbody>
                     </table></div>
 
-                    <h3 style="margin-top: 20px;">1H Draw No Bet</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="mt-5">1H Draw No Bet</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="fhDnbTable"></tbody>
                     </table></div>
 
                     <div class="two-col-grid">
                         <div>
-                            <h3 style="font-size: 0.9rem;">1H BTTS</h3>
+                            <h3 class="text-lg">1H BTTS</h3>
                             <div class="table-wrapper"><table>
                                 <tbody id="fhBttsTable"></tbody>
                             </table></div>
                         </div>
                         <div>
-                            <h3 style="font-size: 0.9rem;">1H DC</h3>
+                            <h3 class="text-lg">1H DC</h3>
                             <div class="table-wrapper"><table>
                                 <tbody id="fhDcTable"></tbody>
                             </table></div>
                         </div>
                     </div>
 
-                    <h3 style="font-size: 0.9rem;">1H Exact Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="text-lg">1H Exact Goals</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="fhExactTable"></tbody>
                     </table></div>
 
-                    <h3 style="font-size: 0.9rem;">1H Goal Spreads</h3>
+                    <h3 class="text-lg">1H Goal Spreads</h3>
                     <div class="table-wrapper"><table>
                         <tbody id="fhSpreadTable"></tbody>
                     </table></div>
@@ -534,11 +515,11 @@
                     <h2>4. 2nd Half Markets</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">Independent
+                    <p class="description-text">Independent
                         2H goals</p>
 
                     <h3>2H 1X2</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
+                    <div class="table-wrapper"><table class="mb-4">
                         <thead>
                             <tr>
                                 <th>Outcome</th>
@@ -550,7 +531,7 @@
                     </table></div>
 
                     <h3>2H Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <div class="table-wrapper"><table class="mb-5">
                         <thead>
                             <tr>
                                 <th>Line</th>
@@ -561,32 +542,32 @@
                         <tbody id="shGoalsTable"></tbody>
                     </table></div>
 
-                    <h3 style="margin-top: 20px;">2H Draw No Bet</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="mt-5">2H Draw No Bet</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="shDnbTable"></tbody>
                     </table></div>
 
                     <div class="two-col-grid">
                         <div>
-                            <h3 style="font-size: 0.9rem;">2H BTTS</h3>
+                            <h3 class="text-lg">2H BTTS</h3>
                             <div class="table-wrapper"><table>
                                 <tbody id="shBttsTable"></tbody>
                             </table></div>
                         </div>
                         <div>
-                            <h3 style="font-size: 0.9rem;">2H DC</h3>
+                            <h3 class="text-lg">2H DC</h3>
                             <div class="table-wrapper"><table>
                                 <tbody id="shDcTable"></tbody>
                             </table></div>
                         </div>
                     </div>
 
-                    <h3 style="font-size: 0.9rem;">2H Exact Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="text-lg">2H Exact Goals</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="shExactTable"></tbody>
                     </table></div>
 
-                    <h3 style="font-size: 0.9rem;">2H Goal Spreads</h3>
+                    <h3 class="text-lg">2H Goal Spreads</h3>
                     <div class="table-wrapper"><table>
                         <tbody id="shSpreadTable"></tbody>
                     </table></div>
@@ -594,14 +575,14 @@
             </div>
 
             <!-- AWAY TEAM BLOCK -->
-            <div class="card hidden" id="awayTeamArea" style="margin-top: 20px; margin-bottom: 20px;">
+            <div class="card hidden mt-5 mb-5" id="awayTeamArea">
                 <div class="card-header" onclick="toggleCard('awayTeamArea')">
                     <h2>6. Away Team Markets</h2>
                 </div>
                 <div class="card-content">
                     <div class="two-col-grid">
                         <div>
-                            <h3 style="font-size: 0.9rem;">Team Goals (FT)</h3>
+                            <h3 class="text-lg">Team Goals (FT)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
@@ -614,7 +595,7 @@
                             </table></div>
                         </div>
                         <div>
-                            <h3 style="font-size: 0.9rem;">Team Goals (1H)</h3>
+                            <h3 class="text-lg">Team Goals (1H)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
@@ -625,7 +606,7 @@
                                 </thead>
                                 <tbody id="away1hTable"></tbody>
                             </table></div>
-                            <h3 style="font-size: 0.9rem; margin-top: 15px;">Team Goals (2H)</h3>
+                            <h3 class="text-lg mt-4">Team Goals (2H)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
@@ -639,18 +620,18 @@
                         </div>
                     </div>
 
-                    <h3 style="font-size: 0.9rem;">Exact Goals (FT)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="text-lg">Exact Goals (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="awayExactTable"></tbody>
                     </table></div>
 
-                    <h3 style="font-size: 0.9rem;">Goal Spreads (FT)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
+                    <h3 class="text-lg">Goal Spreads (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
                         <tbody id="awaySpreadTable"></tbody>
                     </table></div>
 
-                    <h3 style="font-size: 0.9rem;">Win Combinations</h3>
-                    <div class="table-wrapper"><table style="font-size: 0.85rem;">
+                    <h3 class="text-lg">Win Combinations</h3>
+                    <div class="table-wrapper"><table class="text-md">
                         <thead>
                             <tr>
                                 <th>Combination</th>
@@ -669,7 +650,7 @@
                     <h2>7. Goals Combinations</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         I = 1st Half, II = 2nd Half
                     </p>
                     <div class="table-wrapper"><table>
@@ -691,7 +672,7 @@
                     <h2>8. BTTS Combinations</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         GG = Both Teams to Score (FT), IGG = BTTS 1H, IIGG = BTTS 2H
                     </p>
                     <div class="table-wrapper"><table>
@@ -712,7 +693,7 @@
                     <h2>9. First Team to Score</h2>
                 </div>
                 <div class="card-content">
-                    <p style="font-size: 0.75rem; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                    <p class="description-text">
                         T1 = Home, T2 = Away, no = No goals. I = 1H, II = 2H.
                     </p>
                     <div class="table-wrapper"><table>
