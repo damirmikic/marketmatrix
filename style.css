@@ -253,11 +253,18 @@ button:hover {
 }
 
 /* Tables */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 10px -20px; /* Bleed to card edges */
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
     font-size: 0.9rem;
+    min-width: 500px; /* Prevent squishing */
 }
 
 th {
@@ -289,6 +296,14 @@ tr:last-child td {
 
 .prob-col {
     color: var(--prob-color);
+}
+
+/* Mobile table adjustments */
+@media (max-width: 768px) {
+    th, td {
+        padding: 8px 6px; /* Reduce padding on mobile */
+        font-size: 0.85rem;
+    }
 }
 
 .two-col-grid {
