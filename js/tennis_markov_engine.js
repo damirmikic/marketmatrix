@@ -543,7 +543,7 @@ export class TennisMarkovEngine {
         const pBothWinSet = p21 + p12;
         const bothToWinSet = this.rawOdds(pBothWinSet);
 
-        // 4. Game Handicap - Use exact distribution
+        // 4. Game Handicap - Use exact margin distribution
         let avgGamesA = calibration.expGamesPlayer1;
         let avgGamesB = calibration.expGamesPlayer2;
 
@@ -552,23 +552,39 @@ export class TennisMarkovEngine {
             avgGamesB = directPlayerGames.p2;
         }
 
-        const mu = avgGamesA - avgGamesB;
-
-        // Calculate sigma from exact distribution
-        let marginSq = 0;
+        // Calculate exact margin distribution by convolving distA and distB
+        const marginDist = {};
         for (let gA in calibration.distA) {
             for (let gB in calibration.distB) {
                 const margin = parseFloat(gA) - parseFloat(gB);
                 const prob = calibration.distA[gA] * calibration.distB[gB];
-                marginSq += margin * margin * prob;
+                marginDist[margin] = (marginDist[margin] || 0) + prob;
             }
+        }
+
+        // Calculate mu and sigma for reference (used in return value)
+        let mu = 0;
+        let marginSq = 0;
+        for (let m in marginDist) {
+            const margin = parseFloat(m);
+            const prob = marginDist[m];
+            mu += margin * prob;
+            marginSq += margin * margin * prob;
         }
         const sigma = Math.sqrt(marginSq - mu * mu);
 
+        // Use exact distribution for handicap probabilities
         const handicaps = {};
         [-5.5, -4.5, -3.5, -2.5, -1.5, 1.5, 2.5, 3.5, 4.5, 5.5].forEach(line => {
-            const z = (-line - mu) / sigma;
-            const probP1 = 1 - this.normalCDF(z);
+            // P(Player 1 covers line) = P(Margin > line)
+            // For line = -3.5, Player 1 covers if margin > -3.5 (i.e., margin >= -3, -2, -1, 0, 1, ...)
+            let probP1 = 0;
+            for (let m in marginDist) {
+                const margin = parseFloat(m);
+                if (margin > line) {
+                    probP1 += marginDist[m];
+                }
+            }
             const probP2 = 1 - probP1;
 
             handicaps[line] = {
@@ -602,7 +618,8 @@ export class TennisMarkovEngine {
             mu,
             sigma,
             avgGamesA,
-            avgGamesB
+            avgGamesB,
+            marginDist  // Include exact margin distribution for reference
         };
     }
 
