@@ -1,9 +1,9 @@
 import * as TennisAPI from './js/tennis_api.js';
-import { TennisEngine } from './tennis_engine.js';
+import { TennisMarkovEngine } from './js/tennis_markov_engine.js';
 import { tennisEloService } from './js/tennis_elo_service.js';
 import { tennisWtaEloService } from './js/tennis_wta_elo_service.js';
 
-const engine = new TennisEngine();
+const engine = new TennisMarkovEngine();
 
 // Store current match players for Elo lookup
 let currentPlayer1 = null;
