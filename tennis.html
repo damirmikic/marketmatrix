@@ -150,105 +150,115 @@
                 </div>
             </div>
 
-            <!-- DERIVATIVES -->
-            <div class="card hidden" id="derivativesCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('derivativesCard')">
-                    <h2>Derivative Markets</h2>
+            <!-- SET 1 WINNER -->
+            <div class="card hidden" id="setWinnerCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('setWinnerCard')">
+                    <h2>Set 1 Winner</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <!-- Left Sub-Column -->
-                        <div>
-                            <div id="setWinnerContainer" style="margin-bottom: 20px;">
-                                <h3>Set 1 Winner</h3>
-                                <div class="table-wrapper"><table style="min-width: 280px; table-layout: auto;">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 40%;">Player</th>
-                                            <th style="width: 30%;">Prob</th>
-                                            <th style="width: 30%;">Odds</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="setWinnerTable"></tbody>
-                                </table></div>
-                            </div>
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40%; text-align: left;">Player</th>
+                                <th style="width: 30%; text-align: center;">Prob</th>
+                                <th style="width: 30%; text-align: center;">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="setWinnerTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
 
-                            <h3>Set Betting (Correct Score)</h3>
-                            <div class="table-wrapper"><table style="min-width: 280px; table-layout: auto;">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 35%;">Score</th>
-                                        <th style="width: 30%;">Prob</th>
-                                        <th style="width: 35%;">Raw Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="correctScoreTable"></tbody>
-                            </table></div>
+            <!-- SET BETTING (CORRECT SCORE) -->
+            <div class="card hidden" id="setBettingCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('setBettingCard')">
+                    <h2>Set Betting (Correct Score)</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th style="width: 35%; text-align: left;">Score</th>
+                                <th style="width: 30%; text-align: center;">Prob</th>
+                                <th style="width: 35%; text-align: center;">Raw Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="correctScoreTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- GAME HANDICAP -->
+            <div class="card hidden" id="gameHandicapCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('gameHandicapCard')">
+                    <h2>Game Handicap</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th style="width: 25%; text-align: left;">Line</th>
+                                <th style="width: 37.5%; text-align: center;">Home Odds</th>
+                                <th style="width: 37.5%; text-align: center;">Away Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gameHandicapTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- TIE BREAK & BOTH TO WIN SET -->
+            <div class="card hidden" id="additionalMarketsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('additionalMarketsCard')">
+                    <h2>Additional Markets</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <strong>Tie Break Prob (Match):</strong> <span id="tbProb">-</span>
                         </div>
-
-                        <!-- Right Sub-Column -->
-                        <div>
-                            <h3>Game Handicap</h3>
-                            <div class="table-wrapper"><table style="min-width: 280px; table-layout: auto;">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 25%;">Line</th>
-                                        <th style="width: 37.5%;">Home Odds</th>
-                                        <th style="width: 37.5%;">Away Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="gameHandicapTable"></tbody>
-                            </table></div>
+                        <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <strong>Both to Win Set:</strong> <span id="bothToWinSetProb">-</span>
                         </div>
-                    </div>
-
-                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                        <strong>Tie Break Prob (Match):</strong> <span id="tbProb">-</span>
-                    </div>
-
-                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                        <strong>Both to Win Set:</strong> <span id="bothToWinSetProb">-</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Player Total Games Markets -->
-            <div class="card hidden" id="playerTotalsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('playerTotalsCard')">
-                    <h2>Player Total Games</h2>
+            <!-- PLAYER 1 TOTAL GAMES -->
+            <div class="card hidden" id="player1TotalsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('player1TotalsCard')">
+                    <h2>Player 1 Total Games</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <!-- Player 1 Totals -->
-                        <div>
-                            <h4 style="font-weight: 600; margin-bottom: 10px; color: #1f2937;">Player 1 Total Games</h4>
-                            <div class="table-wrapper"><table style="min-width: 280px; width: 100%; border-collapse: collapse; font-size: 0.875rem; table-layout: auto;">
-                                <thead style="background: #f3f4f6;">
-                                    <tr>
-                                        <th style="padding: 8px; text-align: left; width: 30%;">Line</th>
-                                        <th style="padding: 8px; text-align: center; width: 35%;">Over</th>
-                                        <th style="padding: 8px; text-align: center; width: 35%;">Under</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="player1TotalsTable"></tbody>
-                            </table></div>
-                        </div>
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th style="width: 30%; text-align: left;">Line</th>
+                                <th style="width: 35%; text-align: center;">Over</th>
+                                <th style="width: 35%; text-align: center;">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="player1TotalsTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
 
-                        <!-- Player 2 Totals -->
-                        <div>
-                            <h4 style="font-weight: 600; margin-bottom: 10px; color: #1f2937;">Player 2 Total Games</h4>
-                            <div class="table-wrapper"><table style="min-width: 280px; width: 100%; border-collapse: collapse; font-size: 0.875rem; table-layout: auto;">
-                                <thead style="background: #f3f4f6;">
-                                    <tr>
-                                        <th style="padding: 8px; text-align: left; width: 30%;">Line</th>
-                                        <th style="padding: 8px; text-align: center; width: 35%;">Over</th>
-                                        <th style="padding: 8px; text-align: center; width: 35%;">Under</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="player2TotalsTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
+            <!-- PLAYER 2 TOTAL GAMES -->
+            <div class="card hidden" id="player2TotalsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('player2TotalsCard')">
+                    <h2>Player 2 Total Games</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th style="width: 30%; text-align: left;">Line</th>
+                                <th style="width: 35%; text-align: center;">Over</th>
+                                <th style="width: 35%; text-align: center;">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="player2TotalsTable"></tbody>
+                    </table></div>
                 </div>
             </div>
         </div>
