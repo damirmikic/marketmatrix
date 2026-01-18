@@ -576,12 +576,13 @@ export class TennisMarkovEngine {
         // Use exact distribution for handicap probabilities
         const handicaps = {};
         [-5.5, -4.5, -3.5, -2.5, -1.5, 1.5, 2.5, 3.5, 4.5, 5.5].forEach(line => {
-            // P(Player 1 covers line) = P(Margin > line)
-            // For line = -3.5, Player 1 covers if margin > -3.5 (i.e., margin >= -3, -2, -1, 0, 1, ...)
+            // P(Player 1 covers line) = P(Margin > -line)
+            // For line = -5.5, Player 1 gives 5.5 games, needs margin > +5.5
+            // For line = +5.5, Player 1 gets 5.5 games, needs margin > -5.5
             let probP1 = 0;
             for (let m in marginDist) {
                 const margin = parseFloat(m);
-                if (margin > line) {
+                if (margin > -line) {
                     probP1 += marginDist[m];
                 }
             }
