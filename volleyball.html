@@ -69,31 +69,10 @@
                 </div>
             </div>
 
-            <!-- 3. FAIR VALUE -->
-            <div class="card hidden" id="fairValueCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('fairValueCard')">
-                    <h2>3. Fair Value</h2>
-                </div>
-                <div class="card-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <div style="font-size: 0.7rem; color: #64748b;">Team 1</div>
-                            <div id="fairTeam1" style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">-</div>
-                            <div id="fairP1Pct" style="font-size: 0.75rem; color: #64748b;">-</div>
-                        </div>
-                        <div style="text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <div style="font-size: 0.7rem; color: #64748b;">Team 2</div>
-                            <div id="fairTeam2" style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">-</div>
-                            <div id="fairP2Pct" style="font-size: 0.75rem; color: #64748b;">-</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. PARAMETERS -->
+            <!-- 3. PARAMETERS -->
             <div class="card hidden" id="paramsCard" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('paramsCard')">
-                    <h2>4. Model Parameters</h2>
+                    <h2>3. Model Parameters</h2>
                 </div>
                 <div class="card-content">
                     <h3 style="font-size: 0.8rem; margin-bottom: 5px;">Point Win Probability</h3>
@@ -140,8 +119,29 @@
 
         <!-- RIGHT COLUMN: MARKETS -->
         <div class="main-content">
+            <!-- FAIR VALUE -->
+            <div class="card hidden" id="fairValueCard">
+                <div class="card-header" onclick="toggleCard('fairValueCard')">
+                    <h2>Fair Value (Raw)</h2>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; gap: 20px;">
+                        <div style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <div style="font-size: 0.8rem; color: #64748b;">Team 1 Fair Odds</div>
+                            <div id="fairTeam1" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+                            <div id="fairP1Pct" style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">-</div>
+                        </div>
+                        <div style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                            <div style="font-size: 0.8rem; color: #64748b;">Team 2 Fair Odds</div>
+                            <div id="fairTeam2" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+                            <div id="fairP2Pct" style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- EXACT SET SCORES -->
-            <div class="card hidden" id="exactScoresCard">
+            <div class="card hidden" id="exactScoresCard" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('exactScoresCard')">
                     <h2>Exact Set Scores</h2>
                 </div>
