@@ -11,6 +11,15 @@ let currentPlayer2 = null;
 let currentSurface = 'Hard';
 let currentTour = 'ATP'; // Default to ATP
 
+// UI Helper - Toggle card collapse/expand
+function toggleCard(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('collapsed');
+}
+
+// Expose to window for HTML onclick handlers
+window.toggleCard = toggleCard;
+
 window.runModel = function (surface = 'Hard') {
     try {
         const odds1 = parseFloat(document.getElementById('player1Odds').value);
