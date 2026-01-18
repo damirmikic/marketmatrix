@@ -216,15 +216,20 @@ export class VolleyballEngine {
             // If set handicap is provided, include it in error calculation
             if (setHandicapLine !== null && setHandicapProb !== null) {
                 // Calculate set handicap probability from exact scores
+                // Note: setHandicapProb is always Team 1's probability from market odds
                 const outcomes = this.getAllMatchOutcomes(pSet25, pSet15);
-                let setHandicapCalc = 0;
+                let team1HandicapProb = 0;
+
                 for (const outcome of outcomes) {
                     const margin = outcome.setsWon - outcome.setsLost;
+                    // Team 1 covers the handicap if margin > -line
+                    // This works for both positive and negative lines
                     if (margin > -setHandicapLine) {
-                        setHandicapCalc += outcome.probability;
+                        team1HandicapProb += outcome.probability;
                     }
                 }
-                const handicapError = Math.abs(setHandicapCalc - setHandicapProb);
+
+                const handicapError = Math.abs(team1HandicapProb - setHandicapProb);
                 totalError += handicapError * 0.5; // Weight handicap error less
             }
 
@@ -410,20 +415,39 @@ export class VolleyballEngine {
         const markets = [];
 
         for (const line of lines) {
-            let prob = 0;
+            let team1Prob = 0;
+            let team2Prob = 0;
 
             for (const outcome of exactScores) {
                 const margin = outcome.setsWon - outcome.setsLost;
-                // Team 1 covers handicap if margin > -line
-                if (margin > -line) {
-                    prob += outcome.probability;
+
+                if (line < 0) {
+                    // Negative line: Team 1 handicap
+                    // Team 1 must win by more than |line|
+                    if (margin > -line) {
+                        team1Prob += outcome.probability;
+                    }
+                } else {
+                    // Positive line: Team 2 handicap
+                    // Team 2 must win by more than line (margin must be less than -line)
+                    if (margin < -line) {
+                        team2Prob += outcome.probability;
+                    }
                 }
+            }
+
+            // For negative lines, team2 is the complement
+            // For positive lines, team1 is the complement
+            if (line < 0) {
+                team2Prob = 1 - team1Prob;
+            } else {
+                team1Prob = 1 - team2Prob;
             }
 
             markets.push({
                 line: line,
-                team1: prob,
-                team2: 1 - prob
+                team1: team1Prob,
+                team2: team2Prob
             });
         }
 
