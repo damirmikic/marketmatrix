@@ -261,41 +261,8 @@ export class VolleyballEngine {
     }
 
     // ==========================================
-    // PHASE 5: SET HANDICAP CALCULATIONS
+    // PHASE 5: MATCH OUTCOMES
     // ==========================================
-
-    /**
-     * Calculate probability of covering set handicap
-     * @param {number} pSet - Probability of winning a regular set
-     * @param {number} pSet5 - Probability of winning set 5
-     * @param {number} line - Handicap line (e.g., -1.5 means Team 1 must win by 2+ sets)
-     * @returns {number} Probability of covering handicap
-     */
-    calculateSetHandicapProb(pSet, pSet5, line) {
-        const p = pSet;
-        const q = 1 - p;
-        const p5 = pSet5;
-        const q5 = 1 - p5;
-
-        // Calculate all possible outcomes and their probabilities
-        const outcomes = this.getAllMatchOutcomes(p, p5);
-
-        let probCover = 0;
-
-        for (const outcome of outcomes) {
-            const margin = outcome.setsWon - outcome.setsLost; // Margin from Team 1's perspective
-
-            // Check if this outcome covers the handicap
-            // Handicap betting: Team 1 with line X needs margin > -X
-            // E.g., Team 1 -2.5 needs margin > 2.5 (wins by 3+)
-            // E.g., Team 1 +2.5 needs margin > -2.5 (loses by 2 or less, or wins)
-            if (margin > -line) {
-                probCover += outcome.probability;
-            }
-        }
-
-        return probCover;
-    }
 
     /**
      * Get all possible match outcomes with probabilities
@@ -378,11 +345,14 @@ export class VolleyballEngine {
         // Get exact set scores
         const exactScores = this.getAllMatchOutcomes(pSet1, pSet5);
 
-        // Calculate total sets markets
-        const totalSets = this.calculateTotalSetsMarkets(pSet1, pSet5);
+        // Calculate total sets markets (from exact scores)
+        const totalSets = this.calculateTotalSetsFromScores(exactScores);
 
-        // Calculate various set handicaps
-        const setHandicaps = this.calculateSetHandicapMarkets(pSet1, pSet5);
+        // Calculate set handicaps (from exact scores)
+        const setHandicaps = this.calculateSetHandicapsFromScores(exactScores);
+
+        // Calculate set winner markets (to win at least one set)
+        const setWinner = this.calculateSetWinnerMarkets(exactScores);
 
         // Calculate point handicaps (using point spread estimation)
         const pointHandicaps = this.calculatePointHandicapMarkets(pPoint1);
@@ -391,24 +361,23 @@ export class VolleyballEngine {
             exactScores,
             totalSets,
             setHandicaps,
+            setWinner,
             pointHandicaps,
             expectedSets
         };
     }
 
     /**
-     * Calculate total sets over/under markets
+     * Calculate total sets over/under markets from exact scores
      */
-    calculateTotalSetsMarkets(pSet, pSet5) {
-        const outcomes = this.getAllMatchOutcomes(pSet, pSet5);
-
+    calculateTotalSetsFromScores(exactScores) {
         const markets = [];
 
         // Common lines: 3.5, 4.5
         for (const line of [3.5, 4.5]) {
             let pOver = 0;
 
-            for (const outcome of outcomes) {
+            for (const outcome of exactScores) {
                 const totalSets = outcome.setsWon + outcome.setsLost;
                 if (totalSets > line) {
                     pOver += outcome.probability;
@@ -426,14 +395,23 @@ export class VolleyballEngine {
     }
 
     /**
-     * Calculate set handicap markets
+     * Calculate set handicap markets from exact scores
      */
-    calculateSetHandicapMarkets(pSet, pSet5) {
+    calculateSetHandicapsFromScores(exactScores) {
         const lines = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5];
         const markets = [];
 
         for (const line of lines) {
-            const prob = this.calculateSetHandicapProb(pSet, pSet5, line);
+            let prob = 0;
+
+            for (const outcome of exactScores) {
+                const margin = outcome.setsWon - outcome.setsLost;
+                // Team 1 covers handicap if margin > -line
+                if (margin > -line) {
+                    prob += outcome.probability;
+                }
+            }
+
             markets.push({
                 line: line,
                 team1: prob,
@@ -442,6 +420,30 @@ export class VolleyballEngine {
         }
 
         return markets;
+    }
+
+    /**
+     * Calculate set winner markets (to win at least one set)
+     */
+    calculateSetWinnerMarkets(exactScores) {
+        let team1WinsSet = 0;
+        let team2WinsSet = 0;
+
+        for (const outcome of exactScores) {
+            // Team 1 wins at least one set (any score except 0-3)
+            if (outcome.setsWon > 0) {
+                team1WinsSet += outcome.probability;
+            }
+            // Team 2 wins at least one set (any score except 3-0)
+            if (outcome.setsLost > 0) {
+                team2WinsSet += outcome.probability;
+            }
+        }
+
+        return {
+            team1: team1WinsSet,
+            team2: team2WinsSet
+        };
     }
 
     /**
