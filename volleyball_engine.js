@@ -215,7 +215,15 @@ export class VolleyballEngine {
 
             // If set handicap is provided, include it in error calculation
             if (setHandicapLine !== null && setHandicapProb !== null) {
-                const setHandicapCalc = this.calculateSetHandicapProb(pSet25, pSet15, setHandicapLine);
+                // Calculate set handicap probability from exact scores
+                const outcomes = this.getAllMatchOutcomes(pSet25, pSet15);
+                let setHandicapCalc = 0;
+                for (const outcome of outcomes) {
+                    const margin = outcome.setsWon - outcome.setsLost;
+                    if (margin > -setHandicapLine) {
+                        setHandicapCalc += outcome.probability;
+                    }
+                }
                 const handicapError = Math.abs(setHandicapCalc - setHandicapProb);
                 totalError += handicapError * 0.5; // Weight handicap error less
             }
