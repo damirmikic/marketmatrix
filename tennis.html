@@ -19,8 +19,8 @@
             </a>
 
             <!-- 1. MATCH SELECTION -->
-            <div class="card">
-                <div class="card-header">
+            <div class="card" id="matchSelectionCard">
+                <div class="card-header" onclick="toggleCard('matchSelectionCard')">
                     <h2>1. Select Match</h2>
                 </div>
                 <div class="card-content">
@@ -37,8 +37,8 @@
             </div>
 
             <!-- 2. ODDS INPUT -->
-            <div class="card" style="margin-top: 20px;">
-                <div class="card-header">
+            <div class="card" id="oddsInputCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('oddsInputCard')">
                     <h2>2. Input Odds</h2>
                 </div>
                 <div class="card-content">
@@ -76,7 +76,7 @@
 
             <!-- 3. PARAMETERS (SIDE) -->
             <div class="card hidden" id="paramsCard" style="margin-top: 20px;">
-                <div class="card-header">
+                <div class="card-header" onclick="toggleCard('paramsCard')">
                     <h2>3. Parameters</h2>
                 </div>
                 <div class="card-content">
@@ -119,7 +119,7 @@
         <div class="main-content">
             <!-- FAIR VALUE -->
             <div class="card hidden" id="fairValueCard">
-                <div class="card-header">
+                <div class="card-header" onclick="toggleCard('fairValueCard')">
                     <h2>Fair Value (Raw)</h2>
                 </div>
                 <div class="card-content">
@@ -140,7 +140,7 @@
 
             <!-- ELO RATINGS -->
             <div class="card hidden" id="eloCard" style="margin-top: 20px;">
-                <div class="card-header">
+                <div class="card-header" onclick="toggleCard('eloCard')">
                     <h2>Elo Ratings (Tennis Abstract)</h2>
                 </div>
                 <div class="card-content">
@@ -152,7 +152,7 @@
 
             <!-- DERIVATIVES -->
             <div class="card hidden" id="derivativesCard" style="margin-top: 20px;">
-                <div class="card-header">
+                <div class="card-header" onclick="toggleCard('derivativesCard')">
                     <h2>Derivative Markets</h2>
                 </div>
                 <div class="card-content">
@@ -213,9 +213,11 @@
             </div>
 
             <!-- Player Total Games Markets -->
-            <div class="card hidden" style="grid-column: span 2;">
-                <div class="card-header">Player Total Games</div>
-                <div class="card-body">
+            <div class="card hidden" id="playerTotalsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('playerTotalsCard')">
+                    <h2>Player Total Games</h2>
+                </div>
+                <div class="card-content">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <!-- Player 1 Totals -->
                         <div>
