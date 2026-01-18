@@ -258,7 +258,11 @@ function displayDerivatives(d) {
     const scores = ['2-0', '2-1', '0-2', '1-2'];
     let html = '';
     scores.forEach(s => {
-        html += `<tr><td>${s}</td><td>${sb[s].prob}</td><td>${sb[s].odds}</td></tr>`;
+        html += `<tr>
+            <td style="text-align: left;">${s}</td>
+            <td style="text-align: center;">${sb[s].prob}</td>
+            <td style="text-align: center;">${sb[s].odds}</td>
+        </tr>`;
     });
     document.getElementById('correctScoreTable').innerHTML = html;
 
@@ -267,8 +271,16 @@ function displayDerivatives(d) {
     const swTable = document.getElementById('setWinnerTable');
     if (swTable) {
         swTable.innerHTML = `
-            <tr><td>Player 1</td><td>${sw.player1.prob}</td><td>${sw.player1.odds}</td></tr>
-            <tr><td>Player 2</td><td>${sw.player2.prob}</td><td>${sw.player2.odds}</td></tr>
+            <tr>
+                <td style="text-align: left;">Player 1</td>
+                <td style="text-align: center;">${sw.player1.prob}</td>
+                <td style="text-align: center;">${sw.player1.odds}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Player 2</td>
+                <td style="text-align: center;">${sw.player2.prob}</td>
+                <td style="text-align: center;">${sw.player2.odds}</td>
+            </tr>
         `;
     }
 
@@ -285,7 +297,11 @@ function displayDerivatives(d) {
 
     lines.forEach(l => {
         if (gh[l]) {
-            ghHtml += `<tr><td>${l > 0 ? '+' : ''}${l}</td><td>${gh[l].player1.odds}</td><td>${gh[l].player2.odds}</td></tr>`;
+            ghHtml += `<tr>
+                <td style="text-align: left;">${l > 0 ? '+' : ''}${l}</td>
+                <td style="text-align: center;">${gh[l].player1.odds}</td>
+                <td style="text-align: center;">${gh[l].player2.odds}</td>
+            </tr>`;
         }
     });
     document.getElementById('gameHandicapTable').innerHTML = ghHtml;
@@ -309,7 +325,11 @@ function displayPlayerTotals(playerTotals) {
         let html = '';
         Object.keys(playerTotals.player1).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(line => {
             const market = playerTotals.player1[line];
-            html += `<tr><td>${line}</td><td>${market.over.odds}</td><td>${market.under.odds}</td></tr>`;
+            html += `<tr>
+                <td style="text-align: left; padding: 8px;">${line}</td>
+                <td style="text-align: center; padding: 8px;">${market.over.odds}</td>
+                <td style="text-align: center; padding: 8px;">${market.under.odds}</td>
+            </tr>`;
         });
         p1Table.innerHTML = html;
     }
@@ -320,7 +340,11 @@ function displayPlayerTotals(playerTotals) {
         let html = '';
         Object.keys(playerTotals.player2).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(line => {
             const market = playerTotals.player2[line];
-            html += `<tr><td>${line}</td><td>${market.over.odds}</td><td>${market.under.odds}</td></tr>`;
+            html += `<tr>
+                <td style="text-align: left; padding: 8px;">${line}</td>
+                <td style="text-align: center; padding: 8px;">${market.over.odds}</td>
+                <td style="text-align: center; padding: 8px;">${market.under.odds}</td>
+            </tr>`;
         });
         p2Table.innerHTML = html;
     }
