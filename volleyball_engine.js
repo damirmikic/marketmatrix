@@ -286,7 +286,10 @@ export class VolleyballEngine {
             const margin = outcome.setsWon - outcome.setsLost; // Margin from Team 1's perspective
 
             // Check if this outcome covers the handicap
-            if (margin > line) {
+            // Handicap betting: Team 1 with line X needs margin > -X
+            // E.g., Team 1 -2.5 needs margin > 2.5 (wins by 3+)
+            // E.g., Team 1 +2.5 needs margin > -2.5 (loses by 2 or less, or wins)
+            if (margin > -line) {
                 probCover += outcome.probability;
             }
         }
@@ -462,8 +465,11 @@ export class VolleyballEngine {
         const markets = [];
 
         for (const line of lines) {
+            // Calculate probability that point differential > -line
+            // Using normal distribution: X ~ N(totalPointDiff, sigma)
+            // P(X > -line) = 1 - P(X <= -line) = 1 - CDF((-line - mean) / sigma)
             const z = (-line - totalPointDiff) / sigma;
-            const prob = this.normalCDF(z);
+            const prob = 1 - this.normalCDF(z);
 
             markets.push({
                 line: line,
