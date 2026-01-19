@@ -367,6 +367,12 @@ export class VolleyballEngine {
         // Calculate set winner markets (to win at least one set)
         const setWinner = this.calculateSetWinnerMarkets(exactScores);
 
+        // Calculate first set winner
+        const firstSetWinner = {
+            team1: pSet1,
+            team2: 1 - pSet1
+        };
+
         // Calculate point handicaps (using point spread estimation)
         const pointHandicaps = this.calculatePointHandicapMarkets(pPoint1);
 
@@ -375,6 +381,7 @@ export class VolleyballEngine {
             totalSets,
             setHandicaps,
             setWinner,
+            firstSetWinner,
             pointHandicaps,
             expectedSets
         };
