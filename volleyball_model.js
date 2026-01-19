@@ -82,6 +82,9 @@ function displayDerivatives(derivatives) {
     // Display Exact Set Scores
     displayExactScores(derivatives.exactScores);
 
+    // Display First Set Winner
+    displayFirstSetWinner(derivatives.firstSetWinner);
+
     // Display Set Winner Markets
     displaySetWinnerMarkets(derivatives.setWinner);
 
@@ -125,6 +128,42 @@ function displayExactScores(exactScores) {
     });
 
     html += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
+}
+
+function displayFirstSetWinner(firstSetWinner) {
+    const container = document.getElementById('firstSetWinnerTable');
+    if (!container) return;
+
+    const team1Prob = firstSetWinner.team1 * 100;
+    const team2Prob = firstSetWinner.team2 * 100;
+    const team1Odds = firstSetWinner.team1 > 0 ? (1 / firstSetWinner.team1).toFixed(2) : '∞';
+    const team2Odds = firstSetWinner.team2 > 0 ? (1 / firstSetWinner.team2).toFixed(2) : '∞';
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Market</th>
+                    <th>Probability</th>
+                    <th>Odds</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="line-col">Team 1</td>
+                    <td class="num-col">${team1Prob.toFixed(1)}%</td>
+                    <td class="num-col">${team1Odds}</td>
+                </tr>
+                <tr>
+                    <td class="line-col">Team 2</td>
+                    <td class="num-col">${team2Prob.toFixed(1)}%</td>
+                    <td class="num-col">${team2Odds}</td>
+                </tr>
             </tbody>
         </table>
     `;
