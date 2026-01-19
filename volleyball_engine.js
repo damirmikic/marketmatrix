@@ -416,6 +416,16 @@ export class VolleyballEngine {
 
     /**
      * Calculate set handicap markets from exact scores
+     *
+     * Handicap logic:
+     * - Line represents Team 1's handicap
+     * - Team 1 covers if: margin > -line
+     * - Team 2 probability is: 1 - Team 1 probability
+     *
+     * Examples:
+     * - Line -2.5: Team 1 must win by 3+ sets (margin > 2.5) → Only 3-0
+     * - Line +0.5: Team 1 just needs to win (margin > -0.5) → All Team 1 wins
+     * - Line +2.5: Team 1 can lose 0-3, 1-3, 2-3 (margin > -2.5) → All scores
      */
     calculateSetHandicapsFromScores(exactScores) {
         const lines = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5];
@@ -423,38 +433,19 @@ export class VolleyballEngine {
 
         for (const line of lines) {
             let team1Prob = 0;
-            let team2Prob = 0;
 
+            // Team 1 covers the handicap if: margin > -line
             for (const outcome of exactScores) {
                 const margin = outcome.setsWon - outcome.setsLost;
-
-                if (line < 0) {
-                    // Negative line: Team 1 handicap
-                    // Team 1 must win by more than |line|
-                    if (margin > -line) {
-                        team1Prob += outcome.probability;
-                    }
-                } else {
-                    // Positive line: Team 2 handicap
-                    // Team 2 must win by more than line (margin must be less than -line)
-                    if (margin < -line) {
-                        team2Prob += outcome.probability;
-                    }
+                if (margin > -line) {
+                    team1Prob += outcome.probability;
                 }
-            }
-
-            // For negative lines, team2 is the complement
-            // For positive lines, team1 is the complement
-            if (line < 0) {
-                team2Prob = 1 - team1Prob;
-            } else {
-                team1Prob = 1 - team2Prob;
             }
 
             markets.push({
                 line: line,
                 team1: team1Prob,
-                team2: team2Prob
+                team2: 1 - team1Prob
             });
         }
 
