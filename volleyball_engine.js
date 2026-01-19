@@ -300,14 +300,18 @@ export class VolleyballEngine {
         });
 
         // Team 1 wins 3-1
+        // Last set (set 4) must be Team 1's 3rd win
+        // In first 3 sets, Team 1 wins exactly 2: C(3,2) ways
         outcomes.push({
             score: '3-1',
             setsWon: 3,
             setsLost: 1,
-            probability: this.binomialCoeff(4, 3) * Math.pow(p, 3) * q
+            probability: this.binomialCoeff(3, 2) * Math.pow(p, 2) * q * p
         });
 
         // Team 1 wins 3-2
+        // Last set (set 5) must be Team 1's 3rd win
+        // In first 4 sets, Team 1 wins exactly 2: C(4,2) ways
         outcomes.push({
             score: '3-2',
             setsWon: 3,
@@ -324,14 +328,18 @@ export class VolleyballEngine {
         });
 
         // Team 2 wins 3-1
+        // Last set (set 4) must be Team 2's 3rd win
+        // In first 3 sets, Team 2 wins exactly 2: C(3,2) ways
         outcomes.push({
             score: '1-3',
             setsWon: 1,
             setsLost: 3,
-            probability: this.binomialCoeff(4, 1) * p * Math.pow(q, 3)
+            probability: this.binomialCoeff(3, 2) * p * Math.pow(q, 2) * q
         });
 
         // Team 2 wins 3-2
+        // Last set (set 5) must be Team 2's 3rd win
+        // In first 4 sets, Team 2 wins exactly 2: C(4,2) ways
         outcomes.push({
             score: '2-3',
             setsWon: 2,
