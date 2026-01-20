@@ -62,13 +62,13 @@ function displayFirstSetWinner(firstSetWinner, fairOdds) {
             <tbody>
                 <tr>
                     <td class="line-col">Team 1</td>
-                    <td class="num-col">${team1Prob.toFixed(1)}%</td>
-                    <td class="num-col">${team1FairOdds}</td>
+                    <td class="num-col" style="color: #10b981; font-weight: 600;">${team1Prob.toFixed(1)}%</td>
+                    <td class="num-col" style="color: #f59e0b; font-weight: 600;">${team1FairOdds}</td>
                 </tr>
                 <tr>
                     <td class="line-col">Team 2</td>
-                    <td class="num-col">${team2Prob.toFixed(1)}%</td>
-                    <td class="num-col">${team2FairOdds}</td>
+                    <td class="num-col" style="color: #10b981; font-weight: 600;">${team2Prob.toFixed(1)}%</td>
+                    <td class="num-col" style="color: #f59e0b; font-weight: 600;">${team2FairOdds}</td>
                 </tr>
             </tbody>
         </table>
@@ -98,13 +98,13 @@ function displayMatchWinner(matchWinner) {
             <tbody>
                 <tr>
                     <td class="line-col">Team 1</td>
-                    <td class="num-col">${team1Prob.toFixed(1)}%</td>
-                    <td class="num-col">${team1Odds}</td>
+                    <td class="num-col" style="color: #10b981; font-weight: 600;">${team1Prob.toFixed(1)}%</td>
+                    <td class="num-col" style="color: #f59e0b; font-weight: 600;">${team1Odds}</td>
                 </tr>
                 <tr>
                     <td class="line-col">Team 2</td>
-                    <td class="num-col">${team2Prob.toFixed(1)}%</td>
-                    <td class="num-col">${team2Odds}</td>
+                    <td class="num-col" style="color: #10b981; font-weight: 600;">${team2Prob.toFixed(1)}%</td>
+                    <td class="num-col" style="color: #f59e0b; font-weight: 600;">${team2Odds}</td>
                 </tr>
             </tbody>
         </table>
@@ -136,8 +136,8 @@ function displayExactScores(exactScores) {
         html += `
             <tr>
                 <td class="line-col">${outcome.score}</td>
-                <td class="num-col">${probability.toFixed(1)}%</td>
-                <td class="num-col">${odds}</td>
+                <td class="num-col" style="color: #10b981; font-weight: 600;">${probability.toFixed(1)}%</td>
+                <td class="num-col" style="color: #f59e0b; font-weight: 600;">${odds}</td>
             </tr>
         `;
     });
@@ -179,10 +179,10 @@ function displaySetHandicapMarkets(setHandicaps) {
         html += `
             <tr>
                 <td class="line-col">${lineDisplay}</td>
-                <td class="num-col">${team1Prob.toFixed(1)}%</td>
-                <td class="num-col">${team1Odds}</td>
-                <td class="num-col">${team2Prob.toFixed(1)}%</td>
-                <td class="num-col">${team2Odds}</td>
+                <td class="num-col" style="color: #10b981; font-weight: 600;">${team1Prob.toFixed(1)}%</td>
+                <td class="num-col" style="color: #f59e0b; font-weight: 600;">${team1Odds}</td>
+                <td class="num-col" style="color: #10b981; font-weight: 600;">${team2Prob.toFixed(1)}%</td>
+                <td class="num-col" style="color: #f59e0b; font-weight: 600;">${team2Odds}</td>
             </tr>
         `;
     });
@@ -222,10 +222,10 @@ function displayTotalSetsMarkets(totalSets) {
         html += `
             <tr>
                 <td class="line-col">${market.line}</td>
-                <td class="num-col">${overProb.toFixed(1)}%</td>
-                <td class="num-col">${overOdds}</td>
-                <td class="num-col">${underProb.toFixed(1)}%</td>
-                <td class="num-col">${underOdds}</td>
+                <td class="num-col" style="color: #10b981; font-weight: 600;">${overProb.toFixed(1)}%</td>
+                <td class="num-col" style="color: #f59e0b; font-weight: 600;">${overOdds}</td>
+                <td class="num-col" style="color: #10b981; font-weight: 600;">${underProb.toFixed(1)}%</td>
+                <td class="num-col" style="color: #f59e0b; font-weight: 600;">${underOdds}</td>
             </tr>
         `;
     });
