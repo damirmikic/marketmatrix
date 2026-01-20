@@ -11,7 +11,7 @@
 
 <body>
     <div class="container">
-        <!-- LEFT COLUMN: INPUTS & PARAMETERS -->
+        <!-- LEFT COLUMN: INPUTS -->
         <div class="sidebar-column">
             <a href="index.html"
                 style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
@@ -32,86 +32,35 @@
                 </div>
             </div>
 
-            <!-- 2. ODDS INPUT -->
+            <!-- 2. FIRST SET WINNER INPUT -->
             <div class="card" id="oddsInputCard" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('oddsInputCard')">
-                    <h2>2. Input Odds</h2>
+                    <h2>2. First Set Winner Odds</h2>
                 </div>
                 <div class="card-content">
-                    <h3>Match Winner</h3>
                     <div class="input-group">
                         <label>Team 1</label>
-                        <input type="number" id="team1Odds" step="0.01" placeholder="1.90">
+                        <input type="number" id="firstSetTeam1Odds" step="0.01" placeholder="2.60">
                     </div>
                     <div class="input-group">
                         <label>Team 2</label>
-                        <input type="number" id="team2Odds" step="0.01" placeholder="1.90">
+                        <input type="number" id="firstSetTeam2Odds" step="0.01" placeholder="1.44">
                     </div>
-
-                    <h3 style="margin-top: 15px;">Set Handicap (Optional)</h3>
-                    <div class="input-group">
-                        <label>Line</label>
-                        <input type="number" id="setHandicapLine" step="0.5" placeholder="-1.5">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                        <div class="input-group">
-                            <label style="font-size: 0.8rem;">Team 1 Odds</label>
-                            <input type="number" id="setHandicapTeam1" step="0.01" placeholder="1.90">
-                        </div>
-                        <div class="input-group">
-                            <label style="font-size: 0.8rem;">Team 2 Odds</label>
-                            <input type="number" id="setHandicapTeam2" step="0.01" placeholder="1.90">
-                        </div>
-                    </div>
-                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 5px; line-height: 1.3;">
-                        <strong>Note:</strong> Set handicap is optional but helps calibrate the model for more accurate predictions.
+                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 10px; line-height: 1.3;">
+                        <strong>Note:</strong> Enter first set winner odds. All other markets will be calculated from this input.
                     </div>
                 </div>
             </div>
 
-            <!-- 3. PARAMETERS -->
-            <div class="card hidden" id="paramsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('paramsCard')">
-                    <h2>3. Model Parameters</h2>
+            <!-- 3. EXPECTED SETS -->
+            <div class="card hidden" id="expectedSetsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('expectedSetsCard')">
+                    <h2>3. Expected Sets</h2>
                 </div>
                 <div class="card-content">
-                    <h3 style="font-size: 0.8rem; margin-bottom: 5px;">Point Win Probability</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val" id="team1PointProb">-</div>
-                            <div class="stat-label">Team 1</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val" id="team2PointProb">-</div>
-                            <div class="stat-label">Team 2</div>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 0.8rem; margin: 10px 0 5px;">Set Win Probability</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val" id="team1SetProb">-</div>
-                            <div class="stat-label">Team 1</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val" id="team2SetProb">-</div>
-                            <div class="stat-label">Team 2</div>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 15px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px;">
-                            <span>Model Match Win %</span>
-                            <span id="modelMatch1" style="font-weight: bold;">-</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px;">
-                            <span>Model Match Loss %</span>
-                            <span id="modelMatch2" style="font-weight: bold;">-</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                            <span>Expected Sets</span>
-                            <span id="expectedSets" style="font-weight: bold;">-</span>
-                        </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2.5rem; font-weight: bold; color: #3b82f6;" id="expectedSetsValue">-</div>
+                        <div style="font-size: 0.875rem; color: #64748b; margin-top: 5px;">Total Sets</div>
                     </div>
                 </div>
             </div>
@@ -119,54 +68,43 @@
 
         <!-- RIGHT COLUMN: MARKETS -->
         <div class="main-content">
-            <!-- FAIR VALUE -->
-            <div class="card hidden" id="fairValueCard">
-                <div class="card-header" onclick="toggleCard('fairValueCard')">
-                    <h2>Fair Value (Raw)</h2>
-                </div>
-                <div class="card-content">
-                    <div style="display: flex; gap: 20px;">
-                        <div style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <div style="font-size: 0.8rem; color: #64748b;">Team 1 Fair Odds</div>
-                            <div id="fairTeam1" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
-                            <div id="fairP1Pct" style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">-</div>
-                        </div>
-                        <div style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <div style="font-size: 0.8rem; color: #64748b;">Team 2 Fair Odds</div>
-                            <div id="fairTeam2" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
-                            <div id="fairP2Pct" style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">-</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- EXACT SET SCORES -->
-            <div class="card hidden" id="exactScoresCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('exactScoresCard')">
-                    <h2>Exact Set Scores</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="exactScoresTable"></div>
-                </div>
-            </div>
-
             <!-- FIRST SET WINNER -->
-            <div class="card hidden" id="firstSetWinnerCard" style="margin-top: 20px;">
+            <div class="card hidden" id="firstSetWinnerCard">
                 <div class="card-header" onclick="toggleCard('firstSetWinnerCard')">
-                    <h2>First Set Winner</h2>
+                    <h2>First Set Winner (Input)</h2>
                 </div>
                 <div class="card-content">
                     <div class="table-wrapper" id="firstSetWinnerTable"></div>
                 </div>
             </div>
 
-            <!-- SET WINNER -->
-            <div class="card hidden" id="setWinnerCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('setWinnerCard')">
-                    <h2>To Win a Set</h2>
+            <!-- MATCH WINNER -->
+            <div class="card hidden" id="matchWinnerCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('matchWinnerCard')">
+                    <h2>Match Winner (Derived)</h2>
                 </div>
                 <div class="card-content">
-                    <div class="table-wrapper" id="setWinnerTable"></div>
+                    <div class="table-wrapper" id="matchWinnerTable"></div>
+                </div>
+            </div>
+
+            <!-- EXACT SET SCORES -->
+            <div class="card hidden" id="exactScoresCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('exactScoresCard')">
+                    <h2>Correct Score (Derived)</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="exactScoresTable"></div>
+                </div>
+            </div>
+
+            <!-- SET HANDICAP -->
+            <div class="card hidden" id="setHandicapCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('setHandicapCard')">
+                    <h2>Set Handicap (Derived)</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="setHandicapTable"></div>
                 </div>
             </div>
 
@@ -177,29 +115,6 @@
                 </div>
                 <div class="card-content">
                     <div class="table-wrapper" id="totalSetsTable"></div>
-                </div>
-            </div>
-
-            <!-- SET HANDICAP -->
-            <div class="card hidden" id="setHandicapCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('setHandicapCard')">
-                    <h2>Set Handicap</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="setHandicapTable"></div>
-                </div>
-            </div>
-
-            <!-- POINT HANDICAP -->
-            <div class="card hidden" id="pointHandicapCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('pointHandicapCard')">
-                    <h2>Point Handicap (Estimated)</h2>
-                </div>
-                <div class="card-content">
-                    <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 10px; line-height: 1.3;">
-                        Point handicaps are estimated using expected point differential and normal distribution approximation.
-                    </div>
-                    <div class="table-wrapper" id="pointHandicapTable"></div>
                 </div>
             </div>
         </div>

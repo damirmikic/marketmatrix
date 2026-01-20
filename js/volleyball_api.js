@@ -146,43 +146,22 @@ async function fetchEventOdds(eventId) {
 // Parse odds from bet offers
 function parseOdds(betOffers) {
     const odds = {
-        matchOdds: { team1: null, team2: null },
-        setHandicap: { team1: null, team2: null, line: null }
+        firstSetWinner: { team1: null, team2: null }
     };
 
     betOffers.forEach(offer => {
-        // Match Winner (Moneyline)
-        // Look for match winner market
-        if (offer.criterion && offer.criterion.label) {
-            const label = offer.criterion.label.toLowerCase();
-
-            // Match Winner / Full Time Result
-            if (label.includes('match winner') || label === 'full time result' ||
-                label === 'match odds' || label === '1x2' ||
-                (label === 'money line' && !label.includes('set'))) {
+        // First Set Winner
+        // Look for Set 1 market
+        if (offer.criterion && (offer.criterion.label === 'Set 1' || offer.criterion.englishLabel === 'Set 1')) {
+            // Check if it's a match-type bet (winner market, not handicap)
+            if (offer.betOfferType && offer.betOfferType.name === 'Match') {
                 offer.outcomes.forEach(outcome => {
                     if (outcome.type === 'OT_ONE') {
-                        odds.matchOdds.team1 = outcome.odds / 1000;
+                        odds.firstSetWinner.team1 = outcome.odds / 1000;
                     } else if (outcome.type === 'OT_TWO') {
-                        odds.matchOdds.team2 = outcome.odds / 1000;
+                        odds.firstSetWinner.team2 = outcome.odds / 1000;
                     }
                 });
-            }
-
-            // Set Handicap
-            if ((label.includes('set') && label.includes('handicap')) ||
-                (label.includes('set') && label.includes('spread'))) {
-                // Look for main line if multiple handicaps exist
-                if (!offer.tags || offer.tags.includes('MAIN_LINE') || odds.setHandicap.line === null) {
-                    offer.outcomes.forEach(outcome => {
-                        if (outcome.type === 'OT_ONE' && outcome.line !== undefined) {
-                            odds.setHandicap.team1 = outcome.odds / 1000;
-                            odds.setHandicap.line = outcome.line / 1000;
-                        } else if (outcome.type === 'OT_TWO') {
-                            odds.setHandicap.team2 = outcome.odds / 1000;
-                        }
-                    });
-                }
             }
         }
     });
@@ -219,29 +198,18 @@ function populateInputs(odds) {
     // Clear inputs first to ensure no stale data
     clearInputs();
 
-    // Match Odds
-    if (odds.matchOdds.team1) {
-        document.getElementById('team1Odds').value = odds.matchOdds.team1.toFixed(2);
+    // First Set Winner Odds
+    if (odds.firstSetWinner.team1) {
+        document.getElementById('firstSetTeam1Odds').value = odds.firstSetWinner.team1.toFixed(2);
     }
-    if (odds.matchOdds.team2) {
-        document.getElementById('team2Odds').value = odds.matchOdds.team2.toFixed(2);
-    }
-
-    // Set Handicap
-    if (odds.setHandicap.line !== null) {
-        document.getElementById('setHandicapLine').value = odds.setHandicap.line.toFixed(1);
-    }
-    if (odds.setHandicap.team1) {
-        document.getElementById('setHandicapTeam1').value = odds.setHandicap.team1.toFixed(2);
-    }
-    if (odds.setHandicap.team2) {
-        document.getElementById('setHandicapTeam2').value = odds.setHandicap.team2.toFixed(2);
+    if (odds.firstSetWinner.team2) {
+        document.getElementById('firstSetTeam2Odds').value = odds.firstSetWinner.team2.toFixed(2);
     }
 }
 
 // Clear all input fields
 function clearInputs() {
-    const inputs = ['team1Odds', 'team2Odds', 'setHandicapLine', 'setHandicapTeam1', 'setHandicapTeam2'];
+    const inputs = ['firstSetTeam1Odds', 'firstSetTeam2Odds'];
 
     inputs.forEach(id => {
         const element = document.getElementById(id);
