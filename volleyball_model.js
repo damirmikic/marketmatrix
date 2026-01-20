@@ -14,37 +14,24 @@ window.toggleCard = toggleCard;
 
 window.runModel = function () {
     try {
-        const team1Odds = parseFloat(document.getElementById('team1Odds').value);
-        const team2Odds = parseFloat(document.getElementById('team2Odds').value);
+        const team1Odds = parseFloat(document.getElementById('firstSetTeam1Odds').value);
+        const team2Odds = parseFloat(document.getElementById('firstSetTeam2Odds').value);
 
         if (!team1Odds || !team2Odds) return;
 
-        // Get set handicap inputs if available
-        const setHandicapLine = parseFloat(document.getElementById('setHandicapLine').value);
-        const setHandicapTeam1 = parseFloat(document.getElementById('setHandicapTeam1').value);
-        const setHandicapTeam2 = parseFloat(document.getElementById('setHandicapTeam2').value);
+        // 1. De-vig first set winner odds
+        const fairFirstSet = engine.removeVigorish(team1Odds, team2Odds);
 
-        // 1. De-vig match odds
-        const fairMatchOdds = engine.removeVigorish(team1Odds, team2Odds);
-        displayFairValue(fairMatchOdds);
+        // 2. Generate all derivatives from first set winner probability
+        const derivatives = engine.generateDerivatives(fairFirstSet.p1);
 
-        // 2. De-vig set handicap if available
-        let fairSetHandicap = null;
-        if (setHandicapTeam1 && setHandicapTeam2) {
-            fairSetHandicap = engine.removeVigorish(setHandicapTeam1, setHandicapTeam2);
-        }
-
-        // 3. Solve parameters
-        const result = engine.solveParameters(
-            fairMatchOdds.p1,
-            setHandicapLine || null,
-            fairSetHandicap ? fairSetHandicap.p1 : null
-        );
-        displayParameters(result);
-
-        // 4. Generate derivatives
-        const derivatives = engine.generateDerivatives(result);
-        displayDerivatives(derivatives);
+        // 3. Display results
+        displayFirstSetWinner(derivatives.firstSetWinner, fairFirstSet);
+        displayMatchWinner(derivatives.matchWinner);
+        displayExactScores(derivatives.exactScores);
+        displaySetHandicapMarkets(derivatives.setHandicaps);
+        displayTotalSetsMarkets(derivatives.totalSets);
+        displayExpectedSets(derivatives.expectedSets);
 
         // Show all result cards
         document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
@@ -54,80 +41,35 @@ window.runModel = function () {
     }
 };
 
-function displayFairValue(fair) {
-    document.getElementById('fairTeam1').textContent = (1 / fair.p1).toFixed(2);
-    document.getElementById('fairTeam2').textContent = (1 / fair.p2).toFixed(2);
-    document.getElementById('fairP1Pct').textContent = (fair.p1 * 100).toFixed(1) + '%';
-    document.getElementById('fairP2Pct').textContent = (fair.p2 * 100).toFixed(1) + '%';
-}
-
-function displayParameters(result) {
-    // Point Win Probabilities
-    document.getElementById('team1PointProb').textContent = (result.pPoint1 * 100).toFixed(1) + '%';
-    document.getElementById('team2PointProb').textContent = (result.pPoint2 * 100).toFixed(1) + '%';
-
-    // Set Win Probabilities
-    document.getElementById('team1SetProb').textContent = (result.pSet1 * 100).toFixed(1) + '%';
-    document.getElementById('team2SetProb').textContent = (result.pSet2 * 100).toFixed(1) + '%';
-
-    // Match Win Probabilities (verification)
-    document.getElementById('modelMatch1').textContent = (result.pMatch1 * 100).toFixed(1) + '%';
-    document.getElementById('modelMatch2').textContent = (result.pMatch2 * 100).toFixed(1) + '%';
-
-    // Expected Sets
-    document.getElementById('expectedSets').textContent = result.expectedSets.toFixed(2);
-}
-
-function displayDerivatives(derivatives) {
-    // Display Exact Set Scores
-    displayExactScores(derivatives.exactScores);
-
-    // Display First Set Winner
-    displayFirstSetWinner(derivatives.firstSetWinner);
-
-    // Display Set Winner Markets
-    displaySetWinnerMarkets(derivatives.setWinner);
-
-    // Display Total Sets Markets
-    displayTotalSetsMarkets(derivatives.totalSets);
-
-    // Display Set Handicap Markets
-    displaySetHandicapMarkets(derivatives.setHandicaps);
-
-    // Display Point Handicap Markets
-    displayPointHandicapMarkets(derivatives.pointHandicaps);
-}
-
-function displayExactScores(exactScores) {
-    const container = document.getElementById('exactScoresTable');
+function displayFirstSetWinner(firstSetWinner, fairOdds) {
+    const container = document.getElementById('firstSetWinnerTable');
     if (!container) return;
+
+    const team1Prob = firstSetWinner.team1 * 100;
+    const team2Prob = firstSetWinner.team2 * 100;
+    const team1FairOdds = (1 / firstSetWinner.team1).toFixed(2);
+    const team2FairOdds = (1 / firstSetWinner.team2).toFixed(2);
 
     let html = `
         <table>
             <thead>
                 <tr>
-                    <th>Score</th>
+                    <th>Team</th>
                     <th>Probability</th>
-                    <th>Odds</th>
+                    <th>Fair Odds</th>
                 </tr>
             </thead>
             <tbody>
-    `;
-
-    exactScores.forEach(outcome => {
-        const probability = outcome.probability * 100;
-        const odds = probability > 0 ? (1 / outcome.probability).toFixed(2) : '∞';
-
-        html += `
-            <tr>
-                <td class="line-col">${outcome.score}</td>
-                <td class="num-col">${probability.toFixed(1)}%</td>
-                <td class="num-col">${odds}</td>
-            </tr>
-        `;
-    });
-
-    html += `
+                <tr>
+                    <td class="line-col">Team 1</td>
+                    <td class="num-col">${team1Prob.toFixed(1)}%</td>
+                    <td class="num-col">${team1FairOdds}</td>
+                </tr>
+                <tr>
+                    <td class="line-col">Team 2</td>
+                    <td class="num-col">${team2Prob.toFixed(1)}%</td>
+                    <td class="num-col">${team2FairOdds}</td>
+                </tr>
             </tbody>
         </table>
     `;
@@ -135,22 +77,22 @@ function displayExactScores(exactScores) {
     container.innerHTML = html;
 }
 
-function displayFirstSetWinner(firstSetWinner) {
-    const container = document.getElementById('firstSetWinnerTable');
+function displayMatchWinner(matchWinner) {
+    const container = document.getElementById('matchWinnerTable');
     if (!container) return;
 
-    const team1Prob = firstSetWinner.team1 * 100;
-    const team2Prob = firstSetWinner.team2 * 100;
-    const team1Odds = firstSetWinner.team1 > 0 ? (1 / firstSetWinner.team1).toFixed(2) : '∞';
-    const team2Odds = firstSetWinner.team2 > 0 ? (1 / firstSetWinner.team2).toFixed(2) : '∞';
+    const team1Prob = matchWinner.team1 * 100;
+    const team2Prob = matchWinner.team2 * 100;
+    const team1Odds = (1 / matchWinner.team1).toFixed(2);
+    const team2Odds = (1 / matchWinner.team2).toFixed(2);
 
     let html = `
         <table>
             <thead>
                 <tr>
-                    <th>Market</th>
+                    <th>Team</th>
                     <th>Probability</th>
-                    <th>Odds</th>
+                    <th>Fair Odds</th>
                 </tr>
             </thead>
             <tbody>
@@ -171,73 +113,31 @@ function displayFirstSetWinner(firstSetWinner) {
     container.innerHTML = html;
 }
 
-function displaySetWinnerMarkets(setWinner) {
-    const container = document.getElementById('setWinnerTable');
+function displayExactScores(exactScores) {
+    const container = document.getElementById('exactScoresTable');
     if (!container) return;
-
-    const team1Prob = setWinner.team1 * 100;
-    const team2Prob = setWinner.team2 * 100;
-    const team1Odds = setWinner.team1 > 0 ? (1 / setWinner.team1).toFixed(2) : '∞';
-    const team2Odds = setWinner.team2 > 0 ? (1 / setWinner.team2).toFixed(2) : '∞';
 
     let html = `
         <table>
             <thead>
                 <tr>
-                    <th>Market</th>
+                    <th>Score</th>
                     <th>Probability</th>
-                    <th>Odds</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="line-col">Team 1 To Win a Set</td>
-                    <td class="num-col">${team1Prob.toFixed(1)}%</td>
-                    <td class="num-col">${team1Odds}</td>
-                </tr>
-                <tr>
-                    <td class="line-col">Team 2 To Win a Set</td>
-                    <td class="num-col">${team2Prob.toFixed(1)}%</td>
-                    <td class="num-col">${team2Odds}</td>
-                </tr>
-            </tbody>
-        </table>
-    `;
-
-    container.innerHTML = html;
-}
-
-function displayTotalSetsMarkets(totalSets) {
-    const container = document.getElementById('totalSetsTable');
-    if (!container) return;
-
-    let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Line</th>
-                    <th>Over Prob</th>
-                    <th>Over Odds</th>
-                    <th>Under Prob</th>
-                    <th>Under Odds</th>
+                    <th>Fair Odds</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    totalSets.forEach(market => {
-        const overProb = market.over * 100;
-        const underProb = market.under * 100;
-        const overOdds = market.over > 0 ? (1 / market.over).toFixed(2) : '∞';
-        const underOdds = market.under > 0 ? (1 / market.under).toFixed(2) : '∞';
+    exactScores.forEach(outcome => {
+        const probability = outcome.probability * 100;
+        const odds = probability > 0 ? (1 / outcome.probability).toFixed(2) : '∞';
 
         html += `
             <tr>
-                <td class="line-col">${market.line}</td>
-                <td class="num-col">${overProb.toFixed(1)}%</td>
-                <td class="num-col">${overOdds}</td>
-                <td class="num-col">${underProb.toFixed(1)}%</td>
-                <td class="num-col">${underOdds}</td>
+                <td class="line-col">${outcome.score}</td>
+                <td class="num-col">${probability.toFixed(1)}%</td>
+                <td class="num-col">${odds}</td>
             </tr>
         `;
     });
@@ -295,8 +195,8 @@ function displaySetHandicapMarkets(setHandicaps) {
     container.innerHTML = html;
 }
 
-function displayPointHandicapMarkets(pointHandicaps) {
-    const container = document.getElementById('pointHandicapTable');
+function displayTotalSetsMarkets(totalSets) {
+    const container = document.getElementById('totalSetsTable');
     if (!container) return;
 
     let html = `
@@ -304,30 +204,28 @@ function displayPointHandicapMarkets(pointHandicaps) {
             <thead>
                 <tr>
                     <th>Line</th>
-                    <th>Team 1 Prob</th>
-                    <th>Team 1 Odds</th>
-                    <th>Team 2 Prob</th>
-                    <th>Team 2 Odds</th>
+                    <th>Over Prob</th>
+                    <th>Over Odds</th>
+                    <th>Under Prob</th>
+                    <th>Under Odds</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    pointHandicaps.forEach(market => {
-        const team1Prob = market.team1 * 100;
-        const team2Prob = market.team2 * 100;
-        const team1Odds = market.team1 > 0 ? (1 / market.team1).toFixed(2) : '∞';
-        const team2Odds = market.team2 > 0 ? (1 / market.team2).toFixed(2) : '∞';
-
-        const lineDisplay = market.line > 0 ? `+${market.line}` : market.line;
+    totalSets.forEach(market => {
+        const overProb = market.over * 100;
+        const underProb = market.under * 100;
+        const overOdds = market.over > 0 ? (1 / market.over).toFixed(2) : '∞';
+        const underOdds = market.under > 0 ? (1 / market.under).toFixed(2) : '∞';
 
         html += `
             <tr>
-                <td class="line-col">${lineDisplay}</td>
-                <td class="num-col">${team1Prob.toFixed(1)}%</td>
-                <td class="num-col">${team1Odds}</td>
-                <td class="num-col">${team2Prob.toFixed(1)}%</td>
-                <td class="num-col">${team2Odds}</td>
+                <td class="line-col">${market.line}</td>
+                <td class="num-col">${overProb.toFixed(1)}%</td>
+                <td class="num-col">${overOdds}</td>
+                <td class="num-col">${underProb.toFixed(1)}%</td>
+                <td class="num-col">${underOdds}</td>
             </tr>
         `;
     });
@@ -338,6 +236,12 @@ function displayPointHandicapMarkets(pointHandicaps) {
     `;
 
     container.innerHTML = html;
+}
+
+function displayExpectedSets(expectedSets) {
+    const container = document.getElementById('expectedSetsValue');
+    if (!container) return;
+    container.textContent = expectedSets.toFixed(2);
 }
 
 // Initialize API on page load
@@ -358,14 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Setup event listeners for manual input
-    const inputs = ['team1Odds', 'team2Odds', 'setHandicapLine', 'setHandicapTeam1', 'setHandicapTeam2'];
+    const inputs = ['firstSetTeam1Odds', 'firstSetTeam2Odds'];
     inputs.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener('input', () => {
-                // Auto-run model when inputs change
-                const team1Odds = document.getElementById('team1Odds').value;
-                const team2Odds = document.getElementById('team2Odds').value;
+                const team1Odds = document.getElementById('firstSetTeam1Odds').value;
+                const team2Odds = document.getElementById('firstSetTeam2Odds').value;
                 if (team1Odds && team2Odds) {
                     window.runModel();
                 }
