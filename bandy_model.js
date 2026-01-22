@@ -67,7 +67,7 @@ window.runModel = function () {
         displayHandicaps(markets.handicaps);
         displayTotalGoals(markets.totals, totalLine);
         displayFirstHalf(markets.firstHalf);
-        displaySecondHalf(markets.secondHalf);
+        displayHTFT(markets.htft);
         displayBTTS(markets.btts);
         displayDoubleChance(markets.doubleChance);
         displayDrawNoBet(markets.drawNoBet);
@@ -239,6 +239,7 @@ function displayHalfMarkets(half, containerId) {
     const bttsEl = document.getElementById(`${containerId}BttsTable`);
     const homeTeamEl = document.getElementById(`${containerId}HomeTeamTable`);
     const awayTeamEl = document.getElementById(`${containerId}AwayTeamTable`);
+    const handicapEl = document.getElementById(`${containerId}HandicapTable`);
     const dnbEl = document.getElementById(`${containerId}DnbTable`);
 
     // Winner
@@ -394,6 +395,30 @@ function displayHalfMarkets(half, containerId) {
         awayTeamEl.innerHTML = html;
     }
 
+    // Asian Handicap
+    if (handicapEl && half.handicap) {
+        const lineDisplay = half.handicap.line > 0 ? `+${half.handicap.line}` : half.handicap.line;
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Line</th>
+                        <th>Home Odds</th>
+                        <th>Away Odds</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="line-col">${lineDisplay}</td>
+                        <td class="num-col">${probToOdds(half.handicap.homeCovers)}</td>
+                        <td class="num-col">${probToOdds(half.handicap.awayCovers)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        handicapEl.innerHTML = html;
+    }
+
     // Draw No Bet
     if (dnbEl) {
         let html = `
@@ -427,8 +452,38 @@ function displayFirstHalf(firstHalf) {
     displayHalfMarkets(firstHalf, 'h1');
 }
 
-function displaySecondHalf(secondHalf) {
-    displayHalfMarkets(secondHalf, 'h2');
+function displayHTFT(htft) {
+    const container = document.getElementById('htftTable');
+    if (!container) return;
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>HT/FT</th>
+                    <th>Probability</th>
+                    <th>Fair Odds</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    htft.forEach(combo => {
+        html += `
+            <tr>
+                <td class="line-col">${combo.outcome}</td>
+                <td class="num-col" style="color: #10b981; font-weight: 600;">${(combo.probability * 100).toFixed(1)}%</td>
+                <td class="num-col" style="color: #f59e0b; font-weight: 600;">${probToOdds(combo.probability)}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
 }
 
 function displayBTTS(btts) {

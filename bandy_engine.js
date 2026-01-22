@@ -316,6 +316,9 @@ export class BandyEngine {
         // Generate full-time matrix
         const matrixFT = this.generateMatrix(lambdas.lambdaHome, lambdas.lambdaAway);
 
+        // Generate half-time matrix for HT/FT
+        const matrixHT = this.generateMatrix(lambdas.lambdaHome * 0.5, lambdas.lambdaAway * 0.5, 10);
+
         // Calculate all markets
         const markets = {
             lambdas: lambdas,
@@ -328,11 +331,13 @@ export class BandyEngine {
             handicaps: this.generateHandicapMarkets(matrixFT),
 
             // Total Goals Markets
-            totals: this.generateTotalGoalsMarkets(matrixFT),
+            totals: this.generateTotalGoalsMarkets(matrixFT, totalLine),
 
             // Half-Time Markets (50% of full-time lambdas)
-            firstHalf: this.generateHalfMarkets(lambdas.lambdaHome * 0.5, lambdas.lambdaAway * 0.5, 'First Half'),
-            secondHalf: this.generateHalfMarkets(lambdas.lambdaHome * 0.5, lambdas.lambdaAway * 0.5, 'Second Half'),
+            firstHalf: this.generateHalfMarkets(lambdas.lambdaHome * 0.5, lambdas.lambdaAway * 0.5, 'First Half', totalLine),
+
+            // HT/FT Market
+            htft: this.generateHTFT(matrixHT, matrixFT),
 
             // Special Markets
             btts: this.calcBTTS(matrixFT),
@@ -340,7 +345,7 @@ export class BandyEngine {
             drawNoBet: this.generateDrawNoBet(matrixFT),
 
             // Team Totals
-            teamTotals: this.generateTeamTotals(matrixFT),
+            teamTotals: this.generateTeamTotals(matrixFT, lambdas.lambdaHome, lambdas.lambdaAway),
 
             // Exact Goals
             exactGoals: this.generateExactGoals(matrixFT),
@@ -371,8 +376,15 @@ export class BandyEngine {
         return markets;
     }
 
-    generateTotalGoalsMarkets(matrix) {
-        const lines = [4.5, 5.5, 6.5, 7.5, 8.5, 9.5];
+    generateTotalGoalsMarkets(matrix, centralLine) {
+        // Generate lines: central -2, -1, 0, +1, +2
+        const lines = [
+            centralLine - 2,
+            centralLine - 1,
+            centralLine,
+            centralLine + 1,
+            centralLine + 2
+        ];
         const markets = [];
 
         for (const line of lines) {
@@ -387,32 +399,49 @@ export class BandyEngine {
         return markets;
     }
 
-    generateHalfMarkets(lambdaHome, lambdaAway, name) {
+    generateHalfMarkets(lambdaHome, lambdaAway, name, totalLine) {
         const matrix = this.generateMatrix(lambdaHome, lambdaAway, 10);
 
         const result1X2 = this.calc1X2FromMatrix(matrix);
         const btts = this.calcBTTS(matrix);
 
-        // Half totals (typical lines: 2.5, 3.5, 4.5)
+        // Half totals - central line is half of full-time total, ±1
+        const halfCentral = totalLine / 2;
         const totals = [];
-        for (const line of [2.5, 3.5, 4.5]) {
+        for (const line of [halfCentral - 1, halfCentral, halfCentral + 1]) {
             const result = this.calcTotalFromMatrix(matrix, line);
             totals.push({ line, over: result.over, under: result.under });
         }
 
-        // Half team totals (typical lines: 1.5, 2.5, 3.5)
+        // Half team totals - based on half lambdas, ±0.5
+        const homeCentral = Math.round(lambdaHome * 2) / 2;
+        const awayCentral = Math.round(lambdaAway * 2) / 2;
+
         const teamTotals = {
             home: [],
             away: []
         };
 
-        for (const line of [1.5, 2.5, 3.5]) {
+        for (const line of [homeCentral - 0.5, homeCentral, homeCentral + 0.5]) {
             const homeResult = this.calcTeamTotal(matrix, line, true);
-            const awayResult = this.calcTeamTotal(matrix, line, false);
-
             teamTotals.home.push({ line, over: homeResult.over, under: homeResult.under });
+        }
+
+        for (const line of [awayCentral - 0.5, awayCentral, awayCentral + 0.5]) {
+            const awayResult = this.calcTeamTotal(matrix, line, false);
             teamTotals.away.push({ line, over: awayResult.over, under: awayResult.under });
         }
+
+        // Asian Handicap - one line based on difference
+        const lambdaDiff = lambdaHome - lambdaAway;
+        let handicapLine = 0;
+
+        // Round to nearest 0.5
+        if (Math.abs(lambdaDiff) > 0.5) {
+            handicapLine = Math.round(lambdaDiff * 2) / 2;
+        }
+
+        const handicap = this.calcHandicap(matrix, handicapLine);
 
         // Draw No Bet
         const dnb = {
@@ -426,8 +455,39 @@ export class BandyEngine {
             totals,
             btts,
             dnb,
-            teamTotals
+            teamTotals,
+            handicap: {
+                line: handicapLine,
+                homeCovers: handicap.homeCovers,
+                awayCovers: handicap.awayCovers
+            }
         };
+    }
+
+    /**
+     * Generate Half-Time/Full-Time market
+     * Calculates probabilities for all 9 combinations of HT and FT results
+     * Uses correlation assumption: results are independent for simplicity
+     */
+    generateHTFT(halfMatrix, fullMatrix) {
+        const ht = this.calc1X2FromMatrix(halfMatrix);
+        const ft = this.calc1X2FromMatrix(fullMatrix);
+
+        // Calculate all 9 combinations
+        // Assuming independence (simplified model)
+        const combinations = [
+            { outcome: 'Home/Home', probability: ht.homeWin * ft.homeWin },
+            { outcome: 'Home/Draw', probability: ht.homeWin * ft.draw },
+            { outcome: 'Home/Away', probability: ht.homeWin * ft.awayWin },
+            { outcome: 'Draw/Home', probability: ht.draw * ft.homeWin },
+            { outcome: 'Draw/Draw', probability: ht.draw * ft.draw },
+            { outcome: 'Draw/Away', probability: ht.draw * ft.awayWin },
+            { outcome: 'Away/Home', probability: ht.awayWin * ft.homeWin },
+            { outcome: 'Away/Draw', probability: ht.awayWin * ft.draw },
+            { outcome: 'Away/Away', probability: ht.awayWin * ft.awayWin }
+        ];
+
+        return combinations;
     }
 
     generateDoubleChance(matrix) {
@@ -449,16 +509,25 @@ export class BandyEngine {
         };
     }
 
-    generateTeamTotals(matrix) {
-        const lines = [2.5, 3.5, 4.5];
+    generateTeamTotals(matrix, lambdaHome, lambdaAway) {
+        // Central line is based on lambda (round to nearest 0.5)
+        const homeCentral = Math.round(lambdaHome * 2) / 2;
+        const awayCentral = Math.round(lambdaAway * 2) / 2;
+
+        // Generate lines: central -1, 0, +1
+        const homeLines = [homeCentral - 1, homeCentral, homeCentral + 1];
+        const awayLines = [awayCentral - 1, awayCentral, awayCentral + 1];
+
         const home = [];
         const away = [];
 
-        for (const line of lines) {
+        for (const line of homeLines) {
             const homeResult = this.calcTeamTotal(matrix, line, true);
-            const awayResult = this.calcTeamTotal(matrix, line, false);
-
             home.push({ line, over: homeResult.over, under: homeResult.under });
+        }
+
+        for (const line of awayLines) {
+            const awayResult = this.calcTeamTotal(matrix, line, false);
             away.push({ line, over: awayResult.over, under: awayResult.under });
         }
 
