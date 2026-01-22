@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bandy | MarketMatrix</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- LEFT COLUMN: INPUTS -->
+        <div class="sidebar-column">
+            <a href="index.html"
+                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
+                &larr; Home
+            </a>
+
+            <!-- 1. MATCH SELECTION -->
+            <div class="card" id="matchSelectionCard">
+                <div class="card-header" onclick="toggleCard('matchSelectionCard')">
+                    <h2>1. Select Match</h2>
+                </div>
+                <div class="card-content">
+                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">LEAGUE</label>
+                    <select id="leagueSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
+
+                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">MATCH</label>
+                    <select id="matchSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;" disabled></select>
+                </div>
+            </div>
+
+            <!-- 2. MATCH WINNER (1X2) -->
+            <div class="card" id="oddsInputCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('oddsInputCard')">
+                    <h2>2. Match Winner Odds</h2>
+                    <span id="matchWinnerMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
+                </div>
+                <div class="card-content">
+                    <div class="input-group">
+                        <label>Home</label>
+                        <input type="number" id="homeOdds" step="0.01" placeholder="2.10">
+                    </div>
+                    <div class="input-group">
+                        <label>Draw</label>
+                        <input type="number" id="drawOdds" step="0.01" placeholder="3.80">
+                    </div>
+                    <div class="input-group">
+                        <label>Away</label>
+                        <input type="number" id="awayOdds" step="0.01" placeholder="2.75">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. TOTAL GOALS -->
+            <div class="card" id="totalGoalsInputCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('totalGoalsInputCard')">
+                    <h2>3. Total Goals</h2>
+                    <span id="totalGoalsMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
+                </div>
+                <div class="card-content">
+                    <div class="input-group">
+                        <label>Line</label>
+                        <input type="number" id="totalGoalsLine" step="0.5" placeholder="6.5">
+                    </div>
+                    <div class="input-group">
+                        <label id="overLabel">Over</label>
+                        <input type="number" id="overOdds" step="0.01" placeholder="1.90">
+                    </div>
+                    <div class="input-group">
+                        <label id="underLabel">Under</label>
+                        <input type="number" id="underOdds" step="0.01" placeholder="1.90">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. MODEL PARAMETERS -->
+            <div class="card hidden" id="modelParamsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('modelParamsCard')">
+                    <h2>4. Model Parameters</h2>
+                </div>
+                <div class="card-content">
+                    <div style="padding: 10px;">
+                        <div style="margin-bottom: 10px;">
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">EXPECTED TOTAL</div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;" id="expectedTotalValue">-</div>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">λ HOME</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: #059669;" id="lambdaHome">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">λ AWAY</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: #dc2626;" id="lambdaAway">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: MARKETS -->
+        <div class="main-content">
+            <!-- MATCH WINNER -->
+            <div class="card hidden" id="matchWinnerCard">
+                <div class="card-header" onclick="toggleCard('matchWinnerCard')">
+                    <h2>Match Winner (1X2)</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="matchWinnerTable"></div>
+                </div>
+            </div>
+
+            <!-- ASIAN HANDICAP -->
+            <div class="card hidden" id="handicapCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('handicapCard')">
+                    <h2>Asian Handicap</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="handicapTable"></div>
+                </div>
+            </div>
+
+            <!-- TOTAL GOALS -->
+            <div class="card hidden" id="totalGoalsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('totalGoalsCard')">
+                    <h2>Total Goals Over/Under</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="totalGoalsTable"></div>
+                </div>
+            </div>
+
+            <!-- FIRST HALF MARKETS -->
+            <div class="card hidden" id="firstHalfCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('firstHalfCard')">
+                    <h2>First Half Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="margin-top: 0;">Winner</h3>
+                    <div class="table-wrapper" id="h1WinnerTable"></div>
+
+                    <h3 style="margin-top: 20px;">Total Goals</h3>
+                    <div class="table-wrapper" id="h1TotalTable"></div>
+
+                    <h3 style="margin-top: 20px;">Both Teams To Score</h3>
+                    <div class="table-wrapper" id="h1BttsTable"></div>
+
+                    <h3 style="margin-top: 20px;">Draw No Bet</h3>
+                    <div class="table-wrapper" id="h1DnbTable"></div>
+
+                    <h3 style="margin-top: 20px;">Home Team Total</h3>
+                    <div class="table-wrapper" id="h1HomeTeamTable"></div>
+
+                    <h3 style="margin-top: 20px;">Away Team Total</h3>
+                    <div class="table-wrapper" id="h1AwayTeamTable"></div>
+                </div>
+            </div>
+
+            <!-- SECOND HALF MARKETS -->
+            <div class="card hidden" id="secondHalfCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('secondHalfCard')">
+                    <h2>Second Half Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="margin-top: 0;">Winner</h3>
+                    <div class="table-wrapper" id="h2WinnerTable"></div>
+
+                    <h3 style="margin-top: 20px;">Total Goals</h3>
+                    <div class="table-wrapper" id="h2TotalTable"></div>
+
+                    <h3 style="margin-top: 20px;">Both Teams To Score</h3>
+                    <div class="table-wrapper" id="h2BttsTable"></div>
+
+                    <h3 style="margin-top: 20px;">Draw No Bet</h3>
+                    <div class="table-wrapper" id="h2DnbTable"></div>
+
+                    <h3 style="margin-top: 20px;">Home Team Total</h3>
+                    <div class="table-wrapper" id="h2HomeTeamTable"></div>
+
+                    <h3 style="margin-top: 20px;">Away Team Total</h3>
+                    <div class="table-wrapper" id="h2AwayTeamTable"></div>
+                </div>
+            </div>
+
+            <!-- BOTH TEAMS TO SCORE (FULL TIME) -->
+            <div class="card hidden" id="bttsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('bttsCard')">
+                    <h2>Both Teams To Score</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="bttsTable"></div>
+                </div>
+            </div>
+
+            <!-- DOUBLE CHANCE -->
+            <div class="card hidden" id="doubleChanceCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('doubleChanceCard')">
+                    <h2>Double Chance</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="doubleChanceTable"></div>
+                </div>
+            </div>
+
+            <!-- DRAW NO BET (FULL TIME) -->
+            <div class="card hidden" id="dnbCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('dnbCard')">
+                    <h2>Draw No Bet</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="dnbTable"></div>
+                </div>
+            </div>
+
+            <!-- TEAM TOTALS -->
+            <div class="card hidden" id="teamTotalsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('teamTotalsCard')">
+                    <h2>Team Totals</h2>
+                </div>
+                <div class="card-content">
+                    <h3 style="margin-top: 0;">Home Team Total</h3>
+                    <div class="table-wrapper" id="homeTeamTotalTable"></div>
+
+                    <h3 style="margin-top: 20px;">Away Team Total</h3>
+                    <div class="table-wrapper" id="awayTeamTotalTable"></div>
+                </div>
+            </div>
+
+            <!-- EXACT GOALS -->
+            <div class="card hidden" id="exactGoalsCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('exactGoalsCard')">
+                    <h2>Exact Goals</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="exactGoalsTable"></div>
+                </div>
+            </div>
+
+            <!-- COMBO BETS -->
+            <div class="card hidden" id="comboCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('comboCard')">
+                    <h2>Combo Bets (1X2 & Total)</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="comboTable"></div>
+                </div>
+            </div>
+
+            <!-- GOAL RANGES -->
+            <div class="card hidden" id="goalRangesCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('goalRangesCard')">
+                    <h2>Goal Ranges</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper" id="goalRangesTable"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="bandy_model.js"></script>
+</body>
+
+</html>
