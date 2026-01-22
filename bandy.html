@@ -54,10 +54,10 @@
                 </div>
             </div>
 
-            <!-- 3. TOTAL GOALS -->
+            <!-- 3. TOTAL GOALS (OPTIONAL) -->
             <div class="card" id="totalGoalsInputCard" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('totalGoalsInputCard')">
-                    <h2>3. Total Goals</h2>
+                    <h2>3. Total Goals (Optional)</h2>
                     <span id="totalGoalsMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
                 </div>
                 <div class="card-content">
@@ -72,6 +72,9 @@
                     <div class="input-group">
                         <label id="underLabel">Under</label>
                         <input type="number" id="underOdds" step="0.01" placeholder="1.90">
+                    </div>
+                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 10px; line-height: 1.3;">
+                        <strong>Note:</strong> If not available, model will calculate using only match winner odds.
                     </div>
                 </div>
             </div>

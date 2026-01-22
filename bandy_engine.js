@@ -218,13 +218,18 @@ export class BandyEngine {
     /**
      * Solve for optimal lambdas using gradient descent
      * Fits lambdas to match target probabilities from market odds
+     * @param {number} targetHomeWin - Target probability for home win
+     * @param {number} targetDraw - Target probability for draw
+     * @param {number} targetOver - Target probability for over (optional)
+     * @param {number} totalLine - Total goals line (optional, defaults to 6.5)
      */
-    solveLambdas(targetHomeWin, targetDraw, targetOver, totalLine) {
+    solveLambdas(targetHomeWin, targetDraw, targetOver = null, totalLine = 6.5) {
         // Initialize lambdas - bandy typically has higher scoring than ice hockey
         let lambdaHome = totalLine / 2;
         let lambdaAway = totalLine / 2;
 
         let learningRate = 0.05;
+        const hasTotal = targetOver !== null;
 
         for (let iter = 0; iter < this.SOLVER_MAX_ITERATIONS; iter++) {
             // Generate matrix with current lambdas
@@ -232,15 +237,21 @@ export class BandyEngine {
 
             // Calculate model predictions
             const model1X2 = this.calc1X2FromMatrix(matrix);
-            const modelTotal = this.calcTotalFromMatrix(matrix, totalLine);
 
             // Calculate errors
             const errorHomeWin = targetHomeWin - model1X2.homeWin;
             const errorDraw = targetDraw - model1X2.draw;
-            const errorOver = targetOver - modelTotal.over;
 
-            // Total error
-            const totalError = Math.abs(errorHomeWin) + Math.abs(errorDraw) + Math.abs(errorOver);
+            let totalError = Math.abs(errorHomeWin) + Math.abs(errorDraw);
+            let totalAdjustment = 0;
+
+            // Only use total goals error if available
+            if (hasTotal) {
+                const modelTotal = this.calcTotalFromMatrix(matrix, totalLine);
+                const errorOver = targetOver - modelTotal.over;
+                totalError += Math.abs(errorOver);
+                totalAdjustment = errorOver * learningRate;
+            }
 
             // Check convergence
             if (totalError < this.SOLVER_THRESHOLD) {
@@ -249,7 +260,6 @@ export class BandyEngine {
 
             // Adjust lambdas based on errors
             const homeAdjustment = errorHomeWin * learningRate * 2;
-            const totalAdjustment = errorOver * learningRate;
 
             lambdaHome += homeAdjustment + totalAdjustment;
             lambdaAway -= homeAdjustment * 0.5;
@@ -272,25 +282,33 @@ export class BandyEngine {
 
     /**
      * Generate all markets from input odds
+     * totalLine, overOdds, and underOdds are optional
      */
     generateAllMarkets(inputs) {
         const {
             homeOdds,
             drawOdds,
             awayOdds,
-            totalLine,
+            totalLine = 6.5,
             overOdds,
             underOdds
         } = inputs;
 
         // Remove vig to get fair probabilities
         const fair1X2 = this.removeVig3Way(homeOdds, drawOdds, awayOdds);
-        const fairOU = this.removeVig2Way(overOdds, underOdds);
 
         const targetHomeWin = fair1X2[0];
         const targetDraw = fair1X2[1];
         const targetAwayWin = fair1X2[2];
-        const targetOver = fairOU[0];
+
+        // Check if total goals odds are available
+        const hasTotalGoals = overOdds && underOdds;
+        let targetOver = null;
+
+        if (hasTotalGoals) {
+            const fairOU = this.removeVig2Way(overOdds, underOdds);
+            targetOver = fairOU[0];
+        }
 
         // Solve for lambdas
         const lambdas = this.solveLambdas(targetHomeWin, targetDraw, targetOver, totalLine);

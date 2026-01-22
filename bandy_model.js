@@ -27,28 +27,39 @@ window.runModel = function () {
         const overOdds = parseFloat(document.getElementById('overOdds').value);
         const underOdds = parseFloat(document.getElementById('underOdds').value);
 
-        // Validate inputs
-        if ([homeOdds, drawOdds, awayOdds, totalLine, overOdds, underOdds].some(isNaN)) {
-            console.log('Waiting for all inputs...');
+        // Validate required inputs (1X2 odds)
+        if ([homeOdds, drawOdds, awayOdds].some(isNaN)) {
+            console.log('Waiting for match winner odds...');
             return;
         }
 
-        // Update dynamic labels
-        document.getElementById('overLabel').textContent = `Over ${totalLine}`;
-        document.getElementById('underLabel').textContent = `Under ${totalLine}`;
+        // Check if total goals is available
+        const hasTotalGoals = !isNaN(totalLine) && !isNaN(overOdds) && !isNaN(underOdds);
+
+        // Update dynamic labels if total goals is present
+        if (hasTotalGoals) {
+            document.getElementById('overLabel').textContent = `Over ${totalLine}`;
+            document.getElementById('underLabel').textContent = `Under ${totalLine}`;
+        }
 
         // Calculate margins
-        displayMargins(homeOdds, drawOdds, awayOdds, overOdds, underOdds);
+        displayMargins(homeOdds, drawOdds, awayOdds, hasTotalGoals ? overOdds : null, hasTotalGoals ? underOdds : null);
 
         // Generate all markets
-        const markets = engine.generateAllMarkets({
+        const marketInputs = {
             homeOdds,
             drawOdds,
-            awayOdds,
-            totalLine,
-            overOdds,
-            underOdds
-        });
+            awayOdds
+        };
+
+        // Add total goals if available
+        if (hasTotalGoals) {
+            marketInputs.totalLine = totalLine;
+            marketInputs.overOdds = overOdds;
+            marketInputs.underOdds = underOdds;
+        }
+
+        const markets = engine.generateAllMarkets(marketInputs);
 
         // Display all results
         displayExpectedTotal(markets.expectedTotal, markets.lambdas);
@@ -83,12 +94,17 @@ function displayMargins(homeOdds, drawOdds, awayOdds, overOdds, underOdds) {
         marginEl.style.color = margin1X2 < 5 ? '#4ade80' : (margin1X2 < 8 ? '#facc15' : '#f87171');
     }
 
-    // Total Goals Margin
-    const marginTotal = ((1 / overOdds + 1 / underOdds) - 1) * 100;
+    // Total Goals Margin (only if available)
     const totalMarginEl = document.getElementById('totalGoalsMargin');
     if (totalMarginEl) {
-        totalMarginEl.textContent = `Margin: ${marginTotal.toFixed(2)}%`;
-        totalMarginEl.style.color = marginTotal < 5 ? '#4ade80' : (marginTotal < 8 ? '#facc15' : '#f87171');
+        if (overOdds && underOdds) {
+            const marginTotal = ((1 / overOdds + 1 / underOdds) - 1) * 100;
+            totalMarginEl.textContent = `Margin: ${marginTotal.toFixed(2)}%`;
+            totalMarginEl.style.color = marginTotal < 5 ? '#4ade80' : (marginTotal < 8 ? '#facc15' : '#f87171');
+        } else {
+            totalMarginEl.textContent = 'Not available';
+            totalMarginEl.style.color = '#64748b';
+        }
     }
 }
 
@@ -703,16 +719,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners for manual input
     const inputs = ['homeOdds', 'drawOdds', 'awayOdds', 'totalGoalsLine', 'overOdds', 'underOdds'];
+    const requiredInputs = ['homeOdds', 'drawOdds', 'awayOdds'];
+
     inputs.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener('input', () => {
-                const allFilled = inputs.every(inputId => {
+                // Check if required inputs (1X2 odds) are filled
+                const requiredFilled = requiredInputs.every(inputId => {
                     const val = document.getElementById(inputId).value;
                     return val && !isNaN(parseFloat(val));
                 });
 
-                if (allFilled) {
+                // Trigger model if required inputs are filled
+                if (requiredFilled) {
                     window.runModel();
                 }
             });

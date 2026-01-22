@@ -170,7 +170,8 @@ function parseOdds(betOffers) {
         }
 
         // Total Goals (Over/Under)
-        if (offer.criterion && offer.criterion.label === 'Full Time' &&
+        if (offer.criterion &&
+            (offer.criterion.label === 'Total Goals' || offer.criterion.englishLabel === 'Total Goals') &&
             offer.betOfferType && offer.betOfferType.name === 'Over/Under') {
             // Get the line from the first outcome
             if (offer.outcomes && offer.outcomes.length > 0) {
