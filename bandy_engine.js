@@ -405,8 +405,8 @@ export class BandyEngine {
         const result1X2 = this.calc1X2FromMatrix(matrix);
         const btts = this.calcBTTS(matrix);
 
-        // Half totals - central line is half of full-time total, ±1
-        const halfCentral = totalLine / 2;
+        // Half totals - central line is half of full-time total, rounded to .5
+        const halfCentral = Math.round((totalLine / 2) * 2) / 2;
         const totals = [];
         for (const line of [halfCentral - 1, halfCentral, halfCentral + 1]) {
             const result = this.calcTotalFromMatrix(matrix, line);
@@ -414,34 +414,41 @@ export class BandyEngine {
         }
 
         // Half team totals - based on half lambdas, ±0.5
-        const homeCentral = Math.round(lambdaHome * 2) / 2;
-        const awayCentral = Math.round(lambdaAway * 2) / 2;
+        // Always round to X.5 value (never whole numbers)
+        const homeCentral = Math.round(lambdaHome - 0.5) + 0.5;
+        const awayCentral = Math.round(lambdaAway - 0.5) + 0.5;
 
         const teamTotals = {
             home: [],
             away: []
         };
 
-        for (const line of [homeCentral - 0.5, homeCentral, homeCentral + 0.5]) {
+        for (const line of [homeCentral - 1, homeCentral, homeCentral + 1]) {
             const homeResult = this.calcTeamTotal(matrix, line, true);
             teamTotals.home.push({ line, over: homeResult.over, under: homeResult.under });
         }
 
-        for (const line of [awayCentral - 0.5, awayCentral, awayCentral + 0.5]) {
+        for (const line of [awayCentral - 1, awayCentral, awayCentral + 1]) {
             const awayResult = this.calcTeamTotal(matrix, line, false);
             teamTotals.away.push({ line, over: awayResult.over, under: awayResult.under });
         }
 
-        // Asian Handicap - one line based on difference
-        const lambdaDiff = lambdaHome - lambdaAway;
-        let handicapLine = 0;
+        // Asian Handicap - find the most balanced line (closest to 50/50 odds)
+        let bestHandicapLine = 0;
+        let bestDiff = 1.0; // Start with max possible difference from 0.5
 
-        // Round to nearest 0.5
-        if (Math.abs(lambdaDiff) > 0.5) {
-            handicapLine = Math.round(lambdaDiff * 2) / 2;
+        // Test lines from -3 to +3 in 0.5 increments
+        for (let testLine = -3; testLine <= 3; testLine += 0.5) {
+            const testResult = this.calcHandicap(matrix, testLine);
+            const diff = Math.abs(testResult.homeCovers - 0.5);
+
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bestHandicapLine = testLine;
+            }
         }
 
-        const handicap = this.calcHandicap(matrix, handicapLine);
+        const handicap = this.calcHandicap(matrix, bestHandicapLine);
 
         // Draw No Bet
         const dnb = {
@@ -457,7 +464,7 @@ export class BandyEngine {
             dnb,
             teamTotals,
             handicap: {
-                line: handicapLine,
+                line: bestHandicapLine,
                 homeCovers: handicap.homeCovers,
                 awayCovers: handicap.awayCovers
             }
@@ -510,9 +517,9 @@ export class BandyEngine {
     }
 
     generateTeamTotals(matrix, lambdaHome, lambdaAway) {
-        // Central line is based on lambda (round to nearest 0.5)
-        const homeCentral = Math.round(lambdaHome * 2) / 2;
-        const awayCentral = Math.round(lambdaAway * 2) / 2;
+        // Central line is based on lambda (always round to X.5 value)
+        const homeCentral = Math.round(lambdaHome - 0.5) + 0.5;
+        const awayCentral = Math.round(lambdaAway - 0.5) + 0.5;
 
         // Generate lines: central -1, 0, +1
         const homeLines = [homeCentral - 1, homeCentral, homeCentral + 1];
