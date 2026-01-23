@@ -314,12 +314,12 @@ class FootballModel extends BaseModel {
     }
 
     let htftProbs = { "11": 0, "1X": 0, "12": 0, "X1": 0, "XX": 0, "X2": 0, "21": 0, "2X": 0, "22": 0 };
-    for (let h1 = 0; h1 <= 7; h1++) { // Optimize nesting limit, 7 is usually safe for HT
-        for (let a1 = 0; a1 <= 7; a1++) {
+    for (let h1 = 0; h1 <= 20; h1++) {
+        for (let a1 = 0; a1 <= 20; a1++) {
             let p1 = matrixFH[h1][a1];
             let outcome1 = getOutcome(h1, a1);
-            for (let h2 = 0; h2 <= 7; h2++) {
-                for (let a2 = 0; a2 <= 7; a2++) {
+            for (let h2 = 0; h2 <= 20; h2++) {
+                for (let a2 = 0; a2 <= 20; a2++) {
                     let p2 = matrixSH[h2][a2];
                     let outcome2 = getOutcome(h1 + h2, a1 + a2);
                     htftProbs[outcome1 + outcome2] += (p1 * p2);
