@@ -713,24 +713,12 @@
         </div>
     </div>
 
-    <script>
-        function toggleCard(id) {
-            document.getElementById(id).classList.toggle('collapsed');
-        }
+    <script type="module">
+        import { toggleCard, syncRatio, toggleAllCards } from './js/ui_utils.js';
 
-        function syncRatio(changed) {
-            const r1H = document.getElementById('ratio1H');
-            const r2H = document.getElementById('ratio2H');
-            if (changed === '1H') {
-                let val = Math.max(30, Math.min(70, parseInt(r1H.value) || 45));
-                r1H.value = val;
-                r2H.value = 100 - val;
-            } else {
-                let val = Math.max(30, Math.min(70, parseInt(r2H.value) || 55));
-                r2H.value = val;
-                r1H.value = 100 - val;
-            }
-        }
+        window.toggleCard = toggleCard;
+        window.syncRatio = syncRatio;
+        window.toggleAllCards = toggleAllCards;
     </script>
     <script type="module" src="model.js"></script>
 </body>

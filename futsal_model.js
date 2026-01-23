@@ -4,20 +4,14 @@
 import * as FutsalAPI from './js/futsal_api.js';
 import { FutsalEngine } from './futsal_engine.js';
 import { probToOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
-const engine = new FutsalEngine();
+class FutsalModel extends BaseModel {
+    constructor() {
+        super(new FutsalEngine());
+    }
 
-// UI Helper - Toggle card collapse/expand
-function toggleCard(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('collapsed');
-}
-
-// Expose to window for HTML onclick handlers
-window.toggleCard = toggleCard;
-
-// Main model execution
-window.runModel = function () {
+    runModel() {
     try {
         // Get inputs
         const homeOdds = parseFloat(document.getElementById('homeOdds').value);
@@ -82,7 +76,11 @@ window.runModel = function () {
     } catch (e) {
         console.error("Model Error:", e);
     }
-};
+    }
+}
+
+const futsalModel = new FutsalModel();
+window.runModel = () => futsalModel.runModel();
 
 // Display functions
 function displayMargins(homeOdds, drawOdds, awayOdds, overOdds, underOdds) {
