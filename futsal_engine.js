@@ -408,30 +408,30 @@ export class FutsalEngine {
         // Half totals - central line is half of full-time total, rounded to .5
         const halfCentral = Math.round((totalLine / 2) * 2) / 2;
         const totals = [];
-        for (const line of [halfCentral - 1, halfCentral, halfCentral + 1]) {
+
+        // Generate lines ensuring they're all .5 values and non-negative
+        const totalLines = [halfCentral - 1, halfCentral, halfCentral + 1].filter(line => line >= 0.5);
+        for (const line of totalLines) {
             const result = this.calcTotalFromMatrix(matrix, line);
             totals.push({ line, over: result.over, under: result.under });
         }
 
-        // Half team totals - based on half lambdas, ±0.5
-        // Always round to X.5 value (never whole numbers)
-        const homeCentral = Math.round(lambdaHome - 0.5) + 0.5;
-        const awayCentral = Math.round(lambdaAway - 0.5) + 0.5;
+        // Half team totals - show only the most balanced line
+        // Always round to X.5 value (never whole numbers) and ensure non-negative
+        const homeCentral = Math.max(0.5, Math.round(lambdaHome - 0.5) + 0.5);
+        const awayCentral = Math.max(0.5, Math.round(lambdaAway - 0.5) + 0.5);
 
         const teamTotals = {
             home: [],
             away: []
         };
 
-        for (const line of [homeCentral - 1, homeCentral, homeCentral + 1]) {
-            const homeResult = this.calcTeamTotal(matrix, line, true);
-            teamTotals.home.push({ line, over: homeResult.over, under: homeResult.under });
-        }
+        // For first half, show only one most balanced line
+        const homeResult = this.calcTeamTotal(matrix, homeCentral, true);
+        teamTotals.home.push({ line: homeCentral, over: homeResult.over, under: homeResult.under });
 
-        for (const line of [awayCentral - 1, awayCentral, awayCentral + 1]) {
-            const awayResult = this.calcTeamTotal(matrix, line, false);
-            teamTotals.away.push({ line, over: awayResult.over, under: awayResult.under });
-        }
+        const awayResult = this.calcTeamTotal(matrix, awayCentral, false);
+        teamTotals.away.push({ line: awayCentral, over: awayResult.over, under: awayResult.under });
 
         // Asian Handicap - find the most balanced line (closest to 50/50 odds)
         let bestHandicapLine = 0;
@@ -517,13 +517,13 @@ export class FutsalEngine {
     }
 
     generateTeamTotals(matrix, lambdaHome, lambdaAway) {
-        // Central line is based on lambda (always round to X.5 value)
-        const homeCentral = Math.round(lambdaHome - 0.5) + 0.5;
-        const awayCentral = Math.round(lambdaAway - 0.5) + 0.5;
+        // Central line is based on lambda (always round to X.5 value) and ensure non-negative
+        const homeCentral = Math.max(0.5, Math.round(lambdaHome - 0.5) + 0.5);
+        const awayCentral = Math.max(0.5, Math.round(lambdaAway - 0.5) + 0.5);
 
-        // Generate lines: central -1, 0, +1
-        const homeLines = [homeCentral - 1, homeCentral, homeCentral + 1];
-        const awayLines = [awayCentral - 1, awayCentral, awayCentral + 1];
+        // Generate lines: central -1, 0, +1 (filter out negative values)
+        const homeLines = [homeCentral - 1, homeCentral, homeCentral + 1].filter(line => line >= 0.5);
+        const awayLines = [awayCentral - 1, awayCentral, awayCentral + 1].filter(line => line >= 0.5);
 
         const home = [];
         const away = [];
