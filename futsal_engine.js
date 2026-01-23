@@ -405,8 +405,8 @@ export class FutsalEngine {
         const result1X2 = this.calc1X2FromMatrix(matrix);
         const btts = this.calcBTTS(matrix);
 
-        // Half totals - central line is half of full-time total, rounded to .5
-        const halfCentral = Math.round((totalLine / 2) * 2) / 2;
+        // Half totals - central line is half of full-time total, always use .5 values
+        const halfCentral = Math.floor(totalLine / 2) + 0.5;
         const totals = [];
 
         // Generate lines ensuring they're all .5 values and non-negative
