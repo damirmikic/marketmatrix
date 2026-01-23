@@ -4,6 +4,7 @@
  */
 
 import { TennisEngine } from './tennis_engine.js';
+import assert from 'assert';
 
 const engine = new TennisEngine();
 
@@ -11,87 +12,57 @@ console.log('========================================');
 console.log('Tennis Engine Test Suite');
 console.log('========================================\n');
 
-// Test Case 1: Balanced match (Alcaraz vs Sinner)
-console.log('TEST 1: Balanced Match');
-console.log('Scenario: Alcaraz (1.50) vs Sinner (2.50)');
-console.log('Expected: Tight match, Total 22.5 games');
-console.log('----------------------------------------');
+function runTest(testName, odds1, odds2, totalGames, surface = 'Hard') {
+    console.log(`TEST: ${testName}`);
+    console.log(`Scenario: Player 1 (${odds1}) vs Player 2 (${odds2})`);
+    console.log(`Expected: Total ${totalGames} games on ${surface}`);
+    console.log('----------------------------------------');
 
-const test1 = engine.generatePrices(1.50, 2.50, 22.5);
+    try {
+        // 1. De-vig
+        const fairParams = engine.removeVigorish(odds1, odds2);
+        assert(fairParams.p1 > 0 && fairParams.p2 > 0, "Fair probabilities should be positive");
+        assert(Math.abs(fairParams.p1 + fairParams.p2 - 1.0) < 1e-6, "Fair probabilities should sum to 1");
+        console.log(`  Fair Probs: P1=${fairParams.p1.toFixed(3)}, P2=${fairParams.p2.toFixed(3)}`);
 
-console.log('\nCalibration Results:');
-console.log('  P1 Hold Rate:', test1.calibration.p1HoldRate);
-console.log('  P2 Hold Rate:', test1.calibration.p2HoldRate);
-console.log('  Simulated Win Prob:', test1.calibration.simulatedWinProb);
-console.log('  Simulated Total Games:', test1.calibration.simulatedTotalGames);
+        // 2. Solve
+        const result = engine.solveParameters(fairParams.p1, totalGames, surface);
+        assert(result.pa > 0 && result.pb > 0, "Hold probabilities should be positive");
+        console.log(`  Solved Hold Probs: PA=${result.pa.toFixed(3)}, PB=${result.pb.toFixed(3)}`);
+        console.log(`  Calibrated Win Prob: ${(result.calibration.pMatch * 100).toFixed(1)}%`);
+        console.log(`  Calibrated Total: ${result.calibration.expTotal.toFixed(2)}`);
 
-console.log('\nSet Betting:');
-console.log('  2-0:', test1.markets.setBetting['2-0'].odds, '(' + test1.markets.setBetting['2-0'].prob + ')');
-console.log('  2-1:', test1.markets.setBetting['2-1'].odds, '(' + test1.markets.setBetting['2-1'].prob + ')');
-console.log('  0-2:', test1.markets.setBetting['0-2'].odds, '(' + test1.markets.setBetting['0-2'].prob + ')');
-console.log('  1-2:', test1.markets.setBetting['1-2'].odds, '(' + test1.markets.setBetting['1-2'].prob + ')');
+        // 3. Derivatives
+        const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration);
+        assert(derivatives.setBetting, "Set betting market should be generated");
+        assert(derivatives.gameHandicap, "Game handicap market should be generated");
+        console.log('  Generated derivatives for set betting and game handicap.');
 
-console.log('\nTotal Games (22.5):');
-const total22_5 = test1.markets.totalGames[22.5];
-if (total22_5) {
-    console.log('  Over:', total22_5.over.odds, '(' + total22_5.over.prob + ')');
-    console.log('  Under:', total22_5.under.odds, '(' + total22_5.under.prob + ')');
+        console.log('  Test Passed!\n');
+        return true;
+    } catch (e) {
+        console.error(`  Test Failed: ${e.message}`);
+        console.error(e.stack);
+        return false;
+    }
 }
 
-console.log('\n========================================\n');
+let success = 0;
+let failed = 0;
 
-// Test Case 2: Serve-bot match (Isner vs Opelka)
-console.log('TEST 2: Serve-Bot Match');
-console.log('Scenario: Isner (1.50) vs Opelka (2.50)');
-console.log('Expected: High service holds, Total 25.5 games');
-console.log('----------------------------------------');
+runTest('Balanced Match', 1.50, 2.50, 22.5, 'Hard') ? success++ : failed++;
+runTest('Serve-Bot Match', 1.50, 2.50, 25.5, 'Grass') ? success++ : failed++;
+runTest('One-Sided Match', 1.20, 4.50, 20.5, 'Clay') ? success++ : failed++;
 
-const test2 = engine.generatePrices(1.50, 2.50, 25.5);
 
-console.log('\nCalibration Results:');
-console.log('  P1 Hold Rate:', test2.calibration.p1HoldRate);
-console.log('  P2 Hold Rate:', test2.calibration.p2HoldRate);
-console.log('  Simulated Win Prob:', test2.calibration.simulatedWinProb);
-console.log('  Simulated Total Games:', test2.calibration.simulatedTotalGames);
-
-console.log('\nSet Betting:');
-console.log('  2-0:', test2.markets.setBetting['2-0'].odds, '(' + test2.markets.setBetting['2-0'].prob + ')');
-console.log('  2-1:', test2.markets.setBetting['2-1'].odds, '(' + test2.markets.setBetting['2-1'].prob + ')');
-
-console.log('\nTotal Games (25.5):');
-const total25_5 = test2.markets.totalGames[25.5];
-if (total25_5) {
-    console.log('  Over:', total25_5.over.odds, '(' + total25_5.over.prob + ')');
-    console.log('  Under:', total25_5.under.odds, '(' + total25_5.under.prob + ')');
-}
-
-console.log('\n========================================\n');
-
-// Test Case 3: One-sided match
-console.log('TEST 3: One-Sided Match');
-console.log('Scenario: Djokovic (1.20) vs Qualifier (4.50)');
-console.log('Expected: Dominant player, Total 20.5 games');
-console.log('----------------------------------------');
-
-const test3 = engine.generatePrices(1.20, 4.50, 20.5);
-
-console.log('\nCalibration Results:');
-console.log('  P1 Hold Rate:', test3.calibration.p1HoldRate);
-console.log('  P2 Hold Rate:', test3.calibration.p2HoldRate);
-console.log('  Simulated Win Prob:', test3.calibration.simulatedWinProb);
-console.log('  Simulated Total Games:', test3.calibration.simulatedTotalGames);
-
-console.log('\nSet Betting:');
-console.log('  2-0:', test3.markets.setBetting['2-0'].odds, '(' + test3.markets.setBetting['2-0'].prob + ')');
-console.log('  2-1:', test3.markets.setBetting['2-1'].odds, '(' + test3.markets.setBetting['2-1'].prob + ')');
-
-console.log('\nSet Handicap (-1.5):');
-const setHcp = test3.markets.setHandicaps[-1.5];
-if (setHcp) {
-    console.log('  Player 1:', setHcp.player1.odds, '(' + setHcp.player1.prob + ')');
-    console.log('  Player 2:', setHcp.player2.odds, '(' + setHcp.player2.prob + ')');
-}
-
-console.log('\n========================================');
-console.log('All tests completed successfully!');
 console.log('========================================');
+if (failed === 0) {
+    console.log(`All ${success} tests completed successfully!`);
+} else {
+    console.log(`${success} tests passed, ${failed} tests failed.`);
+}
+console.log('========================================');
+
+if (failed > 0) {
+    process.exit(1); // Exit with error code if any test fails
+}

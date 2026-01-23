@@ -1,6 +1,5 @@
 import { solveShin, probToOdds } from './js/core/math_utils.js';
 import { solveParameters, calculateMatrix } from './js/math.js';
-
 import {
     populateHalfDetailed,
     populateTeamMarkets,
@@ -12,7 +11,6 @@ import {
     calculateTeamGoalCombos,
     get1X2Probs
 } from './js/markets.js';
-
 import {
     initApiLoader,
     handleCountryChange,
@@ -23,34 +21,13 @@ import {
 
 import { updateBuilderMatrices } from './js/bet_builder.js';
 
-// --- UI Helpers ---
-function toggleCard(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('collapsed');
-}
-
-function toggleAllCards() {
-    const btn = document.getElementById('toggleAllBtn');
-    const cards = document.querySelectorAll('.card:not(.hidden)');
-    const isCollapsing = btn.textContent.includes('Collapse');
-
-    cards.forEach(card => {
-        if (isCollapsing) {
-            card.classList.add('collapsed');
-        } else {
-            card.classList.remove('collapsed');
-        }
-    });
-
-    btn.textContent = isCollapsing ? "Expand All" : "Collapse All";
-}
-
-// Make globally available for HTML onclick attributes
-window.toggleCard = toggleCard;
-window.toggleAllCards = toggleAllCards;
-
+import { BaseModel } from './js/base_model.js';
 // --- Main Controller ---
-function runModel() {
+class FootballModel extends BaseModel {
+    constructor() {
+        super();
+    }
+    runModel() {
     // Get Inputs
     const h = parseFloat(document.getElementById('homeOdds').value);
     const d = parseFloat(document.getElementById('drawOdds').value);
@@ -497,11 +474,11 @@ function runModel() {
 
     // Update Bet Builder
     updateBuilderMatrices(matrixFH, matrixSH);
+    }
 }
 
-// Make global
-window.runModel = runModel;
-
+const footballModel = new FootballModel();
+window.runModel = () => footballModel.runModel();
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     // Inject API Styles

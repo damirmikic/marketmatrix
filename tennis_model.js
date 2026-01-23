@@ -2,25 +2,18 @@ import * as TennisAPI from './js/tennis_api.js';
 import { TennisMarkovEngine } from './js/tennis_markov_engine.js';
 import { tennisEloService } from './js/tennis_elo_service.js';
 import { tennisWtaEloService } from './js/tennis_wta_elo_service.js';
+import { BaseModel } from './js/base_model.js';
 
-const engine = new TennisMarkovEngine();
+class TennisModel extends BaseModel {
+    constructor() {
+        super(new TennisMarkovEngine());
+        this.currentPlayer1 = null;
+        this.currentPlayer2 = null;
+        this.currentSurface = 'Hard';
+        this.currentTour = 'ATP'; // Default to ATP
+    }
 
-// Store current match players for Elo lookup
-let currentPlayer1 = null;
-let currentPlayer2 = null;
-let currentSurface = 'Hard';
-let currentTour = 'ATP'; // Default to ATP
-
-// UI Helper - Toggle card collapse/expand
-function toggleCard(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('collapsed');
-}
-
-// Expose to window for HTML onclick handlers
-window.toggleCard = toggleCard;
-
-window.runModel = function (surface = 'Hard') {
+    runModel(surface = 'Hard') {
     try {
         const odds1 = parseFloat(document.getElementById('player1Odds').value);
         const odds2 = parseFloat(document.getElementById('player2Odds').value);
@@ -374,3 +367,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inputs = document.querySelectorAll('input');
     inputs.forEach(i => i.addEventListener('input', () => window.runModel(document.getElementById('surfaceBadge').textContent)));
 });
+
+const tennisModel = new TennisModel();
+window.runModel = (surface) => tennisModel.runModel(surface);
+window.setCurrentPlayers = (p1, p2, surface, tour) => {
+    tennisModel.currentPlayer1 = p1;
+    tennisModel.currentPlayer2 = p2;
+    tennisModel.currentSurface = surface;
+    tennisModel.currentTour = tour;
+};
