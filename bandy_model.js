@@ -73,7 +73,7 @@ window.runModel = function () {
         displayDrawNoBet(markets.drawNoBet);
         displayTeamTotals(markets.teamTotals);
         displayExactGoals(markets.exactGoals);
-        displayComboBets(markets.comboBets);
+        displayComboBets(markets.comboBets, totalLine);
         displayGoalRanges(markets.goalRanges);
 
         // Show all result cards
@@ -683,7 +683,7 @@ function displayExactGoals(exactGoals) {
     container.innerHTML = html;
 }
 
-function displayComboBets(comboBets) {
+function displayComboBets(comboBets, totalLine) {
     const container = document.getElementById('comboTable');
     if (!container) return;
 
@@ -703,9 +703,11 @@ function displayComboBets(comboBets) {
     order.forEach(outcome => {
         const combo = comboBets.find(c => c.outcome === outcome);
         if (combo) {
+            // Add total line to Over/Under labels
+            const displayOutcome = combo.outcome.replace('Over', `Over ${totalLine.toFixed(1)}`).replace('Under', `Under ${totalLine.toFixed(1)}`);
             html += `
                 <tr>
-                    <td class="line-col">${combo.outcome}</td>
+                    <td class="line-col">${displayOutcome}</td>
                     <td class="num-col" style="color: #10b981; font-weight: 600;">${(combo.probability * 100).toFixed(1)}%</td>
                     <td class="num-col" style="color: #f59e0b; font-weight: 600;">${probToOdds(combo.probability)}</td>
                 </tr>
