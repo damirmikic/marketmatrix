@@ -8,9 +8,9 @@ let tennisData = {
 
 let runModelCallback = null;
 
-// API endpoints
-const GROUP_URL = 'https://eu-offering-api.kambicdn.com/offering/v2018/paf11lv/betoffer/group/1000093193.json?includeParticipants=true&onlyMain=false&type=2&market=LV&lang=en_GB&suppress_response_codes=true';
-const EVENT_URL_BASE = 'https://eu1.offering-api.kambicdn.com/offering/v2018/paf11lv/betoffer/event/';
+// API endpoints - Using Kambi API pattern
+const GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/tennis/all/all/all/competitions.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true';
+const EVENT_URL_BASE = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/';
 
 export function setRunModelCallback(callback) {
     runModelCallback = callback;
@@ -152,7 +152,7 @@ export function handleTournamentChange() {
 // Fetch detailed odds for a specific event
 async function fetchEventOdds(eventId) {
     try {
-        const url = `${EVENT_URL_BASE}${eventId}.json?lang=en_US&market=US&client_id=200&channel_id=7&includeParticipants=true`;
+        const url = `${EVENT_URL_BASE}${eventId}.json?lang=en_GB&market=GB&client_id=200&channel_id=7&includeParticipants=true`;
         const response = await fetch(url);
         const data = await response.json();
         return data;

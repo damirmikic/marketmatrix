@@ -34,3 +34,48 @@ export function toggleAllCards() {
 
     btn.textContent = isCollapsing ? "Expand All" : "Collapse All";
 }
+
+// Tab Navigation - Switch primary tabs
+export function switchTab(tabContainerId, tabName) {
+    const container = document.getElementById(tabContainerId);
+    if (!container) return;
+
+    // Update tab buttons
+    const tabBtns = container.querySelectorAll(':scope > .tab-nav > .tab-btn');
+    tabBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+
+    // Update tab panels
+    const tabPanels = container.querySelectorAll(':scope > .tab-panel');
+    tabPanels.forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.tab === tabName);
+    });
+
+    // Activate first sub-tab if exists
+    const activePanel = container.querySelector(`:scope > .tab-panel[data-tab="${tabName}"]`);
+    if (activePanel) {
+        const firstSubTab = activePanel.querySelector('.sub-tab-nav .sub-tab-btn');
+        if (firstSubTab && !activePanel.querySelector('.sub-tab-btn.active')) {
+            switchSubTab(activePanel.id, firstSubTab.dataset.subtab);
+        }
+    }
+}
+
+// Tab Navigation - Switch sub-tabs
+export function switchSubTab(panelId, subTabName) {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    // Update sub-tab buttons
+    const subTabBtns = panel.querySelectorAll('.sub-tab-nav .sub-tab-btn');
+    subTabBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.subtab === subTabName);
+    });
+
+    // Update sub-tab content
+    const subTabContents = panel.querySelectorAll('.sub-tab-content');
+    subTabContents.forEach(content => {
+        content.classList.toggle('active', content.dataset.subtab === subTabName);
+    });
+}
