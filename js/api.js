@@ -11,60 +11,69 @@ let footballData = {
 let runModelCallback = null;
 
 // API endpoints - Using Kambi API pattern
-const GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/football/all/all/all/competitions.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true';
+const GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/group.json?channel_id=7&client_id=200&lang=en_GB&market=GB';
 const EVENT_URL_BASE = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/';
+const EVENTS_BY_GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/football';
 
 export function setRunModelCallback(callback) {
     runModelCallback = callback;
 }
 
-// Build country and league hierarchy from events
-function buildHierarchy(events) {
+// Build country and league hierarchy from group.json response
+function buildHierarchyFromGroups(groupData) {
     const countryMap = new Map();
     const leagueMap = new Map();
 
-    events.forEach(event => {
-        if (!event.path || event.path.length < 3) return;
+    // Find Football group in the response
+    const footballGroup = groupData.group?.groups?.find(g => 
+        g.englishName === 'Football' || g.name === 'Football' || g.sport === 'FOOTBALL'
+    );
 
-        // Path structure: [Country, League, Tournament/Event]
-        const countryPath = event.path[0];
-        const leaguePath = event.path[1];
+    if (!footballGroup || !footballGroup.groups) {
+        console.error('Football group not found in API response');
+        return;
+    }
 
-        const countryName = countryPath.name;
-        const countryId = countryPath.id;
-        const leagueName = leaguePath.name;
-        const leagueId = leaguePath.id;
+    // Iterate through countries (first level under Football)
+    footballGroup.groups.forEach(countryGroup => {
+        const countryId = countryGroup.id;
+        const countryName = countryGroup.englishName || countryGroup.name;
 
-        // Add to country map
+        // Skip if no leagues under this country
+        if (!countryGroup.groups || countryGroup.groups.length === 0) return;
+
+        // Add country to map
         if (!countryMap.has(countryId)) {
             countryMap.set(countryId, {
                 name: countryName,
                 id: countryId,
+                boCount: countryGroup.boCount || 0,
                 leagues: []
             });
         }
 
-        // Add to league map under country
-        if (!leagueMap.has(leagueId)) {
-            leagueMap.set(leagueId, {
-                name: leagueName,
-                id: leagueId,
-                countryId: countryId,
-                events: []
-            });
-        }
+        // Iterate through leagues (second level under country)
+        countryGroup.groups.forEach(leagueGroup => {
+            // Only include groups that have sport: FOOTBALL (actual leagues)
+            if (leagueGroup.sport !== 'FOOTBALL') return;
 
-        leagueMap.get(leagueId).events.push({
-            id: event.id,
-            name: event.name,
-            homeName: event.homeName,
-            awayName: event.awayName,
-            start: event.start,
-            path: event.path
+            const leagueId = leagueGroup.id;
+            const leagueName = leagueGroup.englishName || leagueGroup.name;
+
+            if (!leagueMap.has(leagueId)) {
+                leagueMap.set(leagueId, {
+                    name: leagueName,
+                    id: leagueId,
+                    countryId: countryId,
+                    countryName: countryName,
+                    termKey: leagueGroup.termKey || '',
+                    eventCount: leagueGroup.eventCount || 0,
+                    boCount: leagueGroup.boCount || 0,
+                    sortOrder: leagueGroup.sortOrder || '999',
+                    events: []
+                });
+            }
         });
-
-        // Store full event data
-        footballData.eventMap[event.id] = event;
     });
 
     // Build country-league relationships
@@ -75,23 +84,42 @@ function buildHierarchy(events) {
         }
     });
 
-    // Convert to arrays and sort
+    // Sort leagues within each country by sortOrder, then by name
+    countryMap.forEach(country => {
+        country.leagues.sort((a, b) => {
+            const orderA = parseInt(a.sortOrder) || 999;
+            const orderB = parseInt(b.sortOrder) || 999;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name);
+        });
+    });
+
+    // Convert to arrays and sort countries by boCount (most popular first), then by name
     footballData.countries = Array.from(countryMap.values())
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(c => c.leagues.length > 0) // Only include countries with leagues
+        .sort((a, b) => {
+            // Sort by boCount descending (most popular first)
+            if (b.boCount !== a.boCount) return b.boCount - a.boCount;
+            return a.name.localeCompare(b.name);
+        });
 
     footballData.leagues = Array.from(leagueMap.values())
         .sort((a, b) => a.name.localeCompare(b.name));
+
+    console.log(`Loaded ${footballData.countries.length} countries with ${footballData.leagues.length} leagues`);
 }
 
-// Fetch football matches
+// Fetch football tournaments/leagues structure
 export async function initApiLoader() {
     try {
         const response = await fetch(GROUP_URL);
         const data = await response.json();
 
-        if (data.events && data.events.length > 0) {
-            buildHierarchy(data.events);
+        if (data.group) {
+            buildHierarchyFromGroups(data);
             populateCountrySelector();
+        } else {
+            console.error('Invalid API response structure');
         }
     } catch (error) {
         console.error('Error loading football data:', error);
@@ -108,7 +136,7 @@ function populateCountrySelector() {
     footballData.countries.forEach(country => {
         const option = document.createElement('option');
         option.value = country.id;
-        option.textContent = country.name;
+        option.textContent = `${country.name} (${country.leagues.length})`;
         selector.appendChild(option);
     });
 }
@@ -117,6 +145,11 @@ function populateCountrySelector() {
 export function handleCountryChange() {
     const countryId = document.getElementById('apiCountrySelect').value;
     const leagueSelect = document.getElementById('apiLeagueSelect');
+    const matchSelect = document.getElementById('apiMatchSelect');
+
+    // Reset match selector
+    matchSelect.innerHTML = '<option value="">Select competition</option>';
+    matchSelect.disabled = true;
 
     if (!countryId) {
         leagueSelect.innerHTML = '<option value="">Select country</option>';
@@ -136,16 +169,48 @@ export function handleCountryChange() {
     country.leagues.forEach(league => {
         const option = document.createElement('option');
         option.value = league.id;
-        option.textContent = league.name;
+        option.textContent = `${league.name} (${league.eventCount} events)`;
+        option.dataset.termKey = league.termKey;
+        option.dataset.countryName = country.name;
         leagueSelect.appendChild(option);
     });
 
     leagueSelect.disabled = false;
 }
 
+// Fetch events for a specific league
+async function fetchLeagueEvents(leagueId, termKey, countryName) {
+    try {
+        // Build the URL path for the league events
+        // Format: /listView/football/{country}/{league}/all/matches.json
+        const countrySlug = countryName.toLowerCase().replace(/\s+/g, '_');
+        const leagueSlug = termKey || 'all';
+        
+        const url = `${EVENTS_BY_GROUP_URL}/${countrySlug}/${leagueSlug}/all/matches.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.events && data.events.length > 0) {
+            return data.events;
+        }
+        
+        // Fallback: try using group ID directly
+        const fallbackUrl = `https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/group/${leagueId}.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true`;
+        const fallbackResponse = await fetch(fallbackUrl);
+        const fallbackData = await fallbackResponse.json();
+        
+        return fallbackData.events || [];
+    } catch (error) {
+        console.error('Error fetching league events:', error);
+        return [];
+    }
+}
+
 // Handle league selection
-export function handleLeagueChange() {
-    const leagueId = document.getElementById('apiLeagueSelect').value;
+export async function handleLeagueChange() {
+    const leagueSelect = document.getElementById('apiLeagueSelect');
+    const leagueId = leagueSelect.value;
     const matchSelect = document.getElementById('apiMatchSelect');
 
     if (!leagueId) {
@@ -154,8 +219,37 @@ export function handleLeagueChange() {
         return;
     }
 
+    // Get termKey and countryName from selected option
+    const selectedOption = leagueSelect.options[leagueSelect.selectedIndex];
+    const termKey = selectedOption.dataset.termKey;
+    const countryName = selectedOption.dataset.countryName;
+
+    // Show loading state
+    matchSelect.innerHTML = '<option value="">Loading matches...</option>';
+    matchSelect.disabled = true;
+
+    // Fetch events for this league
+    const events = await fetchLeagueEvents(leagueId, termKey, countryName);
+    
+    // Update league data with events
     const league = footballData.leagues.find(l => l.id == leagueId);
-    if (!league || !league.events || league.events.length === 0) {
+    if (league) {
+        league.events = events.map(event => ({
+            id: event.id,
+            name: event.name,
+            homeName: event.homeName,
+            awayName: event.awayName,
+            start: event.start,
+            path: event.path
+        }));
+
+        // Store full event data in eventMap
+        events.forEach(event => {
+            footballData.eventMap[event.id] = event;
+        });
+    }
+
+    if (!events || events.length === 0) {
         matchSelect.innerHTML = '<option value="">No matches available</option>';
         matchSelect.disabled = true;
         return;
@@ -163,10 +257,23 @@ export function handleLeagueChange() {
 
     matchSelect.innerHTML = '<option value="">Select Match...</option>';
 
-    league.events.forEach(event => {
+    // Sort events by start time
+    events.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    events.forEach(event => {
         const option = document.createElement('option');
         option.value = event.id;
-        option.textContent = `${event.homeName} vs ${event.awayName}`;
+        
+        // Format start time
+        const startDate = new Date(event.start);
+        const timeStr = startDate.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        option.textContent = `${event.homeName} vs ${event.awayName} (${timeStr})`;
         matchSelect.appendChild(option);
     });
 
