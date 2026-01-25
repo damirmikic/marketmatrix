@@ -86,12 +86,8 @@ class FootballModel extends BaseModel {
     document.getElementById('xgAway').textContent = params.mu.toFixed(3);
     document.getElementById('zipOmega').textContent = params.omega.toFixed(2);
 
-    // Show all hidden areas
-    [
-        'ftArea', 'fhArea', 'shArea', 'homeTeamArea', 'awayTeamArea',
-        'goalComboArea', 'drawComboArea', 'dcComboArea', 'htftComboArea',
-        'homeGoalComboArea', 'awayGoalComboArea', 'bttsComboArea', 'ftsComboArea', 'ahArea'
-    ].forEach(id => document.getElementById(id).classList.remove('hidden'));
+    // Show markets tab container
+    document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     // 3. Generate Matrices (Pass Omega)
     // Read half ratios from input (default 45/55 if unavailable)
