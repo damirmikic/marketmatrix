@@ -188,23 +188,87 @@ async function fetchLeagueEvents(leagueId, termKey, countryName) {
         
         const url = `${EVENTS_BY_GROUP_URL}/${countrySlug}/${leagueSlug}/all/matches.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true`;
         
+        console.log('Fetching matches from:', url);
+        
         const response = await fetch(url);
         const data = await response.json();
         
         if (data.events && data.events.length > 0) {
-            return data.events;
+            // Parse the nested event structure - events contain {event, betOffers}
+            return parseMatchesFromResponse(data.events);
         }
         
         // Fallback: try using group ID directly
         const fallbackUrl = `https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/group/${leagueId}.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true`;
+        console.log('Trying fallback URL:', fallbackUrl);
         const fallbackResponse = await fetch(fallbackUrl);
         const fallbackData = await fallbackResponse.json();
         
-        return fallbackData.events || [];
+        if (fallbackData.events && fallbackData.events.length > 0) {
+            return parseMatchesFromResponse(fallbackData.events);
+        }
+        
+        return [];
     } catch (error) {
         console.error('Error fetching league events:', error);
         return [];
     }
+}
+
+// Parse matches from API response - handles nested {event, betOffers} structure
+function parseMatchesFromResponse(eventsArray) {
+    return eventsArray.map(item => {
+        const event = item.event;
+        const betOffers = item.betOffers || [];
+        
+        // Extract 1X2 odds from betOffers (Full Time criterion)
+        let matchOdds = { home: null, draw: null, away: null };
+        let goalLine = { over: null, under: null, line: null };
+        
+        betOffers.forEach(offer => {
+            // Match (1X2) odds - criterion label "Full Time" or betOfferType name "Match"
+            if (offer.betOfferType && offer.betOfferType.name === 'Match') {
+                offer.outcomes.forEach(outcome => {
+                    if (outcome.type === 'OT_ONE') {
+                        matchOdds.home = outcome.odds / 1000;
+                    } else if (outcome.type === 'OT_CROSS') {
+                        matchOdds.draw = outcome.odds / 1000;
+                    } else if (outcome.type === 'OT_TWO') {
+                        matchOdds.away = outcome.odds / 1000;
+                    }
+                });
+            }
+            
+            // Over/Under odds - betOfferType name "Over/Under"
+            if (offer.betOfferType && offer.betOfferType.name === 'Over/Under') {
+                offer.outcomes.forEach(outcome => {
+                    if (outcome.type === 'OT_OVER') {
+                        goalLine.over = outcome.odds / 1000;
+                        goalLine.line = outcome.line / 1000;
+                    } else if (outcome.type === 'OT_UNDER') {
+                        goalLine.under = outcome.odds / 1000;
+                    }
+                });
+            }
+        });
+        
+        return {
+            id: event.id,
+            name: event.name,
+            englishName: event.englishName,
+            homeName: event.homeName,
+            awayName: event.awayName,
+            start: event.start,
+            state: event.state,
+            group: event.group,
+            path: event.path,
+            sport: event.sport,
+            tags: event.tags,
+            matchOdds: matchOdds,
+            goalLine: goalLine,
+            betOffers: betOffers
+        };
+    });
 }
 
 // Handle league selection
@@ -231,23 +295,18 @@ export async function handleLeagueChange() {
     // Fetch events for this league
     const events = await fetchLeagueEvents(leagueId, termKey, countryName);
     
+    console.log(`Fetched ${events.length} matches for ${countryName} - ${termKey}`);
+    
     // Update league data with events
     const league = footballData.leagues.find(l => l.id == leagueId);
     if (league) {
-        league.events = events.map(event => ({
-            id: event.id,
-            name: event.name,
-            homeName: event.homeName,
-            awayName: event.awayName,
-            start: event.start,
-            path: event.path
-        }));
-
-        // Store full event data in eventMap
-        events.forEach(event => {
-            footballData.eventMap[event.id] = event;
-        });
+        league.events = events;
     }
+    
+    // Store full event data in eventMap (includes pre-parsed odds)
+    events.forEach(event => {
+        footballData.eventMap[event.id] = event;
+    });
 
     if (!events || events.length === 0) {
         matchSelect.innerHTML = '<option value="">No matches available</option>';
@@ -273,7 +332,13 @@ export async function handleLeagueChange() {
             minute: '2-digit'
         });
         
-        option.textContent = `${event.homeName} vs ${event.awayName} (${timeStr})`;
+        // Show odds preview if available
+        let oddsPreview = '';
+        if (event.matchOdds && event.matchOdds.home) {
+            oddsPreview = ` [${event.matchOdds.home.toFixed(2)} - ${event.matchOdds.draw?.toFixed(2) || '-'} - ${event.matchOdds.away?.toFixed(2) || '-'}]`;
+        }
+        
+        option.textContent = `${event.homeName} vs ${event.awayName} (${timeStr})${oddsPreview}`;
         matchSelect.appendChild(option);
     });
 
@@ -287,6 +352,21 @@ export async function loadEventDetails(eventId) {
         return;
     }
 
+    // First try to use pre-fetched odds from eventMap
+    const cachedEvent = footballData.eventMap[eventId];
+    if (cachedEvent && cachedEvent.matchOdds) {
+        console.log('Using cached odds for event:', eventId);
+        populateInputsFromEvent(cachedEvent);
+        
+        // Trigger model calculation
+        if (runModelCallback) {
+            runModelCallback();
+        }
+        return;
+    }
+
+    // Fallback: fetch from API if not in cache
+    console.log('Fetching odds from API for event:', eventId);
     const eventData = await fetchEventOdds(eventId);
     if (!eventData || !eventData.betOffers) {
         console.error('No odds data available');
@@ -299,6 +379,37 @@ export async function loadEventDetails(eventId) {
     // Trigger model calculation
     if (runModelCallback) {
         runModelCallback();
+    }
+}
+
+// Populate inputs from cached event data
+function populateInputsFromEvent(event) {
+    clearInputs();
+    
+    // 1X2 Odds
+    if (event.matchOdds) {
+        if (event.matchOdds.home) {
+            document.getElementById('homeOdds').value = event.matchOdds.home.toFixed(2);
+        }
+        if (event.matchOdds.draw) {
+            document.getElementById('drawOdds').value = event.matchOdds.draw.toFixed(2);
+        }
+        if (event.matchOdds.away) {
+            document.getElementById('awayOdds').value = event.matchOdds.away.toFixed(2);
+        }
+    }
+    
+    // Goal Line
+    if (event.goalLine) {
+        if (event.goalLine.line) {
+            document.getElementById('goalLine').value = event.goalLine.line.toFixed(1);
+        }
+        if (event.goalLine.over) {
+            document.getElementById('overOdds').value = event.goalLine.over.toFixed(2);
+        }
+        if (event.goalLine.under) {
+            document.getElementById('underOdds').value = event.goalLine.under.toFixed(2);
+        }
     }
 }
 
