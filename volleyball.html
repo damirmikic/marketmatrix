@@ -66,60 +66,77 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: MARKETS -->
-        <div class="main-content">
-            <!-- MATCH WINNER -->
-            <div class="card hidden" id="matchWinnerCard">
-                <div class="card-header" onclick="toggleCard('matchWinnerCard')">
-                    <h2>Match Winner</h2>
+        <div class="markets-column">
+            <!-- TABBED MARKETS -->
+            <div class="tab-container hidden" id="marketsTabContainer">
+                <!-- Primary Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="match" onclick="switchTab('marketsTabContainer', 'match')">Match</button>
+                    <button class="tab-btn" data-tab="sets" onclick="switchTab('marketsTabContainer', 'sets')">Sets</button>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="matchWinnerTable"></div>
-                </div>
-            </div>
 
-            <!-- FIRST SET WINNER -->
-            <div class="card hidden" id="firstSetWinnerCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('firstSetWinnerCard')">
-                    <h2>First Set Winner</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="firstSetWinnerTable"></div>
-                </div>
-            </div>
+                <!-- MATCH TAB PANEL -->
+                <div class="tab-panel active" data-tab="match" id="matchPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="match-winner" onclick="switchSubTab('matchPanel', 'match-winner')">Match Winner</button>
+                        <button class="sub-tab-btn" data-subtab="first-set-winner" onclick="switchSubTab('matchPanel', 'first-set-winner')">First Set Winner</button>
+                    </div>
 
-            <!-- EXACT SET SCORES -->
-            <div class="card hidden" id="exactScoresCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('exactScoresCard')">
-                    <h2>Correct Score</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="exactScoresTable"></div>
-                </div>
-            </div>
+                    <!-- Match Winner Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="match-winner">
+                        <div class="tab-content active">
+                            <div class="table-wrapper" id="matchWinnerTable"></div>
+                        </div>
+                    </div>
 
-            <!-- SET HANDICAP -->
-            <div class="card hidden" id="setHandicapCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('setHandicapCard')">
-                    <h2>Set Handicap</h2>
+                    <!-- First Set Winner Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="first-set-winner">
+                        <div class="tab-content active">
+                            <div class="table-wrapper" id="firstSetWinnerTable"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="setHandicapTable"></div>
-                </div>
-            </div>
 
-            <!-- TOTAL SETS -->
-            <div class="card hidden" id="totalSetsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('totalSetsCard')">
-                    <h2>Total Sets Over/Under</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="totalSetsTable"></div>
+                <!-- SETS TAB PANEL -->
+                <div class="tab-panel" data-tab="sets" id="setsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="correct-score" onclick="switchSubTab('setsPanel', 'correct-score')">Correct Score</button>
+                        <button class="sub-tab-btn" data-subtab="set-handicap" onclick="switchSubTab('setsPanel', 'set-handicap')">Set Handicap</button>
+                        <button class="sub-tab-btn" data-subtab="total-sets" onclick="switchSubTab('setsPanel', 'total-sets')">Total Sets</button>
+                    </div>
+
+                    <!-- Correct Score Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="correct-score">
+                        <div class="tab-content active">
+                            <div class="table-wrapper" id="exactScoresTable"></div>
+                        </div>
+                    </div>
+
+                    <!-- Set Handicap Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="set-handicap">
+                        <div class="tab-content active">
+                            <div class="table-wrapper" id="setHandicapTable"></div>
+                        </div>
+                    </div>
+
+                    <!-- Total Sets Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="total-sets">
+                        <div class="tab-content active">
+                            <div class="table-wrapper" id="totalSetsTable"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script type="module">
+        import { toggleCard, switchTab, switchSubTab } from './js/ui_utils.js';
+
+        window.toggleCard = toggleCard;
+        window.switchTab = switchTab;
+        window.switchSubTab = switchSubTab;
+    </script>
     <script type="module" src="volleyball_model.js"></script>
 </body>
 

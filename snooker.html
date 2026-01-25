@@ -272,17 +272,13 @@
         </div>
     </div>
 
-    <script>
-        function toggleCard(id) {
-            document.getElementById(id).classList.toggle('collapsed');
-        }
+    <script type="module">
+        import { toggleCard, toggleAllCards, switchTab, switchSubTab } from './js/ui_utils.js';
 
-        function toggleAllCards() {
-            const cards = document.querySelectorAll('.card');
-            const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
-            cards.forEach(c => c.classList.toggle('collapsed', !allCollapsed));
-            document.getElementById('toggleAllBtn').textContent = allCollapsed ? 'Collapse All' : 'Expand All';
-        }
+        window.toggleCard = toggleCard;
+        window.toggleAllCards = toggleAllCards;
+        window.switchTab = switchTab;
+        window.switchSubTab = switchSubTab;
     </script>
     <script type="module" src="snooker_model.js"></script>
 </body>
