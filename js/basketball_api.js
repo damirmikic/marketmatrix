@@ -1,5 +1,5 @@
-// Bandy API Module
-// Handles fetching bandy matches and odds
+// Basketball API Module
+// Handles fetching basketball matches and odds
 
 let runModelCallback = null;
 
@@ -7,11 +7,16 @@ export function setRunModelCallback(callback) {
     runModelCallback = callback;
 }
 
-export function initLoader() {
-    // Initialize bandy data loading
-    console.log('Bandy loader initialized');
+export function initBasketballLoader() {
+    // Initialize basketball data loading
+    console.log('Basketball loader initialized');
     // For now, just trigger the model
     if (runModelCallback) runModelCallback();
+}
+
+export function handleCountryChange() {
+    // Handle country selection
+    console.log('Country changed');
 }
 
 export function handleLeagueChange() {
