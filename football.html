@@ -122,8 +122,296 @@
             </div>
         </div>
 
-        <!-- MARKETS TAB CONTAINER -->
-        <div class="markets-column">
+        <!-- COLUMN 2: FULL TIME MARKETS -->
+        <div class="main-content">
+            <div class="markets-container">
+            <div class="card hidden" id="ftArea">
+                <div class="card-header" onclick="toggleCard('ftArea')">
+                    <h2>2. Full Time Markets</h2>
+                </div>
+                <div class="card-content">
+                    <h3 class="text-lg">Match Result / Double Chance</h3>
+                    <div class="stat-grid grid-cols-3">
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="shinHome">-</div>
+                            <div class="stat-label">Home %</div>
+                            <div class="stat-sub-val sub-val" id="fairOddsHome">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="shinDraw">-</div>
+                            <div class="stat-label">Draw %</div>
+                            <div class="stat-sub-val sub-val" id="fairOddsDraw">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val prob-val" id="shinAway">-</div>
+                            <div class="stat-label">Away %</div>
+                            <div class="stat-sub-val sub-val" id="fairOddsAway">-</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="ftDcTable"></tbody>
+                    </table></div>
+
+                    <h3 class="mt-5">Draw No Bet</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="ftDnbTable"></tbody>
+                    </table></div>
+
+                    <h3 class="mt-5">BTTS (Yes/No)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="bttsTable"></tbody>
+                    </table></div>
+
+                    <h3>Total Goals (FT)</h3>
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="totalGoalsTable"></tbody>
+                    </table></div>
+
+                    <h3 class="mt-5">Total Goals Range (FT)</h3>
+                    <div class="table-wrapper"><table class="text-md">
+                        <tbody id="totalSpreadTable"></tbody>
+                    </table></div>
+
+                    <h3 class="mt-5">Result & Totals (2.5)</h3>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comboTable"></tbody>
+                    </table></div>
+
+                    <h3 class="mt-5">HT / FT</h3>
+                    <div class="table-wrapper"><table class="text-md mb-5">
+                        <thead>
+                            <tr>
+                                <th>HT/FT</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="htftTable"></tbody>
+                    </table></div>
+
+
+
+
+                </div>
+            </div>
+
+            <!-- ASIAN HANDICAP BLOCK -->
+            <div class="card hidden mt-5" id="ahArea">
+                <div class="card-header" onclick="toggleCard('ahArea')">
+                    <h2>Asian Handicap</h2>
+                </div>
+                <div class="card-content">
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Home</th>
+                                <th class="num-col">Away</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ahTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- DRAW COMBINATIONS BLOCK -->
+            <div class="card hidden mt-5" id="drawComboArea">
+                <div class="card-header" onclick="toggleCard('drawComboArea')">
+                    <h2>8. Draw Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        Interval Draw correlations
+                    </p>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drawComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- DOUBLE CHANCE COMBINATIONS BLOCK -->
+            <div class="card hidden mt-5" id="dcComboArea">
+                <div class="card-header" onclick="toggleCard('dcComboArea')">
+                    <h2>9. Double Chance Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        Join Interval Double Chance outcomes
+                    </p>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dcComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- HT/FT COMBINATIONS BLOCK -->
+            <div class="card hidden mt-5" id="htftComboArea">
+                <div class="card-header" onclick="toggleCard('htftComboArea')">
+                    <h2>10. HT/FT Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        HT/FT joint outcome correlations
+                    </p>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="htftComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- HOME TEAM GOALS COMBINATIONS BLOCK -->
+            <div class="card hidden mt-5" id="homeGoalComboArea">
+                <div class="card-header" onclick="toggleCard('homeGoalComboArea')">
+                    <h2>11. Home Team Goals Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        T1 = Home Team
+                    </p>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="homeGoalComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- AWAY TEAM GOALS COMBINATIONS BLOCK -->
+            <div class="card hidden mt-5" id="awayGoalComboArea">
+                <div class="card-header" onclick="toggleCard('awayGoalComboArea')">
+                    <h2>12. Away Team Goals Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        T2 = Away Team
+                    </p>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="awayGoalComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- HOME TEAM BLOCK -->
+            <div class="card hidden mt-5" id="homeTeamArea">
+                <div class="card-header" onclick="toggleCard('homeTeamArea')">
+                    <h2>5. Home Team Markets</h2>
+                </div>
+                <div class="card-content">
+                    <div class="two-col-grid">
+                        <div>
+                            <h3 class="text-lg">Team Goals (FT)</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="homeFtTable"></tbody>
+                            </table></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg">Team Goals (1H)</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="home1hTable"></tbody>
+                            </table></div>
+                            <h3 class="text-lg mt-4">Team Goals (2H)</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="home2hTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg">Exact Goals (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="homeExactTable"></tbody>
+                    </table></div>
+
+                    <h3 class="text-lg">Goal Spreads (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="homeSpreadTable"></tbody>
+                    </table></div>
+
+                    <h3 class="text-lg">Win Combinations</h3>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="homeWinComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: INTERVAL MARKETS -->
+        <div class="markets-content">
             <!-- BET BUILDER BLOCK -->
             <div class="card mb-5 border-blue" id="betBuilderArea">
                 <div class="card-header bg-blue-opacity" onclick="toggleCard('betBuilderArea')">
@@ -147,6 +435,7 @@
                     </div>
 
                     <div id="bbLegsList" class="bb-legs-list">
+                        <!-- Legs go here -->
                         <div class="empty-state">No selections added.</div>
                     </div>
 
@@ -160,247 +449,142 @@
                 </div>
             </div>
 
-            <!-- TABBED MARKETS -->
-            <div class="tab-container hidden" id="marketsTabContainer">
-                <!-- Primary Tab Navigation -->
-                <div class="tab-nav">
-                    <button class="tab-btn active" data-tab="fulltime" onclick="switchTab('marketsTabContainer', 'fulltime')">Full Time</button>
-                    <button class="tab-btn" data-tab="firsthalf" onclick="switchTab('marketsTabContainer', 'firsthalf')">1st Half</button>
-                    <button class="tab-btn" data-tab="secondhalf" onclick="switchTab('marketsTabContainer', 'secondhalf')">2nd Half</button>
-                    <button class="tab-btn" data-tab="teams" onclick="switchTab('marketsTabContainer', 'teams')">Teams</button>
-                    <button class="tab-btn" data-tab="combos" onclick="switchTab('marketsTabContainer', 'combos')">Combinations</button>
-                    <button class="tab-btn" data-tab="specials" onclick="switchTab('marketsTabContainer', 'specials')">Specials</button>
+            <!-- 1ST HALF BLOCK -->
+            <div class="card hidden mb-5" id="fhArea">
+                <div class="card-header" onclick="toggleCard('fhArea')">
+                    <h2>3. 1st Half Markets</h2>
                 </div>
+                <div class="card-content">
+                    <h3>1H 1X2</h3>
+                    <div class="table-wrapper"><table class="mb-4">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fh1x2Table"></tbody>
+                    </table></div>
 
-                <!-- FULL TIME TAB PANEL -->
-                <div class="tab-panel active" data-tab="fulltime" id="fulltimePanel">
-                    <div class="sub-tab-nav">
-                        <button class="sub-tab-btn active" data-subtab="ft-result" onclick="switchSubTab('fulltimePanel', 'ft-result')">1X2 / DC</button>
-                        <button class="sub-tab-btn" data-subtab="ft-goals" onclick="switchSubTab('fulltimePanel', 'ft-goals')">Goals</button>
-                        <button class="sub-tab-btn" data-subtab="ft-btts" onclick="switchSubTab('fulltimePanel', 'ft-btts')">BTTS</button>
-                        <button class="sub-tab-btn" data-subtab="ft-combos" onclick="switchSubTab('fulltimePanel', 'ft-combos')">Result & Goals</button>
-                        <button class="sub-tab-btn" data-subtab="ft-htft" onclick="switchSubTab('fulltimePanel', 'ft-htft')">HT/FT</button>
-                    </div>
+                    <h3>1H Goals</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fhGoalsTable"></tbody>
+                    </table></div>
 
-                    <!-- FT 1X2/DC Sub-tab -->
-                    <div class="sub-tab-content active" data-subtab="ft-result">
-                        <div class="tab-content active">
-                            <h3 class="text-lg">Match Result / Double Chance</h3>
-                            <div class="stat-grid grid-cols-3">
-                                <div class="stat-box">
-                                    <div class="stat-val prob-val" id="shinHome">-</div>
-                                    <div class="stat-label">Home %</div>
-                                    <div class="stat-sub-val sub-val" id="fairOddsHome">-</div>
-                                </div>
-                                <div class="stat-box">
-                                    <div class="stat-val prob-val" id="shinDraw">-</div>
-                                    <div class="stat-label">Draw %</div>
-                                    <div class="stat-sub-val sub-val" id="fairOddsDraw">-</div>
-                                </div>
-                                <div class="stat-box">
-                                    <div class="stat-val prob-val" id="shinAway">-</div>
-                                    <div class="stat-label">Away %</div>
-                                    <div class="stat-sub-val sub-val" id="fairOddsAway">-</div>
-                                </div>
-                            </div>
-                            <div class="table-wrapper"><table class="mb-5">
-                                <tbody id="ftDcTable"></tbody>
-                            </table></div>
+                    <h3 class="mt-5">1H Draw No Bet</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="fhDnbTable"></tbody>
+                    </table></div>
 
-                            <h3 class="mt-5">Draw No Bet</h3>
-                            <div class="table-wrapper"><table>
-                                <tbody id="ftDnbTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- FT Goals Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="ft-goals">
-                        <div class="tab-content active">
-                            <h3>Total Goals</h3>
-                            <div class="table-wrapper"><table>
-                                <thead>
-                                    <tr>
-                                        <th>Line</th>
-                                        <th class="num-col">Over</th>
-                                        <th class="num-col">Under</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="totalGoalsTable"></tbody>
-                            </table></div>
-
-                            <h3 class="mt-5">Total Goals Range</h3>
-                            <div class="table-wrapper"><table class="text-md">
-                                <tbody id="totalSpreadTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- FT BTTS Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="ft-btts">
-                        <div class="tab-content active">
-                            <h3>Both Teams to Score</h3>
-                            <div class="table-wrapper"><table>
-                                <tbody id="bttsTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- FT Result & Goals Combo Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="ft-combos">
-                        <div class="tab-content active">
-                            <h3>Result & Totals (2.5)</h3>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>Outcome</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="comboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- FT HT/FT Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="ft-htft">
-                        <div class="tab-content active">
-                            <h3>HT / FT</h3>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>HT/FT</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="htftTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 1ST HALF TAB PANEL -->
-                <div class="tab-panel" data-tab="firsthalf" id="firsthalfPanel">
-                    <div class="sub-tab-nav">
-                        <button class="sub-tab-btn active" data-subtab="fh-result" onclick="switchSubTab('firsthalfPanel', 'fh-result')">1X2 / DC</button>
-                        <button class="sub-tab-btn" data-subtab="fh-goals" onclick="switchSubTab('firsthalfPanel', 'fh-goals')">Goals</button>
-                        <button class="sub-tab-btn" data-subtab="fh-btts" onclick="switchSubTab('firsthalfPanel', 'fh-btts')">BTTS</button>
-                        <button class="sub-tab-btn" data-subtab="fh-exact" onclick="switchSubTab('firsthalfPanel', 'fh-exact')">Exact & Spreads</button>
-                    </div>
-
-                    <!-- 1H 1X2/DC Sub-tab -->
-                    <div class="sub-tab-content active" data-subtab="fh-result">
-                        <div class="tab-content active">
-                            <h3>1H 1X2</h3>
-                            <div class="table-wrapper"><table class="mb-4">
-                                <thead>
-                                    <tr>
-                                        <th>Outcome</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="fh1x2Table"></tbody>
-                            </table></div>
-
-                            <h3 class="mt-5">1H Double Chance</h3>
-                            <div class="table-wrapper"><table>
-                                <tbody id="fhDcTable"></tbody>
-                            </table></div>
-
-                            <h3 class="mt-5">1H Draw No Bet</h3>
-                            <div class="table-wrapper"><table>
-                                <tbody id="fhDnbTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- 1H Goals Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="fh-goals">
-                        <div class="tab-content active">
-                            <h3>1H Goals</h3>
-                            <div class="table-wrapper"><table>
-                                <thead>
-                                    <tr>
-                                        <th>Line</th>
-                                        <th class="num-col">Over</th>
-                                        <th class="num-col">Under</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="fhGoalsTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- 1H BTTS Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="fh-btts">
-                        <div class="tab-content active">
-                            <h3>1H BTTS</h3>
+                    <div class="two-col-grid">
+                        <div>
+                            <h3 class="text-lg">1H BTTS</h3>
                             <div class="table-wrapper"><table>
                                 <tbody id="fhBttsTable"></tbody>
                             </table></div>
                         </div>
-                    </div>
-
-                    <!-- 1H Exact & Spreads Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="fh-exact">
-                        <div class="tab-content active">
-                            <h3>1H Exact Goals</h3>
-                            <div class="table-wrapper"><table class="mb-5">
-                                <tbody id="fhExactTable"></tbody>
-                            </table></div>
-
-                            <h3>1H Goal Spreads</h3>
+                        <div>
+                            <h3 class="text-lg">1H DC</h3>
                             <div class="table-wrapper"><table>
-                                <tbody id="fhSpreadTable"></tbody>
+                                <tbody id="fhDcTable"></tbody>
                             </table></div>
                         </div>
                     </div>
+
+                    <h3 class="text-lg">1H Exact Goals</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="fhExactTable"></tbody>
+                    </table></div>
+
+                    <h3 class="text-lg">1H Goal Spreads</h3>
+                    <div class="table-wrapper"><table>
+                        <tbody id="fhSpreadTable"></tbody>
+                    </table></div>
                 </div>
+            </div>
 
-                <!-- 2ND HALF TAB PANEL -->
-                <div class="tab-panel" data-tab="secondhalf" id="secondhalfPanel">
-                    <div class="sub-tab-nav">
-                        <button class="sub-tab-btn active" data-subtab="sh-result" onclick="switchSubTab('secondhalfPanel', 'sh-result')">1X2 / DC</button>
-                        <button class="sub-tab-btn" data-subtab="sh-goals" onclick="switchSubTab('secondhalfPanel', 'sh-goals')">Goals</button>
-                        <button class="sub-tab-btn" data-subtab="sh-btts" onclick="switchSubTab('secondhalfPanel', 'sh-btts')">BTTS</button>
-                        <button class="sub-tab-btn" data-subtab="sh-exact" onclick="switchSubTab('secondhalfPanel', 'sh-exact')">Exact & Spreads</button>
-                    </div>
+            <!-- 2ND HALF BLOCK -->
+            <div class="card hidden" id="shArea">
+                <div class="card-header" onclick="toggleCard('shArea')">
+                    <h2>4. 2nd Half Markets</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">Independent
+                        2H goals</p>
 
-                    <!-- 2H 1X2/DC Sub-tab -->
-                    <div class="sub-tab-content active" data-subtab="sh-result">
-                        <div class="tab-content active">
-                            <p class="description-text">Independent 2H goals</p>
-                            <h3>2H 1X2</h3>
-                            <div class="table-wrapper"><table class="mb-4">
-                                <thead>
-                                    <tr>
-                                        <th>Outcome</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="sh1x2Table"></tbody>
+                    <h3>2H 1X2</h3>
+                    <div class="table-wrapper"><table class="mb-4">
+                        <thead>
+                            <tr>
+                                <th>Outcome</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sh1x2Table"></tbody>
+                    </table></div>
+
+                    <h3>2H Goals</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="num-col">Over</th>
+                                <th class="num-col">Under</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shGoalsTable"></tbody>
+                    </table></div>
+
+                    <h3 class="mt-5">2H Draw No Bet</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="shDnbTable"></tbody>
+                    </table></div>
+
+                    <div class="two-col-grid">
+                        <div>
+                            <h3 class="text-lg">2H BTTS</h3>
+                            <div class="table-wrapper"><table>
+                                <tbody id="shBttsTable"></tbody>
                             </table></div>
-
-                            <h3 class="mt-5">2H Double Chance</h3>
+                        </div>
+                        <div>
+                            <h3 class="text-lg">2H DC</h3>
                             <div class="table-wrapper"><table>
                                 <tbody id="shDcTable"></tbody>
                             </table></div>
-
-                            <h3 class="mt-5">2H Draw No Bet</h3>
-                            <div class="table-wrapper"><table>
-                                <tbody id="shDnbTable"></tbody>
-                            </table></div>
                         </div>
                     </div>
 
-                    <!-- 2H Goals Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="sh-goals">
-                        <div class="tab-content active">
-                            <h3>2H Goals</h3>
+                    <h3 class="text-lg">2H Exact Goals</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="shExactTable"></tbody>
+                    </table></div>
+
+                    <h3 class="text-lg">2H Goal Spreads</h3>
+                    <div class="table-wrapper"><table>
+                        <tbody id="shSpreadTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- AWAY TEAM BLOCK -->
+            <div class="card hidden mt-5 mb-5" id="awayTeamArea">
+                <div class="card-header" onclick="toggleCard('awayTeamArea')">
+                    <h2>6. Away Team Markets</h2>
+                </div>
+                <div class="card-content">
+                    <div class="two-col-grid">
+                        <div>
+                            <h3 class="text-lg">Team Goals (FT)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
@@ -409,361 +593,132 @@
                                         <th class="num-col">Under</th>
                                     </tr>
                                 </thead>
-                                <tbody id="shGoalsTable"></tbody>
+                                <tbody id="awayFtTable"></tbody>
                             </table></div>
                         </div>
-                    </div>
-
-                    <!-- 2H BTTS Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="sh-btts">
-                        <div class="tab-content active">
-                            <h3>2H BTTS</h3>
-                            <div class="table-wrapper"><table>
-                                <tbody id="shBttsTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- 2H Exact & Spreads Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="sh-exact">
-                        <div class="tab-content active">
-                            <h3>2H Exact Goals</h3>
-                            <div class="table-wrapper"><table class="mb-5">
-                                <tbody id="shExactTable"></tbody>
-                            </table></div>
-
-                            <h3>2H Goal Spreads</h3>
-                            <div class="table-wrapper"><table>
-                                <tbody id="shSpreadTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TEAMS TAB PANEL -->
-                <div class="tab-panel" data-tab="teams" id="teamsPanel">
-                    <div class="sub-tab-nav">
-                        <button class="sub-tab-btn active" data-subtab="home-team" onclick="switchSubTab('teamsPanel', 'home-team')">Home Team</button>
-                        <button class="sub-tab-btn" data-subtab="away-team" onclick="switchSubTab('teamsPanel', 'away-team')">Away Team</button>
-                    </div>
-
-                    <!-- Home Team Sub-tab -->
-                    <div class="sub-tab-content active" data-subtab="home-team">
-                        <div class="tab-content active">
-                            <div class="two-col-grid">
-                                <div>
-                                    <h3 class="text-lg">Team Goals (FT)</h3>
-                                    <div class="table-wrapper"><table>
-                                        <thead>
-                                            <tr>
-                                                <th>Line</th>
-                                                <th class="num-col">Over</th>
-                                                <th class="num-col">Under</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="homeFtTable"></tbody>
-                                    </table></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg">Team Goals (1H)</h3>
-                                    <div class="table-wrapper"><table>
-                                        <thead>
-                                            <tr>
-                                                <th>Line</th>
-                                                <th class="num-col">Over</th>
-                                                <th class="num-col">Under</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="home1hTable"></tbody>
-                                    </table></div>
-                                    <h3 class="text-lg mt-4">Team Goals (2H)</h3>
-                                    <div class="table-wrapper"><table>
-                                        <thead>
-                                            <tr>
-                                                <th>Line</th>
-                                                <th class="num-col">Over</th>
-                                                <th class="num-col">Under</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="home2hTable"></tbody>
-                                    </table></div>
-                                </div>
-                            </div>
-
-                            <h3 class="text-lg">Exact Goals (FT)</h3>
-                            <div class="table-wrapper"><table class="mb-5">
-                                <tbody id="homeExactTable"></tbody>
-                            </table></div>
-
-                            <h3 class="text-lg">Goal Spreads (FT)</h3>
-                            <div class="table-wrapper"><table class="mb-5">
-                                <tbody id="homeSpreadTable"></tbody>
-                            </table></div>
-
-                            <h3 class="text-lg">Win Combinations</h3>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="homeWinComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- Away Team Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="away-team">
-                        <div class="tab-content active">
-                            <div class="two-col-grid">
-                                <div>
-                                    <h3 class="text-lg">Team Goals (FT)</h3>
-                                    <div class="table-wrapper"><table>
-                                        <thead>
-                                            <tr>
-                                                <th>Line</th>
-                                                <th class="num-col">Over</th>
-                                                <th class="num-col">Under</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="awayFtTable"></tbody>
-                                    </table></div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg">Team Goals (1H)</h3>
-                                    <div class="table-wrapper"><table>
-                                        <thead>
-                                            <tr>
-                                                <th>Line</th>
-                                                <th class="num-col">Over</th>
-                                                <th class="num-col">Under</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="away1hTable"></tbody>
-                                    </table></div>
-                                    <h3 class="text-lg mt-4">Team Goals (2H)</h3>
-                                    <div class="table-wrapper"><table>
-                                        <thead>
-                                            <tr>
-                                                <th>Line</th>
-                                                <th class="num-col">Over</th>
-                                                <th class="num-col">Under</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="away2hTable"></tbody>
-                                    </table></div>
-                                </div>
-                            </div>
-
-                            <h3 class="text-lg">Exact Goals (FT)</h3>
-                            <div class="table-wrapper"><table class="mb-5">
-                                <tbody id="awayExactTable"></tbody>
-                            </table></div>
-
-                            <h3 class="text-lg">Goal Spreads (FT)</h3>
-                            <div class="table-wrapper"><table class="mb-5">
-                                <tbody id="awaySpreadTable"></tbody>
-                            </table></div>
-
-                            <h3 class="text-lg">Win Combinations</h3>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="awayWinComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- COMBINATIONS TAB PANEL -->
-                <div class="tab-panel" data-tab="combos" id="combosPanel">
-                    <div class="sub-tab-nav">
-                        <button class="sub-tab-btn active" data-subtab="goals-combo" onclick="switchSubTab('combosPanel', 'goals-combo')">Goals</button>
-                        <button class="sub-tab-btn" data-subtab="draw-combo" onclick="switchSubTab('combosPanel', 'draw-combo')">Draw</button>
-                        <button class="sub-tab-btn" data-subtab="dc-combo" onclick="switchSubTab('combosPanel', 'dc-combo')">Double Chance</button>
-                        <button class="sub-tab-btn" data-subtab="htft-combo" onclick="switchSubTab('combosPanel', 'htft-combo')">HT/FT</button>
-                        <button class="sub-tab-btn" data-subtab="btts-combo" onclick="switchSubTab('combosPanel', 'btts-combo')">BTTS</button>
-                        <button class="sub-tab-btn" data-subtab="team-goals-combo" onclick="switchSubTab('combosPanel', 'team-goals-combo')">Team Goals</button>
-                        <button class="sub-tab-btn" data-subtab="fts-combo" onclick="switchSubTab('combosPanel', 'fts-combo')">First to Score</button>
-                    </div>
-
-                    <!-- Goals Combinations Sub-tab -->
-                    <div class="sub-tab-content active" data-subtab="goals-combo">
-                        <div class="tab-content active">
-                            <p class="description-text">I = 1st Half, II = 2nd Half</p>
-                            <div class="table-wrapper"><table>
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="intervalComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- Draw Combinations Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="draw-combo">
-                        <div class="tab-content active">
-                            <p class="description-text">Interval Draw correlations</p>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="drawComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- Double Chance Combinations Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="dc-combo">
-                        <div class="tab-content active">
-                            <p class="description-text">Joint Interval Double Chance outcomes</p>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dcComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- HT/FT Combinations Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="htft-combo">
-                        <div class="tab-content active">
-                            <p class="description-text">HT/FT joint outcome correlations</p>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="htftComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- BTTS Combinations Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="btts-combo">
-                        <div class="tab-content active">
-                            <p class="description-text">GG = Both Teams to Score (FT), IGG = BTTS 1H, IIGG = BTTS 2H</p>
-                            <div class="table-wrapper"><table>
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="bttsComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- Team Goals Combinations Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="team-goals-combo">
-                        <div class="tab-content active">
-                            <h3 class="text-lg">Home Team Goals Combinations</h3>
-                            <p class="description-text">T1 = Home Team</p>
-                            <div class="table-wrapper"><table class="text-md mb-5">
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="homeGoalComboTable"></tbody>
-                            </table></div>
-
-                            <h3 class="text-lg mt-5">Away Team Goals Combinations</h3>
-                            <p class="description-text">T2 = Away Team</p>
-                            <div class="table-wrapper"><table class="text-md">
-                                <thead>
-                                    <tr>
-                                        <th>Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="awayGoalComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-
-                    <!-- First to Score Combinations Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="fts-combo">
-                        <div class="tab-content active">
-                            <p class="description-text">T1 = Home, T2 = Away, no = No goals. I = 1H, II = 2H.</p>
-                            <div class="table-wrapper"><table>
-                                <thead>
-                                    <tr>
-                                        <th>Market / Combination</th>
-                                        <th class="num-col">Prob</th>
-                                        <th class="num-col">Odds</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ftsComboTable"></tbody>
-                            </table></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SPECIALS TAB PANEL -->
-                <div class="tab-panel" data-tab="specials" id="specialsPanel">
-                    <div class="sub-tab-nav">
-                        <button class="sub-tab-btn active" data-subtab="asian-handicap" onclick="switchSubTab('specialsPanel', 'asian-handicap')">Asian Handicap</button>
-                    </div>
-
-                    <!-- Asian Handicap Sub-tab -->
-                    <div class="sub-tab-content active" data-subtab="asian-handicap">
-                        <div class="tab-content active">
-                            <h3>Asian Handicap</h3>
+                        <div>
+                            <h3 class="text-lg">Team Goals (1H)</h3>
                             <div class="table-wrapper"><table>
                                 <thead>
                                     <tr>
                                         <th>Line</th>
-                                        <th class="num-col">Home</th>
-                                        <th class="num-col">Away</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
                                     </tr>
                                 </thead>
-                                <tbody id="ahTable"></tbody>
+                                <tbody id="away1hTable"></tbody>
+                            </table></div>
+                            <h3 class="text-lg mt-4">Team Goals (2H)</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="away2hTable"></tbody>
                             </table></div>
                         </div>
                     </div>
-                </div>
 
+                    <h3 class="text-lg">Exact Goals (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="awayExactTable"></tbody>
+                    </table></div>
+
+                    <h3 class="text-lg">Goal Spreads (FT)</h3>
+                    <div class="table-wrapper"><table class="mb-5">
+                        <tbody id="awaySpreadTable"></tbody>
+                    </table></div>
+
+                    <h3 class="text-lg">Win Combinations</h3>
+                    <div class="table-wrapper"><table class="text-md">
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="awayWinComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- GOALS COMBINATIONS BLOCK -->
+            <div class="card hidden" id="goalComboArea">
+                <div class="card-header" onclick="toggleCard('goalComboArea')">
+                    <h2>7. Goals Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        I = 1st Half, II = 2nd Half
+                    </p>
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="intervalComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <!-- BTTS COMBINATIONS BLOCK -->
+            <div class="card hidden" id="bttsComboArea">
+                <div class="card-header" onclick="toggleCard('bttsComboArea')">
+                    <h2>8. BTTS Combinations</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        GG = Both Teams to Score (FT), IGG = BTTS 1H, IIGG = BTTS 2H
+                    </p>
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th>Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bttsComboTable"></tbody>
+                    </table></div>
+                </div>
+            </div>
+            <!-- FIRST TEAM TO SCORE BLOCK -->
+            <div class="card hidden" id="ftsComboArea">
+                <div class="card-header" onclick="toggleCard('ftsComboArea')">
+                    <h2>9. First Team to Score</h2>
+                </div>
+                <div class="card-content">
+                    <p class="description-text">
+                        T1 = Home, T2 = Away, no = No goals. I = 1H, II = 2H.
+                    </p>
+                    <div class="table-wrapper"><table>
+                        <thead>
+                            <tr>
+                                <th>Market / Combination</th>
+                                <th class="num-col">Prob</th>
+                                <th class="num-col">Odds</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ftsComboTable"></tbody>
+                    </table></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script type="module">
-        import { toggleCard, syncRatio, toggleAllCards, switchTab, switchSubTab } from './js/ui_utils.js';
+        import { toggleCard, syncRatio, toggleAllCards } from './js/ui_utils.js';
 
         window.toggleCard = toggleCard;
         window.syncRatio = syncRatio;
         window.toggleAllCards = toggleAllCards;
-        window.switchTab = switchTab;
-        window.switchSubTab = switchSubTab;
     </script>
     <script type="module" src="model.js"></script>
 </body>
