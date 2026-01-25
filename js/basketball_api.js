@@ -9,7 +9,7 @@ let basketballData = {
 let runModelCallback = null;
 
 // API endpoints - Using Kambi API pattern
-const GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/basketball/all/all/all/competitions.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true';
+const GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/basketball/all/all/all/matches.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true';
 const EVENT_URL_BASE = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/';
 
 export function setRunModelCallback(callback) {
@@ -20,7 +20,8 @@ export function setRunModelCallback(callback) {
 function buildHierarchy(events) {
     const countryMap = new Map();
 
-    events.forEach(event => {
+    events.forEach(item => {
+        const event = item.event || item;
         // Skip if no path or invalid event
         if (!event.path || event.path.length < 3) return;
 
@@ -185,11 +186,15 @@ function parseOdds(betOffers) {
         total: { over: null, under: null, line: null }
     };
 
+    let bestSpreadScore = null;
+    let bestTotalScore = null;
+
     betOffers.forEach(offer => {
-        const criterionId = offer.criterion.id;
+        const criterionId = offer.criterion?.id;
+        const betOfferType = offer.betOfferType?.name;
 
         // Match Odds (Moneyline)
-        if (criterionId === 1001159551) {
+        if (betOfferType === 'Match') {
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_ONE') {
                     odds.matchOdds.home = outcome.odds / 1000;
@@ -199,28 +204,56 @@ function parseOdds(betOffers) {
             });
         }
 
-        // Spread
-        if (criterionId === 1001427539) {
+        // Spread / Handicap
+        if (criterionId === 1001159512 || betOfferType === 'Handicap') {
+            let spreadHome = null;
+            let spreadAway = null;
+            let spreadLine = null;
+
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_ONE') {
-                    odds.spread.home = outcome.odds / 1000;
-                    odds.spread.line = outcome.line / 1000;
+                    spreadHome = outcome.odds / 1000;
+                    spreadLine = outcome.line / 1000;
                 } else if (outcome.type === 'OT_TWO') {
-                    odds.spread.away = outcome.odds / 1000;
+                    spreadAway = outcome.odds / 1000;
                 }
             });
+
+            if (spreadHome && spreadAway) {
+                const score = Math.abs(spreadHome - 2) + Math.abs(spreadAway - 2);
+                if (bestSpreadScore === null || score < bestSpreadScore) {
+                    bestSpreadScore = score;
+                    odds.spread.home = spreadHome;
+                    odds.spread.away = spreadAway;
+                    odds.spread.line = spreadLine;
+                }
+            }
         }
 
         // Total Points
-        if (criterionId === 1001159891) {
+        if (criterionId === 1001159509 || betOfferType === 'Over/Under') {
+            let totalOver = null;
+            let totalUnder = null;
+            let totalLine = null;
+
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_OVER') {
-                    odds.total.over = outcome.odds / 1000;
-                    odds.total.line = outcome.line / 1000;
+                    totalOver = outcome.odds / 1000;
+                    totalLine = outcome.line / 1000;
                 } else if (outcome.type === 'OT_UNDER') {
-                    odds.total.under = outcome.odds / 1000;
+                    totalUnder = outcome.odds / 1000;
                 }
             });
+
+            if (totalOver && totalUnder) {
+                const score = Math.abs(totalOver - 2) + Math.abs(totalUnder - 2);
+                if (bestTotalScore === null || score < bestTotalScore) {
+                    bestTotalScore = score;
+                    odds.total.over = totalOver;
+                    odds.total.under = totalUnder;
+                    odds.total.line = totalLine;
+                }
+            }
         }
     });
 
