@@ -72,7 +72,7 @@ export async function initBasketballLoader() {
 
 // Populate tournament dropdown
 function populateTournamentSelector() {
-    const selector = document.getElementById('apiTournamentSelect');
+    const selector = document.getElementById('apiCountrySelect');
     if (!selector) return;
 
     selector.innerHTML = '<option value="">Select Tournament...</option>';
@@ -87,7 +87,7 @@ function populateTournamentSelector() {
 
 // Handle tournament selection
 export function handleCountryChange() {
-    const tournamentId = document.getElementById('apiTournamentSelect').value;
+    const tournamentId = document.getElementById('apiCountrySelect').value;
     const matchSelect = document.getElementById('apiMatchSelect');
 
     if (!tournamentId) {

@@ -68,7 +68,7 @@ export async function initTableTennisLoader() {
 
 // Populate tournament dropdown
 function populateTournamentSelector() {
-    const selector = document.getElementById('tournamentSelect');
+    const selector = document.getElementById('apiCountrySelect');
     if (!selector) return;
 
     selector.innerHTML = '<option value="">Select Tournament...</option>';
@@ -83,8 +83,8 @@ function populateTournamentSelector() {
 
 // Handle tournament selection
 export function handleCountryChange() {
-    const tournamentId = document.getElementById('tournamentSelect').value;
-    const matchSelect = document.getElementById('matchSelect');
+    const tournamentId = document.getElementById('apiCountrySelect').value;
+    const matchSelect = document.getElementById('apiMatchSelect');
 
     if (!tournamentId) {
         matchSelect.innerHTML = '<option value="">Select Match...</option>';
@@ -182,7 +182,7 @@ function parseOdds(betOffers) {
 
 // Handle match selection
 export async function handleMatchChange() {
-    const eventId = document.getElementById('matchSelect').value;
+    const eventId = document.getElementById('apiMatchSelect').value;
 
     if (!eventId) {
         clearInputs();
