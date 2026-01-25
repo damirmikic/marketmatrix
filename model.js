@@ -327,8 +327,10 @@ class FootballModel extends BaseModel {
             }
         }
     }
+    // Explicitly define the order of all 9 HT/FT combinations for consistent display
+    const htftOrder = ["11", "1X", "12", "X1", "XX", "X2", "21", "2X", "22"];
     let htftHtml = "";
-    Object.keys(htftProbs).forEach(key => {
+    htftOrder.forEach(key => {
         let label = key[0] + "/" + key[1];
         let p = htftProbs[key];
         htftHtml += `<tr><td>${label}</td><td class="num-col prob-col">${(p * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(p)}</td></tr>`;
