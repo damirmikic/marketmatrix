@@ -458,7 +458,137 @@ tr:last-child td {
 .no-underline { text-decoration: none; }
 
 /* ================================
-   6. MEDIA QUERIES
+   6. TAB NAVIGATION
+   ================================ */
+
+/* Tab Container */
+.tab-container {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+/* Primary Tabs */
+.tab-nav {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.tab-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-btn {
+    flex: 1;
+    min-width: max-content;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    position: relative;
+    margin: 0;
+    width: auto;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+}
+
+/* Sub Tabs */
+.sub-tab-nav {
+    display: flex;
+    background: rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.sub-tab-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.sub-tab-btn {
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    margin: 0;
+    width: auto;
+}
+
+.sub-tab-btn:hover {
+    color: #94a3b8;
+}
+
+.sub-tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    padding: 15px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Sub Tab Content */
+.sub-tab-content {
+    display: none;
+}
+
+.sub-tab-content.active {
+    display: block;
+}
+
+/* Tab Panel (wrapper for sub-tabs + content) */
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* ================================
+   7. MEDIA QUERIES
    ================================ */
 
 /* Small phones: 375px */
@@ -514,7 +644,7 @@ tr:last-child td {
     }
 
     .container {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 280px 1fr;
         gap: 24px;
     }
 
@@ -556,7 +686,7 @@ tr:last-child td {
     }
 
     .container {
-        grid-template-columns: 280px 320px 1fr;
+        grid-template-columns: 280px 1fr;
         gap: 20px;
     }
 }
