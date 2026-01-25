@@ -332,13 +332,7 @@ export async function handleLeagueChange() {
             minute: '2-digit'
         });
         
-        // Show odds preview if available
-        let oddsPreview = '';
-        if (event.matchOdds && event.matchOdds.home) {
-            oddsPreview = ` [${event.matchOdds.home.toFixed(2)} - ${event.matchOdds.draw?.toFixed(2) || '-'} - ${event.matchOdds.away?.toFixed(2) || '-'}]`;
-        }
-        
-        option.textContent = `${event.homeName} vs ${event.awayName} (${timeStr})${oddsPreview}`;
+        option.textContent = `${event.homeName} vs ${event.awayName} (${timeStr})`;
         matchSelect.appendChild(option);
     });
 
