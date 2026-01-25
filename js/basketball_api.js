@@ -18,26 +18,39 @@ export function setRunModelCallback(callback) {
 
 // Build tournament hierarchy from events
 function buildHierarchy(events) {
-    const tournamentMap = new Map();
+    const countryMap = new Map();
 
     events.forEach(event => {
         // Skip if no path or invalid event
-        if (!event.path || event.path.length < 2) return;
+        if (!event.path || event.path.length < 3) return;
 
-        // Get tournament name (last item in path before the event)
-        const tournamentPath = event.path[event.path.length - 1];
+        // Path structure: [Sport, Country, Tournament]
+        const countryPath = event.path[1];
+        const tournamentPath = event.path[2];
+        const countryName = countryPath.name;
+        const countryId = countryPath.id;
         const tournamentName = tournamentPath.name;
         const tournamentId = tournamentPath.id;
 
-        if (!tournamentMap.has(tournamentId)) {
-            tournamentMap.set(tournamentId, {
+        if (!countryMap.has(countryId)) {
+            countryMap.set(countryId, {
+                name: countryName,
+                id: countryId,
+                tournaments: []
+            });
+        }
+
+        let country = countryMap.get(countryId);
+        if (!country.tournaments.find(t => t.id === tournamentId)) {
+            country.tournaments.push({
                 name: tournamentName,
                 id: tournamentId,
                 events: []
             });
         }
 
-        tournamentMap.get(tournamentId).events.push({
+        let tournament = country.tournaments.find(t => t.id === tournamentId);
+        tournament.events.push({
             id: event.id,
             name: event.name,
             homeName: event.homeName,
@@ -51,7 +64,7 @@ function buildHierarchy(events) {
     });
 
     // Convert map to array and sort
-    basketballData.tournaments = Array.from(tournamentMap.values())
+    basketballData.countries = Array.from(countryMap.values())
         .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -63,42 +76,77 @@ export async function initBasketballLoader() {
 
         if (data.events && data.events.length > 0) {
             buildHierarchy(data.events);
-            populateTournamentSelector();
+            populateCountrySelector();
         }
     } catch (error) {
         console.error('Error loading basketball data:', error);
     }
 }
 
-// Populate tournament dropdown
-function populateTournamentSelector() {
+// Populate country dropdown
+function populateCountrySelector() {
     const selector = document.getElementById('apiCountrySelect');
     if (!selector) return;
 
-    selector.innerHTML = '<option value="">Select Tournament...</option>';
+    selector.innerHTML = '<option value="">Select Country...</option>';
 
-    basketballData.tournaments.forEach(tournament => {
+    basketballData.countries.forEach(country => {
         const option = document.createElement('option');
-        option.value = tournament.id;
-        option.textContent = tournament.name;
+        option.value = country.id;
+        option.textContent = country.name;
         selector.appendChild(option);
     });
 }
 
-// Handle tournament selection
+// Handle country selection
 export function handleCountryChange() {
-    const tournamentId = document.getElementById('apiCountrySelect').value;
-    const matchSelect = document.getElementById('apiMatchSelect');
+    const countryId = document.getElementById('apiCountrySelect').value;
+    const leagueSelect = document.getElementById('apiLeagueSelect');
 
-    if (!tournamentId) {
-        matchSelect.innerHTML = '<option value="">Select Match...</option>';
+    if (!countryId) {
+        leagueSelect.innerHTML = '<option value="">Select country</option>';
+        leagueSelect.disabled = true;
         return;
     }
 
-    const tournament = basketballData.tournaments.find(t => t.id == tournamentId);
-    if (!tournament) return;
+    const country = basketballData.countries.find(c => c.id == countryId);
+    if (!country || !country.tournaments || country.tournaments.length === 0) {
+        leagueSelect.innerHTML = '<option value="">No leagues available</option>';
+        leagueSelect.disabled = true;
+        return;
+    }
 
-    if (!tournament.events || tournament.events.length === 0) {
+    leagueSelect.innerHTML = '<option value="">Select Competition...</option>';
+
+    country.tournaments.forEach(tournament => {
+        const option = document.createElement('option');
+        option.value = tournament.id;
+        option.textContent = tournament.name;
+        leagueSelect.appendChild(option);
+    });
+
+    leagueSelect.disabled = false;
+}
+
+// Handle league selection
+export function handleLeagueChange() {
+    const leagueId = document.getElementById('apiLeagueSelect').value;
+    const matchSelect = document.getElementById('apiMatchSelect');
+
+    if (!leagueId) {
+        matchSelect.innerHTML = '<option value="">Select competition</option>';
+        matchSelect.disabled = true;
+        return;
+    }
+
+    // Find the tournament across all countries
+    let tournament = null;
+    for (const country of basketballData.countries) {
+        tournament = country.tournaments.find(t => t.id == leagueId);
+        if (tournament) break;
+    }
+
+    if (!tournament || !tournament.events || tournament.events.length === 0) {
         matchSelect.innerHTML = '<option value="">No matches available</option>';
         matchSelect.disabled = true;
         return;
@@ -114,11 +162,6 @@ export function handleCountryChange() {
     });
 
     matchSelect.disabled = false;
-}
-
-// Alias for compatibility
-export function handleLeagueChange() {
-    handleCountryChange();
 }
 
 // Fetch detailed odds for a specific event
