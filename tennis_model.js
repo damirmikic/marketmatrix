@@ -1,7 +1,5 @@
 import * as TennisAPI from './js/tennis_api.js';
 import { TennisMarkovEngine } from './js/tennis_markov_engine.js';
-import { tennisEloService } from './js/tennis_elo_service.js';
-import { tennisWtaEloService } from './js/tennis_wta_elo_service.js';
 import { BaseModel } from './js/base_model.js';
 
 class TennisModel extends BaseModel {
@@ -14,7 +12,7 @@ class TennisModel extends BaseModel {
     }
 
     runModel(surface = 'Hard') {
-    try {
+        try {
         const odds1 = parseFloat(document.getElementById('player1Odds').value);
         const odds2 = parseFloat(document.getElementById('player2Odds').value);
         let totalLine = parseFloat(document.getElementById('totalGamesLine').value);
@@ -23,28 +21,13 @@ class TennisModel extends BaseModel {
         const oddsOver = parseFloat(document.getElementById('oddsOver')?.value);
         const oddsUnder = parseFloat(document.getElementById('oddsUnder')?.value);
 
-        if (surface) {
-            document.getElementById('surfaceBadge').textContent = surface;
-            currentSurface = surface;
-        }
+        const surfaceToUse = surface || this.currentSurface || 'Hard';
+        document.getElementById('surfaceBadge').textContent = surfaceToUse;
+        this.currentSurface = surfaceToUse;
 
         if (!odds1 || !odds2) return;
 
-        // Fetch Elo-based hold probabilities if player names are available
-        let eloHoldProbs = null;
-        if (currentPlayer1 && currentPlayer2) {
-            // Use appropriate Elo service based on tour
-            const eloService = currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
-            eloHoldProbs = eloService.getEloAdjustedHoldProbs(
-                currentPlayer1,
-                currentPlayer2,
-                surface
-            );
-
-            if (eloHoldProbs) {
-                console.log(`Using ${currentTour} Elo-enhanced priors:`, eloHoldProbs);
-            }
-        }
+        const eloHoldProbs = null;
 
         // PHASE 2: Handle Synthetic Total and Fair Total Adjustment
         let isSynthetic = false;
@@ -53,9 +36,11 @@ class TennisModel extends BaseModel {
 
         const totalLineInput = document.getElementById('totalGamesLine');
 
+        const { engine } = this;
+
         // Step 1: Check if Total Line is missing -> Generate Synthetic Total
         if (!totalLine || isNaN(totalLine)) {
-            targetTotal = engine.estimateSyntheticTotal(odds1, odds2, surface);
+            targetTotal = engine.estimateSyntheticTotal(odds1, odds2, surfaceToUse);
             totalLineInput.value = targetTotal.toFixed(1);
             isSynthetic = true;
 
@@ -108,28 +93,29 @@ class TennisModel extends BaseModel {
             console.log('Direct Player Games (market-driven):', directPlayerGames);
         }
 
-        // 3. Solve (with adjusted/synthetic total and Elo-enhanced priors)
-        const result = engine.solveParameters(fairParams.p1, targetTotal, surface, eloHoldProbs);
-        displayParameters(result, eloHoldProbs, directPlayerGames);
+        // 3. Solve (with adjusted/synthetic total)
+        const result = engine.solveParameters(fairParams.p1, targetTotal, surfaceToUse, eloHoldProbs);
+        displayParameters(result, directPlayerGames);
 
         // 4. Derivatives (pass directPlayerGames for market-driven handicap calculation)
         const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration, directPlayerGames);
         displayDerivatives(derivatives);
 
-        // Show all result cards including Elo card
-        document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
+        // Show all result cards + markets container
+        document.querySelectorAll('.card.hidden, .tab-container.hidden').forEach(el => el.classList.remove('hidden'));
 
-    } catch (e) {
-        console.error("Model Error:", e);
+        } catch (e) {
+            console.error("Model Error:", e);
+        }
     }
-};
+}
 
 function displayFairValue(fair) {
     document.getElementById('fairP1').textContent = (1 / fair.p1).toFixed(2);
     document.getElementById('fairP2').textContent = (1 / fair.p2).toFixed(2);
 }
 
-function displayParameters(result, eloHoldProbs = null, directPlayerGames = null) {
+function displayParameters(result, directPlayerGames = null) {
     document.getElementById('p1Hold').textContent = (result.pa * 100).toFixed(1) + '%';
     document.getElementById('p2Hold').textContent = (result.pb * 100).toFixed(1) + '%';
     document.getElementById('modelTotal').textContent = result.calibration.expTotal.toFixed(2);
@@ -162,88 +148,7 @@ function displayParameters(result, eloHoldProbs = null, directPlayerGames = null
         }
     }
 
-    // Display Elo ratings if available
-    displayEloRatings(eloHoldProbs);
 }
-
-/**
- * Display Elo ratings and related data
- */
-function displayEloRatings(eloHoldProbs) {
-    const eloInfoEl = document.getElementById('eloInfo');
-    if (!eloInfoEl) return;
-
-    if (!currentPlayer1 || !currentPlayer2) {
-        eloInfoEl.innerHTML = '<p class="text-sm text-gray-500">Select a match to see Elo ratings</p>';
-        return;
-    }
-
-    // Use appropriate Elo service based on tour
-    const eloService = currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
-
-    const player1Data = eloService.getPlayerData(currentPlayer1);
-    const player2Data = eloService.getPlayerData(currentPlayer2);
-
-    if (!player1Data || !player2Data) {
-        eloInfoEl.innerHTML = `<p class="text-sm text-yellow-600">⚠️ ${currentTour} Elo data not available for these players</p>`;
-        return;
-    }
-
-    // Get surface-specific Elo
-    const player1Elo = eloService.getPlayerElo(currentPlayer1, currentSurface);
-    const player2Elo = eloService.getPlayerElo(currentPlayer2, currentSurface);
-
-    // Calculate Elo-based win probability
-    const eloWinProb = eloService.calculateWinProbability(currentPlayer1, currentPlayer2, currentSurface);
-
-    const eloEnhanced = eloHoldProbs ? '✓ Elo-Enhanced' : '';
-
-    // Get appropriate ranking field name based on tour
-    const rankLabel = currentTour === 'WTA' ? 'WTA' : 'ATP';
-    const player1Rank = currentTour === 'WTA' ? player1Data.wtaRank : player1Data.atpRank;
-    const player2Rank = currentTour === 'WTA' ? player2Data.wtaRank : player2Data.atpRank;
-
-    eloInfoEl.innerHTML = `
-        <div class="space-y-2">
-            <div class="flex justify-between items-center">
-                <h4 class="font-semibold text-sm">${currentTour} Elo Ratings (${currentSurface})</h4>
-                ${eloEnhanced ? '<span class="text-xs text-green-600 font-medium">' + eloEnhanced + '</span>' : ''}
-            </div>
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <div class="font-medium text-gray-700">${player1Data.name}</div>
-                    <div class="text-gray-600">Elo: <span class="font-mono">${player1Elo.toFixed(0)}</span></div>
-                    <div class="text-gray-600">${rankLabel}: #${player1Rank || 'N/A'}</div>
-                </div>
-                <div>
-                    <div class="font-medium text-gray-700">${player2Data.name}</div>
-                    <div class="text-gray-600">Elo: <span class="font-mono">${player2Elo.toFixed(0)}</span></div>
-                    <div class="text-gray-600">${rankLabel}: #${player2Rank || 'N/A'}</div>
-                </div>
-            </div>
-            ${eloWinProb ? `
-                <div class="mt-2 pt-2 border-t">
-                    <div class="text-xs text-gray-600">
-                        Elo Win Probability:
-                        <span class="font-mono font-semibold">${(eloWinProb * 100).toFixed(1)}%</span> -
-                        <span class="font-mono font-semibold">${((1 - eloWinProb) * 100).toFixed(1)}%</span>
-                    </div>
-                </div>
-            ` : ''}
-        </div>
-    `;
-}
-
-/**
- * Update current match players (called from tennis_api.js)
- */
-window.setCurrentPlayers = function(player1, player2, surface = 'Hard', tour = 'ATP') {
-    currentPlayer1 = player1;
-    currentPlayer2 = player2;
-    currentSurface = surface;
-    currentTour = tour;
-    console.log('Players set:', player1, 'vs', player2, 'on', surface, '(' + tour + ')');
-};
 
 function displayDerivatives(d) {
     // Set Betting
@@ -345,18 +250,6 @@ function displayPlayerTotals(playerTotals) {
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize both ATP and WTA Elo services
-    try {
-        await Promise.all([
-            tennisEloService.fetchEloRatings(),
-            tennisWtaEloService.fetchEloRatings()
-        ]);
-        console.log('ATP and WTA Elo ratings loaded successfully');
-    } catch (error) {
-        console.warn('Failed to load Elo ratings:', error);
-        // Continue even if Elo data fails to load
-    }
-
     // Initialize Tennis API
     TennisAPI.setRunModelCallback(window.runModel);
     await TennisAPI.initLoader();

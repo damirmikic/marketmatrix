@@ -8,8 +8,8 @@ class TennisWtaEloService {
         this.eloCache = new Map(); // Cache player Elo data
         this.lastFetchTime = null;
         this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-        // Use Netlify serverless function to bypass CORS
-        this.ELO_API_URL = '/.netlify/functions/fetch-wta-elo';
+        // Use direct Tennis Abstract URL (requires CORS allowance)
+        this.ELO_API_URL = 'https://www.tennisabstract.com/reports/wta_elo_ratings.html';
     }
 
     /**

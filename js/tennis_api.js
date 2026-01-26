@@ -9,7 +9,7 @@ let tennisData = {
 let runModelCallback = null;
 
 // API endpoints - Using Kambi API pattern
-const GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/tennis/all/all/all/competitions.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true';
+const GROUP_URL = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/tennis/all/all/all/matches.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true';
 const EVENT_URL_BASE = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/';
 
 export function setRunModelCallback(callback) {
@@ -63,7 +63,8 @@ export async function initLoader() {
         const data = await response.json();
 
         if (data.events && data.events.length > 0) {
-            buildHierarchy(data.events);
+            const events = data.events.map(item => item.event || item);
+            buildHierarchy(events);
             populateTournamentSelector();
         }
     } catch (error) {
@@ -373,4 +374,3 @@ function clearInputs() {
         totalInfoEl.textContent = '';
     }
 }
-
