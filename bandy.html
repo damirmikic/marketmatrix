@@ -24,11 +24,26 @@
                     <h2>1. Select Match</h2>
                 </div>
                 <div class="card-content">
-                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">LEAGUE</label>
-                    <select id="leagueSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
-
-                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">MATCH</label>
-                    <select id="matchSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;" disabled></select>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COUNTRY / REGION</label>
+                            <select id="apiCountrySelect" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COMPETITION</label>
+                            <select id="apiLeagueSelect" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;" disabled>
+                                <option value="">Select country</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
+                            <select id="apiMatchSelect" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;" disabled>
+                                <option value="">Select competition</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
