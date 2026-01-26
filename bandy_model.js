@@ -1,7 +1,7 @@
 // Bandy Model - UI Controller
 // Handles user interactions and displays results from BandyEngine
 
-import * as BandyAPI from './js/bandy_api.js';
+import { initBandyLoader, handleCountryChange, handleLeagueChange, handleMatchChange, setRunModelCallback } from './js/bandy_api.js';
 import { BandyEngine } from './bandy_engine.js';
 import { probToOdds } from './js/core/math_utils.js';
 
@@ -759,19 +759,25 @@ function displayGoalRanges(goalRanges) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    BandyAPI.setRunModelCallback(window.runModel);
-    BandyAPI.initLoader();
+    // Initialize API loader
+    setRunModelCallback(window.runModel);
+    initBandyLoader();
 
-    // Setup event listeners for dropdowns
-    const leagueSelect = document.getElementById('leagueSelect');
-    const matchSelect = document.getElementById('matchSelect');
+    // Setup event listeners for 3-level API selectors
+    const countrySelect = document.getElementById('apiCountrySelect');
+    const leagueSelect = document.getElementById('apiLeagueSelect');
+    const matchSelect = document.getElementById('apiMatchSelect');
+
+    if (countrySelect) {
+        countrySelect.addEventListener('change', handleCountryChange);
+    }
 
     if (leagueSelect) {
-        leagueSelect.addEventListener('change', BandyAPI.handleLeagueChange);
+        leagueSelect.addEventListener('change', handleLeagueChange);
     }
 
     if (matchSelect) {
-        matchSelect.addEventListener('change', BandyAPI.handleMatchChange);
+        matchSelect.addEventListener('change', handleMatchChange);
     }
 
     // Setup event listeners for manual input
