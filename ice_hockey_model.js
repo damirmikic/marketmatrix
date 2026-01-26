@@ -1,14 +1,6 @@
 // Ice Hockey Model
 // Advanced probability calculations with gradient descent solver
 
-import {
-    initIceHockeyLoader,
-    handleCountryChange,
-    handleLeagueChange,
-    handleMatchChange,
-    setRunModelCallback
-} from './js/ice_hockey_api.js';
-
 import { factorial, probToOdds } from './js/core/math_utils.js';
 
 // --- Statistical Helper Functions ---
@@ -839,12 +831,5 @@ window.runModel = runModel;
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    setRunModelCallback(runModel);
-    initIceHockeyLoader();
-
-    document.getElementById('apiCountrySelect').addEventListener('change', handleCountryChange);
-    document.getElementById('apiLeagueSelect').addEventListener('change', handleLeagueChange);
-    document.getElementById('apiMatchSelect').addEventListener('change', handleMatchChange);
-
     runModel();
 });

@@ -678,6 +678,29 @@
             document.getElementById('toggleAllBtn').textContent = allCollapsed ? 'Collapse All' : 'Expand All';
         }
     </script>
+    <script type="module">
+        import { initIceHockeyLoader, handleCountryChange, handleLeagueChange, handleMatchChange, setRunModelCallback } from './js/ice_hockey_api.js';
+
+        // Connect API functions to window for HTML event handlers
+        window.handleCountryChange = handleCountryChange;
+        window.handleLeagueChange = handleLeagueChange;
+        window.handleMatchChange = handleMatchChange;
+
+        // Initialize loader
+        document.addEventListener('DOMContentLoaded', () => {
+            initIceHockeyLoader();
+            
+            // Set up model trigger
+            setRunModelCallback(() => {
+                if (window.runModel) window.runModel();
+            });
+            
+            // Re-bind change events since they are outside module scope normally
+            document.getElementById('apiCountrySelect').onchange = window.handleCountryChange;
+            document.getElementById('apiLeagueSelect').onchange = window.handleLeagueChange;
+            document.getElementById('apiMatchSelect').onchange = window.handleMatchChange;
+        });
+    </script>
     <script type="module" src="ice_hockey_model.js"></script>
 </body>
 
