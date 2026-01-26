@@ -33,8 +33,9 @@ window.runModel = function () {
         displayTotalSetsMarkets(derivatives.totalSets);
         displayExpectedSets(derivatives.expectedSets);
 
-        // Show all result cards
+        // Show all result cards and markets tab container
         document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
+        document.getElementById('marketsTabContainer')?.classList.remove('hidden');
 
     } catch (e) {
         console.error("Model Error:", e);
