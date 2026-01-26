@@ -275,9 +275,10 @@ async function runModel() {
     const puckHomeOdds = puckHomeOutcome?.odds ? puckHomeOutcome.odds / 1000 : NaN;
     const puckAwayOdds = puckAwayOutcome?.odds ? puckAwayOutcome.odds / 1000 : NaN;
 
-    const totalGoalsLine = overOutcome?.line ? overOutcome.line / 1000 : NaN;
-    const overOdds = overOutcome?.odds ? overOutcome.odds / 1000 : NaN;
-    const underOdds = underOutcome?.odds ? underOutcome.odds / 1000 : NaN;
+    // Read total goals from input fields (populated by API or user input)
+    const totalGoalsLine = parseFloat(document.getElementById('totalGoalsLine').value) || NaN;
+    const overOdds = parseFloat(document.getElementById('overOdds').value) || NaN;
+    const underOdds = parseFloat(document.getElementById('underOdds').value) || NaN;
 
     // Get Period Ratios
     const p1Ratio = parseFloat(document.getElementById('p1Ratio').value) || 0.333;
