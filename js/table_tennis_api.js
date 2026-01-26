@@ -131,7 +131,7 @@ async function fetchEventOdds(eventId) {
     }
 }
 
-// Parse odds
+// Parse odds using label-based matching
 function parseOdds(betOffers) {
     const odds = {
         matchOdds: { player1: null, player2: null },
@@ -140,10 +140,16 @@ function parseOdds(betOffers) {
     };
 
     betOffers.forEach(offer => {
-        const criterionId = offer.criterion.id;
+        const crit = offer.criterion || {};
+        const label = (crit.englishLabel || crit.label || '').toLowerCase();
 
-        // Match Odds
-        if (criterionId === 1001159551) {
+        // Match Odds - look for match winner markets with 2 outcomes
+        if ((label.includes('match winner') ||
+             label.includes('match odds') ||
+             label.includes('moneyline') ||
+             label === 'fulltime' ||
+             label === 'match') &&
+            offer.outcomes && offer.outcomes.length === 2) {
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_ONE') {
                     odds.matchOdds.player1 = outcome.odds / 1000;
@@ -153,30 +159,37 @@ function parseOdds(betOffers) {
             });
         }
 
-        // Handicap
-        if (criterionId === 1001427539) {
-            offer.outcomes.forEach(outcome => {
-                if (outcome.type === 'OT_ONE') {
-                    odds.handicap.player1 = outcome.odds / 1000;
-                    odds.handicap.line = outcome.line / 1000;
-                } else if (outcome.type === 'OT_TWO') {
-                    odds.handicap.player2 = outcome.odds / 1000;
-                }
-            });
-        }
+        // Total Sets/Games - look for total markets
+        if ((label.includes('total') && (label.includes('set') || label.includes('game'))) ||
+            label.includes('over/under')) {
+            // Find the most balanced line (closest to even odds)
+            let overOdds = null;
+            let underOdds = null;
+            let line = null;
 
-        // Total
-        if (criterionId === 1001159891) {
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_OVER') {
-                    odds.total.over = outcome.odds / 1000;
-                    odds.total.line = outcome.line / 1000;
+                    overOdds = outcome.odds / 1000;
+                    line = outcome.line / 1000;
                 } else if (outcome.type === 'OT_UNDER') {
-                    odds.total.under = outcome.odds / 1000;
+                    underOdds = outcome.odds / 1000;
                 }
             });
+
+            if (overOdds && underOdds && line) {
+                const balance = Math.abs(overOdds - 2.0) + Math.abs(underOdds - 2.0);
+                if (odds.total.line === null || balance < odds.total._balance) {
+                    odds.total.over = overOdds;
+                    odds.total.under = underOdds;
+                    odds.total.line = line;
+                    odds.total._balance = balance;
+                }
+            }
         }
     });
+
+    // Clean up temporary tracking
+    delete odds.total._balance;
 
     return odds;
 }
@@ -214,22 +227,11 @@ function populateInputs(odds) {
     if (odds.matchOdds.player2) {
         document.getElementById('awayOdds').value = odds.matchOdds.player2.toFixed(2);
     }
-
-    if (odds.handicap.line) {
-        document.getElementById('totalGamesLine').value = odds.handicap.line.toFixed(1);
-    }
-
-    if (odds.total.over) {
-        document.getElementById('oddsOver').value = odds.total.over.toFixed(2);
-    }
-    if (odds.total.under) {
-        document.getElementById('oddsUnder').value = odds.total.under.toFixed(2);
-    }
 }
 
 // Clear inputs
 function clearInputs() {
-    const inputs = ['homeOdds', 'awayOdds', 'totalGamesLine', 'oddsOver', 'oddsUnder'];
+    const inputs = ['homeOdds', 'awayOdds'];
 
     inputs.forEach(id => {
         const element = document.getElementById(id);
