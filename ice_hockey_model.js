@@ -208,74 +208,17 @@ function solveLambdas(targetHomeWin, targetDraw, targetOver, totalLine) {
     return { lambdaHome, lambdaAway };
 }
 
-// --- Fetch Odds from API ---
-async function fetchOdds(url) {
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching odds:', error);
-        return null;
-    }
-}
-
-function pickOffer(offers, predicate) {
-    return offers.find(predicate) || null;
-}
-
-function pickOutcome(offer, predicate) {
-    return offer?.outcomes?.find(predicate) || null;
-}
-
 // --- Main Controller ---
-async function runModel() {
-    // Fetch odds from API
-    const oddsUrl = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/1024042899.json?lang=en_US&market=US&client_id=200&channel_id=7&includeParticipants=true';
-    const oddsData = await fetchOdds(oddsUrl);
+function runModel() {
+    // Read all odds from input fields (populated by API or user input)
+    const hOdds = parseFloat(document.getElementById('homeOdds').value) || NaN;
+    const dOdds = parseFloat(document.getElementById('drawOdds').value) || NaN;
+    const aOdds = parseFloat(document.getElementById('awayOdds').value) || NaN;
 
-    if (!oddsData) {
-        console.error('Failed to fetch odds data');
-        return;
-    }
+    const puckLine = parseFloat(document.getElementById('puckLine').value) || NaN;
+    const puckHomeOdds = parseFloat(document.getElementById('puckHomeOdds').value) || NaN;
+    const puckAwayOdds = parseFloat(document.getElementById('puckAwayOdds').value) || NaN;
 
-    // Extract relevant odds from the API response
-    const betOffers = oddsData?.betOffers || [];
-
-    const matchOffer = pickOffer(
-        betOffers,
-        offer => offer.betOfferType?.id === 2 && offer.tags?.includes('MAIN')
-    ) || pickOffer(betOffers, offer => offer.betOfferType?.id === 2 && offer.criterion?.lifetime === 'FULL_TIME');
-
-    const totalOffer = pickOffer(
-        betOffers,
-        offer => offer.betOfferType?.id === 6 && offer.tags?.includes('MAIN_LINE') && offer.criterion?.lifetime === 'FULL_TIME'
-    ) || pickOffer(betOffers, offer => offer.betOfferType?.id === 6 && offer.tags?.includes('MAIN_LINE'));
-
-    const handicapOffer = pickOffer(
-        betOffers,
-        offer => offer.betOfferType?.id === 1 && offer.criterion?.lifetime === 'FULL_TIME'
-    ) || pickOffer(betOffers, offer => offer.betOfferType?.id === 1);
-
-    const homeOutcome = pickOutcome(matchOffer, outcome => outcome.type === 'OT_ONE');
-    const drawOutcome = pickOutcome(matchOffer, outcome => outcome.type === 'OT_CROSS');
-    const awayOutcome = pickOutcome(matchOffer, outcome => outcome.type === 'OT_TWO');
-
-    const overOutcome = pickOutcome(totalOffer, outcome => outcome.type === 'OT_OVER');
-    const underOutcome = pickOutcome(totalOffer, outcome => outcome.type === 'OT_UNDER');
-
-    const puckHomeOutcome = pickOutcome(handicapOffer, outcome => outcome.type === 'OT_ONE');
-    const puckAwayOutcome = pickOutcome(handicapOffer, outcome => outcome.type === 'OT_TWO');
-
-    const hOdds = homeOutcome?.odds ? homeOutcome.odds / 1000 : NaN;
-    const dOdds = drawOutcome?.odds ? drawOutcome.odds / 1000 : NaN;
-    const aOdds = awayOutcome?.odds ? awayOutcome.odds / 1000 : NaN;
-
-    const puckLine = puckHomeOutcome?.line ? puckHomeOutcome.line / 1000 : NaN;
-    const puckHomeOdds = puckHomeOutcome?.odds ? puckHomeOutcome.odds / 1000 : NaN;
-    const puckAwayOdds = puckAwayOutcome?.odds ? puckAwayOutcome.odds / 1000 : NaN;
-
-    // Read total goals from input fields (populated by API or user input)
     const totalGoalsLine = parseFloat(document.getElementById('totalGoalsLine').value) || NaN;
     const overOdds = parseFloat(document.getElementById('overOdds').value) || NaN;
     const underOdds = parseFloat(document.getElementById('underOdds').value) || NaN;
