@@ -188,14 +188,28 @@ function parseOdds(betOffers) {
 
     let bestPuckLineScore = null;
     let bestTotalScore = null;
+    let bestTotalPriority = 999;
 
     betOffers.forEach(offer => {
         const criterionId = offer.criterion?.id;
         const betOfferType = offer.betOfferType?.name;
         const label = (offer.criterion?.label || "").toLowerCase();
 
-        // Match Odds (1X2 Regulation)
-        if (betOfferType === 'Match' && (label === 'full time' || label === 'match' || label.includes('1x2'))) {
+        // Match Odds (1X2 Regulation) - check for 3-way outcome with draw
+        // Ice hockey labels: "regulation time", "regular time", "three way", "1x2", "match"
+        const is1X2Market = betOfferType === 'Match' &&
+            offer.outcomes &&
+            offer.outcomes.some(o => o.type === 'OT_CROSS');
+
+        // Also accept explicit regulation time labels
+        const hasRegulationLabel = label.includes('regulation') ||
+            label.includes('regular time') ||
+            label.includes('three way') ||
+            label.includes('1x2') ||
+            label === 'full time' ||
+            label === 'match';
+
+        if (is1X2Market || (betOfferType === 'Match' && hasRegulationLabel)) {
             offer.outcomes.forEach(outcome => {
                 if (outcome.type === 'OT_ONE') {
                     odds.matchOdds.home = outcome.odds / 1000;
@@ -207,8 +221,12 @@ function parseOdds(betOffers) {
             });
         }
 
-        // Puck Line / Handicap
-        if (betOfferType === 'Handicap' || label.includes('handicap') || label.includes('puck line')) {
+        // Puck Line / Handicap - filter out period-specific
+        const isPeriodHandicap = label.includes('period') || label.includes('1st') ||
+            label.includes('2nd') || label.includes('3rd');
+
+        if ((betOfferType === 'Handicap' || label.includes('handicap') || label.includes('puck line')) &&
+            !isPeriodHandicap) {
             let home = null;
             let away = null;
             let line = null;
@@ -233,8 +251,11 @@ function parseOdds(betOffers) {
             }
         }
 
-        // Total Goals
-        if (betOfferType === 'Over/Under' || label.includes('total goals')) {
+        // Total Goals - prioritize full match totals, avoid period totals
+        const isPeriodTotal = label.includes('period') || label.includes('1st') ||
+            label.includes('2nd') || label.includes('3rd');
+
+        if ((betOfferType === 'Over/Under' || label.includes('total')) && !isPeriodTotal) {
             let over = null;
             let under = null;
             let line = null;
@@ -248,9 +269,22 @@ function parseOdds(betOffers) {
                 }
             });
 
-            if (over && under) {
+            if (over && under && line) {
+                // Priority: prefer lines around 5.0-6.0 for ice hockey (typical main total)
+                // Also prioritize offers with "total goals" or "match total" in label
+                let priority = 2; // default
+                if (label.includes('total goals') || label.includes('match total')) {
+                    priority = 0; // highest priority for explicit total goals
+                } else if (line >= 4.5 && line <= 6.5) {
+                    priority = 1; // likely main total line for hockey
+                }
+
+                // If same priority, prefer odds closer to even
                 const score = Math.abs(over - 2) + Math.abs(under - 2);
-                if (bestTotalScore === null || score < bestTotalScore) {
+
+                if (priority < bestTotalPriority ||
+                    (priority === bestTotalPriority && (bestTotalScore === null || score < bestTotalScore))) {
+                    bestTotalPriority = priority;
                     bestTotalScore = score;
                     odds.total.over = over;
                     odds.total.under = under;
