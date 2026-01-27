@@ -197,7 +197,7 @@ function runModel() {
     const awayBase = toHalfPoint(awayExpected);
 
     function generateTeamTotalLines(base) {
-        return [base - 1.5, base - 0.5, base + 0.5, base + 1.5];
+        return [base - 2, base - 1, base, base + 1, base + 2];
     }
 
     const homeLines = generateTeamTotalLines(homeBase);
