@@ -766,6 +766,70 @@
         window.switchSubTab = switchSubTab;
     </script>
     <script type="module" src="model.js"></script>
+
+    <!-- Quick Sports Menu -->
+    <div class="quick-sports-menu" id="quickSportsMenu">
+        <div class="quick-sports-toggle" onclick="toggleQuickSports()">◀</div>
+        <a href="football.html" class="sport-icon" title="Football">
+            ⚽
+            <span class="tooltip">Football</span>
+        </a>
+        <a href="tennis.html" class="sport-icon" title="Tennis">
+            🎾
+            <span class="tooltip">Tennis</span>
+        </a>
+        <a href="basketball.html" class="sport-icon" title="Basketball">
+            🏀
+            <span class="tooltip">Basketball</span>
+        </a>
+        <a href="nfl.html" class="sport-icon" title="NFL">
+            🏈
+            <span class="tooltip">NFL</span>
+        </a>
+        <a href="ice_hockey.html" class="sport-icon" title="Ice Hockey">
+            🏒
+            <span class="tooltip">Ice Hockey</span>
+        </a>
+        <a href="bandy.html" class="sport-icon" title="Bandy">
+            🏑
+            <span class="tooltip">Bandy</span>
+        </a>
+        <a href="table_tennis.html" class="sport-icon" title="Table Tennis">
+            🏓
+            <span class="tooltip">Table Tennis</span>
+        </a>
+        <a href="volleyball.html" class="sport-icon" title="Volleyball">
+            🏐
+            <span class="tooltip">Volleyball</span>
+        </a>
+        <a href="snooker.html" class="sport-icon" title="Snooker">
+            🎱
+            <span class="tooltip">Snooker</span>
+        </a>
+        <a href="futsal.html" class="sport-icon" title="Futsal">
+            ⚽
+            <span class="tooltip">Futsal</span>
+        </a>
+    </div>
+
+    <script>
+        function toggleQuickSports() {
+            const menu = document.getElementById('quickSportsMenu');
+            menu.classList.toggle('collapsed');
+            const toggle = menu.querySelector('.quick-sports-toggle');
+            toggle.textContent = menu.classList.contains('collapsed') ? '▶' : '◀';
+        }
+        // Set active icon based on current page
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = window.location.pathname.split('/').pop();
+            document.querySelectorAll('.sport-icon').forEach(icon => {
+                if (icon.getAttribute('href') === currentPage) {
+                    icon.classList.add('active');
+                }
+            });
+        });
+    </script>
+
 </body>
 
 </html>
