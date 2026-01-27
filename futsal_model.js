@@ -70,8 +70,16 @@ class FutsalModel extends BaseModel {
         displayComboBets(markets.comboBets, totalLine);
         displayGoalRanges(markets.goalRanges);
 
-        // Show all result cards
-        document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
+        // Show the markets tab container
+        const marketsContainer = document.getElementById('marketsTabContainer');
+        if (marketsContainer) {
+            marketsContainer.classList.remove('hidden');
+        }
+        // Also show model params card
+        const modelParamsCard = document.getElementById('modelParamsCard');
+        if (modelParamsCard) {
+            modelParamsCard.classList.remove('hidden');
+        }
 
     } catch (e) {
         console.error("Model Error:", e);
