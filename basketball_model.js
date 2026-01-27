@@ -90,12 +90,8 @@ function runModel() {
     const expectedTotal = totalLine + (pOver - 0.5) * 20;
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(1);
 
-    // --- Show Markets Area ---
-    ['marketsArea', 'firstHalfArea', 'secondHalfArea', 'q1Area', 'q2Area', 'q3Area', 'q4Area',
-        'teamTotalsArea', 'marginArea', 'specialsArea', 'halftimeFulltimeArea', 'winnerTotalArea',
-        'handicapTotalArea'].forEach(id => {
-            document.getElementById(id).classList.remove('hidden');
-        });
+    // --- Show Markets Tab Container ---
+    document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     // --- Generate Spread Table ---
     // Get fair probability at the base line
