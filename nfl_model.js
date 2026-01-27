@@ -104,23 +104,38 @@ function runModel() {
     const baseSpread = !isNaN(spreadLine) ? spreadLine : -3.5;
     const roundedBaseSpread = toHalfPoint(baseSpread);
 
-    // Generate spread lines from -14 to +14 (typical NFL range), half points only
-    const spreadLinesClean = [];
-    for (let i = -14; i <= 14; i++) {
-        const halfLine = i + 0.5;
-        spreadLinesClean.push(halfLine);
+    // Find the most balanced line (closest to 50/50, i.e., odds near 2.0/2.0)
+    // Generate candidate lines from -20 to +20 (half points only), excluding ±0.5
+    let balancedSpreadLine = roundedBaseSpread;
+    let bestSpreadDiff = 1.0;
+    for (let i = -20; i <= 20; i++) {
+        const testLine = i + 0.5;
+        if (Math.abs(testLine) === 0.5) continue; // Skip ±0.5
+        const probShift = (testLine - roundedBaseSpread) * 0.04;
+        const pHomeCovers = Math.max(0.01, Math.min(0.99, fairSpreadH + probShift));
+        const diff = Math.abs(pHomeCovers - 0.5);
+        if (diff < bestSpreadDiff) {
+            bestSpreadDiff = diff;
+            balancedSpreadLine = testLine;
+        }
     }
-    // Remove -0.5 and +0.5 (rare in NFL)
-    const uniqueSpreadLines = [...new Set(spreadLinesClean)]
-        .filter(line => Math.abs(line) !== 0.5)
-        .sort((a, b) => a - b);
+
+    // Generate ±6 lines from the balanced line (excluding ±0.5)
+    const spreadLinesClean = [];
+    for (let i = -6; i <= 6; i++) {
+        const line = balancedSpreadLine + i;
+        if (Math.abs(line) !== 0.5) {
+            spreadLinesClean.push(line);
+        }
+    }
+    const uniqueSpreadLines = [...new Set(spreadLinesClean)].sort((a, b) => a - b);
 
     let spreadHtml = '';
     uniqueSpreadLines.forEach(line => {
         // NFL: Each point shift changes prob by ~4% (more sensitive than basketball due to lower scoring)
         const probShift = (line - roundedBaseSpread) * 0.04;
         let pHomeCovers = Math.max(0.01, Math.min(0.99, fairSpreadH + probShift));
-        const isBaseLine = Math.abs(line - roundedBaseSpread) < 0.6;
+        const isBaseLine = Math.abs(line - balancedSpreadLine) < 0.6;
         const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
         spreadHtml += `<tr${rowStyle}>
             <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
@@ -133,12 +148,26 @@ function runModel() {
     // --- Generate Total Points Table ---
     const roundedBaseTotal = toHalfPoint(totalLine);
 
-    // Generate total lines (NFL typical range: 35-65 points)
+    // Find the most balanced total line (closest to 50/50, i.e., odds near 2.0/2.0)
+    // Generate candidate lines around the base total (±15 points)
+    let balancedTotalLine = roundedBaseTotal;
+    let bestTotalDiff = 1.0;
+    for (let i = -15; i <= 15; i++) {
+        const testLine = toHalfPoint(roundedBaseTotal + i);
+        const probShift = (testLine - roundedBaseTotal) * 0.035;
+        const pOverTest = Math.max(0.01, Math.min(0.99, pOver - probShift));
+        const diff = Math.abs(pOverTest - 0.5);
+        if (diff < bestTotalDiff) {
+            bestTotalDiff = diff;
+            balancedTotalLine = testLine;
+        }
+    }
+
+    // Generate ±6 lines from the balanced line
     const totalLinesClean = [];
-    for (let i = -8; i <= 8; i++) {
-        const line = roundedBaseTotal + i;
-        const halfLine = Math.floor(line) + 0.5;
-        totalLinesClean.push(halfLine);
+    for (let i = -6; i <= 6; i++) {
+        const line = toHalfPoint(balancedTotalLine + i);
+        totalLinesClean.push(line);
     }
     const uniqueTotalLines = [...new Set(totalLinesClean)].sort((a, b) => a - b);
 
@@ -147,7 +176,7 @@ function runModel() {
         // NFL: Each point shift changes prob by ~3.5% (slightly more sensitive than basketball)
         const probShift = (line - roundedBaseTotal) * 0.035;
         let pOverLine = Math.max(0.01, Math.min(0.99, pOver - probShift));
-        const isBaseLine = Math.abs(line - roundedBaseTotal) < 0.6;
+        const isBaseLine = Math.abs(line - balancedTotalLine) < 0.6;
         const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
         totalHtml += `<tr${rowStyle}>
             <td class="line-col">${line.toFixed(1)}</td>
