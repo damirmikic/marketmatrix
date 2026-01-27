@@ -63,11 +63,8 @@ function runModel() {
     const expectedTotal = 3 + closeness * 1.5; // Range: 3.0 to 4.5 sets
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(1);
 
-    // --- Show Markets Area ---
-    ['marketsArea', 'set1Area', 'set2Area', 'set3Area', 'set4Area', 'set5Area',
-        'exactScoreArea', 'specialsArea', 'winnerTotalArea'].forEach(id => {
-            document.getElementById(id).classList.remove('hidden');
-        });
+    // --- Show Markets Tab Container ---
+    document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     // --- Generate Set Handicap Table (Derived from Set Probability) ---
     // Use set win probability (not match) for binomial model

@@ -14,44 +14,34 @@
         <!-- LEFT COLUMN: API LOADER & INPUTS -->
         <div class="sidebar-column">
             <!-- CONTROLS -->
-            <a href="index.html"
-                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+            <a href="index.html" class="btn btn-home block w-full mb-2\.5 no-underline">
                 &larr; Home
             </a>
-            <button id="toggleAllBtn" onclick="toggleAllCards()" style="margin-top: 0; margin-bottom: 20px;">Collapse
+            <button id="toggleAllBtn" onclick="toggleAllCards()" class="mt-0 mb-5">Collapse
                 All</button>
 
             <!-- API MATCH LOADER -->
-            <div class="card" id="apiMatchLoader" style="margin-bottom: 20px;">
+            <div class="card mb-5" id="apiMatchLoader">
                 <div class="card-header" onclick="toggleCard('apiMatchLoader')">
                     <h2>0. Select Match</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="flex-col gap-3">
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COUNTRY
-                                / REGION</label>
-                            <select id="apiCountrySelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
+                            <label class="form-label">COUNTRY / REGION</label>
+                            <select id="apiCountrySelect" class="form-select">
                                 <option value="">Loading...</option>
                             </select>
                         </div>
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COMPETITION</label>
-                            <select id="apiLeagueSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;"
-                                disabled>
+                            <label class="form-label">COMPETITION</label>
+                            <select id="apiLeagueSelect" class="form-select" disabled>
                                 <option value="">Select country</option>
                             </select>
                         </div>
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
-                            <select id="apiMatchSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;"
-                                disabled>
+                            <label class="form-label">MATCH</label>
+                            <select id="apiMatchSelect" class="form-select-dark" disabled>
                                 <option value="">Select competition</option>
                             </select>
                         </div>
@@ -65,8 +55,7 @@
                     <h2>1. Input Odds</h2>
                 </div>
                 <div class="card-content">
-                    <h3>Match Winner <span id="moneylineMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                    <h3>Match Winner <span id="moneylineMargin" class="margin-info">Margin:
                             -</span></h3>
                     <div class="input-group">
                         <label>Player 1</label>
@@ -77,8 +66,8 @@
                         <input type="number" id="awayOdds" step="0.01" value="2.50" oninput="runModel()">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Set Ratios (Optional)</h3>
-                    <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0;">Individual set win probabilities (defaults to match probability)</p>
+                    <h3 class="mt-4">Set Ratios (Optional)</h3>
+                    <p class="text-xs text-slate mt-neg-2 mb-2\.5">Individual set win probabilities (defaults to match probability)</p>
                     <div class="input-group">
                         <label>Set 1 Ratio</label>
                         <input type="number" id="set1Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">
@@ -100,7 +89,7 @@
                         <input type="number" id="set5Ratio" step="0.01" value="0.20" oninput="runModel()" min="0" max="1">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Derived Parameters</h3>
+                    <h3 class="mt-5">Derived Parameters</h3>
                     <div class="stat-grid">
                         <div class="stat-box">
                             <div class="stat-val" id="homeWinProb">-</div>
@@ -119,229 +108,259 @@
             </div>
         </div>
 
-        <!-- COLUMN 2: MARKETS -->
-        <div class="main-content">
-            <div class="card hidden" id="marketsArea">
-                <div class="card-header" onclick="toggleCard('marketsArea')">
-                    <h2>2. Markets</h2>
+        <!-- MARKETS TAB CONTAINER -->
+        <div class="markets-column">
+            <!-- TABBED MARKETS -->
+            <div class="tab-container hidden" id="marketsTabContainer">
+                <!-- Primary Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="match" onclick="switchTab('marketsTabContainer', 'match')">Match</button>
+                    <button class="tab-btn" data-tab="sets" onclick="switchTab('marketsTabContainer', 'sets')">Sets</button>
+                    <button class="tab-btn" data-tab="specials" onclick="switchTab('marketsTabContainer', 'specials')">Specials</button>
                 </div>
-                <div class="card-content">
-                    <h3>Match Winner (Fair Odds)</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="fairHome">-</div>
-                            <div class="stat-label">Player 1</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="fairAway">-</div>
-                            <div class="stat-label">Player 2</div>
+
+                <!-- MATCH TAB PANEL -->
+                <div class="tab-panel active" data-tab="match" id="matchPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="match-winner" onclick="switchSubTab('matchPanel', 'match-winner')">Winner</button>
+                        <button class="sub-tab-btn" data-subtab="match-handicap" onclick="switchSubTab('matchPanel', 'match-handicap')">Set Handicap</button>
+                        <button class="sub-tab-btn" data-subtab="match-totals" onclick="switchSubTab('matchPanel', 'match-totals')">Total Sets</button>
+                    </div>
+
+                    <!-- Match Winner Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="match-winner">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Match Winner (Fair Odds)</h3>
+                            <div class="stat-grid grid-cols-2">
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="fairHome">-</div>
+                                    <div class="stat-label">Player 1</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="fairAway">-</div>
+                                    <div class="stat-label">Player 2</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <h3 style="margin-top: 20px;">Set Handicap Lines</h3>
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Player 1</th>
-                                <th class="num-col">Player 2</th>
-                            </tr>
-                        </thead>
-                        <tbody id="spreadTable"></tbody>
-                    </table></div>
-
-                    <h3 style="margin-top: 20px;">Total Sets Lines</h3>
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="totalTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- SET MARKETS -->
-            <!-- SET 1 MARKETS -->
-            <div class="card hidden" id="set1Area" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('set1Area')">
-                    <h2>3. Set 1 Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Set 1 Winner</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set1Player1">-</div>
-                            <div class="stat-label">Player 1</div>
+                    <!-- Set Handicap Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="match-handicap">
+                        <div class="tab-content active">
+                            <h3>Set Handicap Lines</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Player 1</th>
+                                        <th class="num-col">Player 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="spreadTable"></tbody>
+                            </table></div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set1Player2">-</div>
-                            <div class="stat-label">Player 2</div>
+                    </div>
+
+                    <!-- Total Sets Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="match-totals">
+                        <div class="tab-content active">
+                            <h3>Total Sets Lines</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="totalTable"></tbody>
+                            </table></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- SET 2 MARKETS -->
-            <div class="card hidden" id="set2Area" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('set2Area')">
-                    <h2>4. Set 2 Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Set 2 Winner</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set2Player1">-</div>
-                            <div class="stat-label">Player 1</div>
+                <!-- SETS TAB PANEL -->
+                <div class="tab-panel" data-tab="sets" id="setsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="set1" onclick="switchSubTab('setsPanel', 'set1')">Set 1</button>
+                        <button class="sub-tab-btn" data-subtab="set2" onclick="switchSubTab('setsPanel', 'set2')">Set 2</button>
+                        <button class="sub-tab-btn" data-subtab="set3" onclick="switchSubTab('setsPanel', 'set3')">Set 3</button>
+                        <button class="sub-tab-btn" data-subtab="set4" onclick="switchSubTab('setsPanel', 'set4')">Set 4</button>
+                        <button class="sub-tab-btn" data-subtab="set5" onclick="switchSubTab('setsPanel', 'set5')">Set 5</button>
+                    </div>
+
+                    <!-- Set 1 Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="set1">
+                        <div class="tab-content active">
+                            <h3>Set 1 Winner</h3>
+                            <div class="stat-grid grid-cols-2">
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set1Player1">-</div>
+                                    <div class="stat-label">Player 1</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set1Player2">-</div>
+                                    <div class="stat-label">Player 2</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set2Player2">-</div>
-                            <div class="stat-label">Player 2</div>
+                    </div>
+
+                    <!-- Set 2 Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="set2">
+                        <div class="tab-content active">
+                            <h3>Set 2 Winner</h3>
+                            <div class="stat-grid grid-cols-2">
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set2Player1">-</div>
+                                    <div class="stat-label">Player 1</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set2Player2">-</div>
+                                    <div class="stat-label">Player 2</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Set 3 Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="set3">
+                        <div class="tab-content active">
+                            <h3>Set 3 Winner</h3>
+                            <div class="stat-grid grid-cols-2">
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set3Player1">-</div>
+                                    <div class="stat-label">Player 1</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set3Player2">-</div>
+                                    <div class="stat-label">Player 2</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Set 4 Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="set4">
+                        <div class="tab-content active">
+                            <h3>Set 4 Winner</h3>
+                            <div class="stat-grid grid-cols-2">
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set4Player1">-</div>
+                                    <div class="stat-label">Player 1</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set4Player2">-</div>
+                                    <div class="stat-label">Player 2</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Set 5 Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="set5">
+                        <div class="tab-content active">
+                            <h3>Set 5 Winner</h3>
+                            <div class="stat-grid grid-cols-2">
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set5Player1">-</div>
+                                    <div class="stat-label">Player 1</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="set5Player2">-</div>
+                                    <div class="stat-label">Player 2</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- SET 3 MARKETS -->
-            <div class="card hidden" id="set3Area" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('set3Area')">
-                    <h2>5. Set 3 Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Set 3 Winner</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set3Player1">-</div>
-                            <div class="stat-label">Player 1</div>
+                <!-- SPECIALS TAB PANEL -->
+                <div class="tab-panel" data-tab="specials" id="specialsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="exact-score" onclick="switchSubTab('specialsPanel', 'exact-score')">Exact Score</button>
+                        <button class="sub-tab-btn" data-subtab="odd-even" onclick="switchSubTab('specialsPanel', 'odd-even')">Odd/Even</button>
+                        <button class="sub-tab-btn" data-subtab="five-setter" onclick="switchSubTab('specialsPanel', 'five-setter')">5 Sets</button>
+                        <button class="sub-tab-btn" data-subtab="both-win" onclick="switchSubTab('specialsPanel', 'both-win')">Win a Set</button>
+                        <button class="sub-tab-btn" data-subtab="winner-total" onclick="switchSubTab('specialsPanel', 'winner-total')">Winner & Total</button>
+                    </div>
+
+                    <!-- Exact Score Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="exact-score">
+                        <div class="tab-content active">
+                            <h3>Exact Score</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Score</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="exactScoreTable"></tbody>
+                            </table></div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set3Player2">-</div>
-                            <div class="stat-label">Player 2</div>
+                    </div>
+
+                    <!-- Odd/Even Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="odd-even">
+                        <div class="tab-content active">
+                            <h3>Total Sets Odd/Even</h3>
+                            <div class="table-wrapper"><table>
+                                <tbody id="oddEvenTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Five Setter Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="five-setter">
+                        <div class="tab-content active">
+                            <h3>Match Goes to 5 Sets</h3>
+                            <div class="table-wrapper"><table>
+                                <tbody id="fiveSetterTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Both Win Set Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="both-win">
+                        <div class="tab-content active">
+                            <h3>Each/Both Players to Win a Set</h3>
+                            <div class="table-wrapper"><table>
+                                <tbody id="bothWinSetTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Winner & Total Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="winner-total">
+                        <div class="tab-content active">
+                            <h3>Winner & Total Sets</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Market</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="winnerTotalTable"></tbody>
+                            </table></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- SET 4 MARKETS -->
-            <div class="card hidden" id="set4Area" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('set4Area')">
-                    <h2>6. Set 4 Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Set 4 Winner</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set4Player1">-</div>
-                            <div class="stat-label">Player 1</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set4Player2">-</div>
-                            <div class="stat-label">Player 2</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SET 5 MARKETS -->
-            <div class="card hidden" id="set5Area" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('set5Area')">
-                    <h2>7. Set 5 Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Set 5 Winner</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set5Player1">-</div>
-                            <div class="stat-label">Player 1</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="set5Player2">-</div>
-                            <div class="stat-label">Player 2</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- COLUMN 3: ADDITIONAL MARKETS -->
-        <div class="markets-content">
-            <!-- EXACT SCORE -->
-            <div class="card hidden" id="exactScoreArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('exactScoreArea')">
-                    <h2>8. Exact Score</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Score</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="exactScoreTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- SPECIALS -->
-            <div class="card hidden" id="specialsArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('specialsArea')">
-                    <h2>9. Specials</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Total Sets Odd/Even</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
-                        <tbody id="oddEvenTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Match Goes to 5 Sets</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
-                        <tbody id="fiveSetterTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Each/Both Players to Win a Set</h3>
-                    <div class="table-wrapper"><table>
-                        <tbody id="bothWinSetTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- WINNER & TOTAL -->
-            <div class="card hidden" id="winnerTotalArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('winnerTotalArea')">
-                    <h2>10. Winner &amp; Total</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Market</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="winnerTotalTable"></tbody>
-                    </table></div>
-                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function toggleCard(id) {
-            document.getElementById(id).classList.toggle('collapsed');
-        }
+    <script type="module">
+        import { toggleCard, toggleAllCards, switchTab, switchSubTab } from './js/ui_utils.js';
 
-        function toggleAllCards() {
-            const cards = document.querySelectorAll('.card');
-            const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
-            cards.forEach(c => c.classList.toggle('collapsed', !allCollapsed));
-            document.getElementById('toggleAllBtn').textContent = allCollapsed ? 'Collapse All' : 'Expand All';
-        }
+        window.toggleCard = toggleCard;
+        window.toggleAllCards = toggleAllCards;
+        window.switchTab = switchTab;
+        window.switchSubTab = switchSubTab;
     </script>
     <script type="module" src="table_tennis_model.js"></script>
 </body>
