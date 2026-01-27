@@ -94,11 +94,7 @@ function runModel() {
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(1);
 
     // --- Show Markets Area ---
-    ['marketsArea', 'firstHalfArea', 'secondHalfArea', 'q1Area', 'q2Area', 'q3Area', 'q4Area',
-        'teamTotalsArea', 'marginArea', 'specialsArea', 'halftimeFulltimeArea', 'winnerTotalArea',
-        'handicapTotalArea'].forEach(id => {
-            document.getElementById(id).classList.remove('hidden');
-        });
+    document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     // --- Generate Spread Table ---
     const fairSpreadH = !isNaN(spreadHomeOdds) && !isNaN(spreadAwayOdds) ?
