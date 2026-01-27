@@ -294,13 +294,9 @@ function runModel() {
     // --- Generate Full-Time Score Matrix ---
     const matrixFT = generateMatrix(lambdas.lambdaHome, lambdas.lambdaAway, 14);
 
-    // --- Show Markets Area ---
-    ['marketsArea', 'puckLineArea', 'totalGoalsArea', 'periodMarketsArea',
-     'period3MarketsArea', 'exactScoreArea', 'specialMarketsArea', 'teamTotalsArea',
-     'comboBetsArea', 'exactGoalsArea', 'spreadGoalsArea'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('hidden');
-    });
+    // --- Show Markets Tab Container ---
+    const marketsContainer = document.getElementById('marketsTabContainer');
+    if (marketsContainer) marketsContainer.classList.remove('hidden');
 
     // --- Calculate regulation 1X2 for Moneyline (incl OT) ---
     const result1X2 = calc1X2FromMatrix(matrixFT);
@@ -482,50 +478,6 @@ function runModel() {
             document.getElementById(period.teamAwayId).innerHTML = periodTeamAwayHtml;
         }
     });
-
-    // --- PERIOD 3 DEDICATED MARKETS ---
-    const p3LambdaHome = lambdas.lambdaHome * p3Ratio;
-    const p3LambdaAway = lambdas.lambdaAway * p3Ratio;
-    const p3Matrix = generateMatrix(p3LambdaHome, p3LambdaAway, 10);
-
-    // Determine Period 3 total line based on full-time line
-    const p3TotalLine = totalGoalsLine <= 5.5 ? 1.5 : 2.5;
-
-    // Period 3 1X2
-    const p3Result = calc1X2FromMatrix(p3Matrix);
-    let p3_1x2Html = `
-        <tr>
-            <td>Home</td>
-            <td class="num-col prob-col">${(p3Result.homeWin * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(p3Result.homeWin)}</td>
-        </tr>
-        <tr>
-            <td>Draw</td>
-            <td class="num-col prob-col">${(p3Result.draw * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(p3Result.draw)}</td>
-        </tr>
-        <tr>
-            <td>Away</td>
-            <td class="num-col prob-col">${(p3Result.awayWin * 100).toFixed(1)}%</td>
-            <td class="num-col">${probToOdds(p3Result.awayWin)}</td>
-        </tr>
-    `;
-    if (document.getElementById('period3_1x2Table')) {
-        document.getElementById('period3_1x2Table').innerHTML = p3_1x2Html;
-    }
-
-    // Period 3 Total Goals
-    const p3Total = calcTotalFromMatrix(p3Matrix, p3TotalLine);
-    let p3TotalHtml = `
-        <tr>
-            <td class="line-col">${p3TotalLine.toFixed(1)}</td>
-            <td class="num-col">${probToOdds(p3Total.over)}</td>
-            <td class="num-col">${probToOdds(p3Total.under)}</td>
-        </tr>
-    `;
-    if (document.getElementById('period3TotalTable')) {
-        document.getElementById('period3TotalTable').innerHTML = p3TotalHtml;
-    }
 
     // --- COMBO BET: 1X2 & Total (Regular Time) ---
     const comboResults = [];

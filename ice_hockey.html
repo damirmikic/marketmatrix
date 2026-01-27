@@ -14,44 +14,34 @@
         <!-- LEFT COLUMN: API LOADER & INPUTS -->
         <div class="sidebar-column">
             <!-- CONTROLS -->
-            <a href="index.html"
-                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+            <a href="index.html" class="btn btn-home block w-full mb-2\.5 no-underline">
                 &larr; Home
             </a>
-            <button id="toggleAllBtn" onclick="toggleAllCards()" style="margin-top: 0; margin-bottom: 20px;">Collapse
+            <button id="toggleAllBtn" onclick="toggleAllCards()" class="mt-0 mb-5">Collapse
                 All</button>
 
             <!-- API MATCH LOADER -->
-            <div class="card" id="apiMatchLoader" style="margin-bottom: 20px;">
+            <div class="card mb-5" id="apiMatchLoader">
                 <div class="card-header" onclick="toggleCard('apiMatchLoader')">
                     <h2>0. Select Match</h2>
                 </div>
                 <div class="card-content">
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="flex-col gap-3">
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COUNTRY
-                                / REGION</label>
-                            <select id="apiCountrySelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;">
+                            <label class="form-label">COUNTRY / REGION</label>
+                            <select id="apiCountrySelect" class="form-select">
                                 <option value="">Loading...</option>
                             </select>
                         </div>
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">COMPETITION</label>
-                            <select id="apiLeagueSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0f172a; color: white;"
-                                disabled>
+                            <label class="form-label">COMPETITION</label>
+                            <select id="apiLeagueSelect" class="form-select" disabled>
                                 <option value="">Select country</option>
                             </select>
                         </div>
                         <div>
-                            <label
-                                style="font-size: 0.7rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">MATCH</label>
-                            <select id="apiMatchSelect"
-                                style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #334155; color: white;"
-                                disabled>
+                            <label class="form-label">MATCH</label>
+                            <select id="apiMatchSelect" class="form-select-dark" disabled>
                                 <option value="">Select competition</option>
                             </select>
                         </div>
@@ -65,8 +55,7 @@
                     <h2>1. Input Odds</h2>
                 </div>
                 <div class="card-content">
-                    <h3>Match Result (1X2) <span id="moneylineMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                    <h3>Match Result (1X2) <span id="moneylineMargin" class="margin-info">Margin:
                             -</span></h3>
                     <div class="input-group">
                         <label>Home</label>
@@ -81,8 +70,7 @@
                         <input type="number" id="awayOdds" step="0.01" value="3.00" oninput="runModel()">
                     </div>
 
-                    <h3>Puck Line <span id="puckLineMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                    <h3>Puck Line <span id="puckLineMargin" class="margin-info">Margin:
                             -</span></h3>
                     <div class="input-group">
                         <label>Line</label>
@@ -97,8 +85,7 @@
                         <input type="number" id="puckAwayOdds" step="0.01" value="1.91" oninput="runModel()">
                     </div>
 
-                    <h3>Total Goals <span id="totalGoalsMargin"
-                            style="float: right; font-size: 0.8rem; font-weight: normal; color: #64748b;">Margin:
+                    <h3>Total Goals <span id="totalGoalsMargin" class="margin-info">Margin:
                             -</span></h3>
                     <div class="input-group">
                         <label>Line</label>
@@ -113,7 +100,7 @@
                         <input type="number" id="underOdds" step="0.01" value="1.91" oninput="runModel()">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Period Ratios (Total = 1.00)</h3>
+                    <h3 class="mt-4">Period Ratios (Total = 1.00)</h3>
                     <div class="input-group">
                         <label>Period 1</label>
                         <input type="number" id="p1Ratio" step="0.001" value="0.333" oninput="runModel()" min="0"
@@ -130,7 +117,7 @@
                             max="1">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Derived Parameters</h3>
+                    <h3 class="mt-4">Derived Parameters</h3>
                     <div class="stat-grid">
                         <div class="stat-box">
                             <div class="stat-val" id="homeWinProb">-</div>
@@ -145,7 +132,7 @@
                             <div class="stat-label">Away %</div>
                         </div>
                     </div>
-                    <div class="stat-grid" style="margin-top: 10px;">
+                    <div class="stat-grid mt-2\.5">
                         <div class="stat-box">
                             <div class="stat-val" id="expectedTotal">-</div>
                             <div class="stat-label">Exp. Goals</div>
@@ -163,520 +150,514 @@
             </div>
         </div>
 
-        <!-- COLUMN 2: MAIN MARKETS -->
-        <div class="main-content">
-            <div class="card hidden" id="marketsArea">
-                <div class="card-header" onclick="toggleCard('marketsArea')">
-                    <h2>2. Moneyline (incl. OT)</h2>
+        <!-- MARKETS TAB CONTAINER -->
+        <div class="markets-column">
+            <!-- TABBED MARKETS -->
+            <div class="tab-container hidden" id="marketsTabContainer">
+                <!-- Primary Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="fulltime" onclick="switchTab('marketsTabContainer', 'fulltime')">Full Time</button>
+                    <button class="tab-btn" data-tab="periods" onclick="switchTab('marketsTabContainer', 'periods')">Periods</button>
+                    <button class="tab-btn" data-tab="teams" onclick="switchTab('marketsTabContainer', 'teams')">Teams</button>
+                    <button class="tab-btn" data-tab="specials" onclick="switchTab('marketsTabContainer', 'specials')">Specials</button>
                 </div>
-                <div class="card-content">
-                    <h3>Fair Odds (Regulation 1X2)</h3>
-                    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="fairHome">-</div>
-                            <div class="stat-label">Home</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="fairDraw">-</div>
-                            <div class="stat-label">Draw</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val prob-val" id="fairAway">-</div>
-                            <div class="stat-label">Away</div>
+
+                <!-- FULL TIME TAB PANEL -->
+                <div class="tab-panel active" data-tab="fulltime" id="fulltimePanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="ft-moneyline" onclick="switchSubTab('fulltimePanel', 'ft-moneyline')">Moneyline</button>
+                        <button class="sub-tab-btn" data-subtab="ft-puckline" onclick="switchSubTab('fulltimePanel', 'ft-puckline')">Puck Line</button>
+                        <button class="sub-tab-btn" data-subtab="ft-goals" onclick="switchSubTab('fulltimePanel', 'ft-goals')">Goals</button>
+                        <button class="sub-tab-btn" data-subtab="ft-btts" onclick="switchSubTab('fulltimePanel', 'ft-btts')">BTTS</button>
+                        <button class="sub-tab-btn" data-subtab="ft-combos" onclick="switchSubTab('fulltimePanel', 'ft-combos')">Result & Goals</button>
+                    </div>
+
+                    <!-- FT Moneyline Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="ft-moneyline">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Match Result / Double Chance</h3>
+                            <div class="stat-grid grid-cols-3">
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="fairHome">-</div>
+                                    <div class="stat-label">Home %</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="fairDraw">-</div>
+                                    <div class="stat-label">Draw %</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-val prob-val" id="fairAway">-</div>
+                                    <div class="stat-label">Away %</div>
+                                </div>
+                            </div>
+
+                            <h3 class="mt-5">Moneyline (Including OT/Shootout)</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Team</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="moneylineTable"></tbody>
+                            </table></div>
+                            <p class="text-xs text-slate mt-2">OT/Shootout edge flattened by 25% (3v3 OT higher variance, shootouts nearly 50/50)</p>
+
+                            <h3 class="mt-5">Double Chance</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="doubleChanceTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Draw No Bet</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dnbTable"></tbody>
+                            </table></div>
                         </div>
                     </div>
 
-                    <h3 style="margin-top: 20px;">Moneyline (Including OT/Shootout)</h3>
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Team</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="moneylineTable"></tbody>
-                    </table></div>
-                    <p style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
-                        OT/Shootout edge flattened by 25% (3v3 OT higher variance, shootouts nearly 50/50)
-                    </p>
+                    <!-- FT Puck Line Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-puckline">
+                        <div class="tab-content active">
+                            <h3>Puck Line (Handicap)</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Home</th>
+                                        <th class="num-col">Away</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="puckLineTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- FT Goals Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-goals">
+                        <div class="tab-content active">
+                            <h3>Total Goals</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="totalGoalsTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Exact Total Goals</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Goals</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="exactGoalsTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Match Score Ranges</h3>
+                            <p class="description-text">Detailed score range markets (regulation time)</p>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Range</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="spreadGoalsTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- FT BTTS Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-btts">
+                        <div class="tab-content active">
+                            <h3>Both Teams to Score</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bttsTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- FT Result & Goals Combo Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-combos">
+                        <div class="tab-content active">
+                            <h3>Result & Totals</h3>
+                            <p class="description-text">Combined bets on match result AND total goals (regulation time)</p>
+                            <div class="table-wrapper"><table class="text-md">
+                                <thead>
+                                    <tr>
+                                        <th>Combo</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comboTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- PUCK LINE MARKETS -->
-            <div class="card hidden" id="puckLineArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('puckLineArea')">
-                    <h2>3. Puck Line (Handicap)</h2>
+                <!-- PERIODS TAB PANEL -->
+                <div class="tab-panel" data-tab="periods" id="periodsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="period-1" onclick="switchSubTab('periodsPanel', 'period-1')">Period 1</button>
+                        <button class="sub-tab-btn" data-subtab="period-2" onclick="switchSubTab('periodsPanel', 'period-2')">Period 2</button>
+                        <button class="sub-tab-btn" data-subtab="period-3" onclick="switchSubTab('periodsPanel', 'period-3')">Period 3</button>
+                    </div>
+
+                    <!-- Period 1 Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="period-1">
+                        <div class="tab-content active">
+                            <h3>Period 1 Winner (1X2)</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p1WinTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 1 Total Goals</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p1TotalTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 1 Draw No Bet</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p1DnbTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 1 BTTS</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p1BttsTable"></tbody>
+                            </table></div>
+
+                            <div class="two-col-grid mt-5">
+                                <div>
+                                    <h3 class="text-lg">P1 Home Team Total</h3>
+                                    <div class="table-wrapper"><table>
+                                        <thead>
+                                            <tr>
+                                                <th>Line</th>
+                                                <th class="num-col">Over</th>
+                                                <th class="num-col">Under</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p1TeamHomeTable"></tbody>
+                                    </table></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg">P1 Away Team Total</h3>
+                                    <div class="table-wrapper"><table>
+                                        <thead>
+                                            <tr>
+                                                <th>Line</th>
+                                                <th class="num-col">Over</th>
+                                                <th class="num-col">Under</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p1TeamAwayTable"></tbody>
+                                    </table></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Period 2 Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="period-2">
+                        <div class="tab-content active">
+                            <h3>Period 2 Winner (1X2)</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p2WinTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 2 Total Goals</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p2TotalTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 2 Draw No Bet</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p2DnbTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 2 BTTS</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p2BttsTable"></tbody>
+                            </table></div>
+
+                            <div class="two-col-grid mt-5">
+                                <div>
+                                    <h3 class="text-lg">P2 Home Team Total</h3>
+                                    <div class="table-wrapper"><table>
+                                        <thead>
+                                            <tr>
+                                                <th>Line</th>
+                                                <th class="num-col">Over</th>
+                                                <th class="num-col">Under</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2TeamHomeTable"></tbody>
+                                    </table></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg">P2 Away Team Total</h3>
+                                    <div class="table-wrapper"><table>
+                                        <thead>
+                                            <tr>
+                                                <th>Line</th>
+                                                <th class="num-col">Over</th>
+                                                <th class="num-col">Under</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2TeamAwayTable"></tbody>
+                                    </table></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Period 3 Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="period-3">
+                        <div class="tab-content active">
+                            <h3>Period 3 Winner (1X2)</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p3WinTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 3 Total Goals</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p3TotalTable"></tbody>
+                            </table></div>
+                            <p class="text-xs text-slate mt-neg-2 mb-4">Line: 1.5 if FT ≤ 5.5, otherwise 2.5</p>
+
+                            <h3 class="mt-5">Period 3 Draw No Bet</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p3DnbTable"></tbody>
+                            </table></div>
+
+                            <h3 class="mt-5">Period 3 BTTS</h3>
+                            <div class="table-wrapper"><table class="mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Outcome</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p3BttsTable"></tbody>
+                            </table></div>
+
+                            <div class="two-col-grid mt-5">
+                                <div>
+                                    <h3 class="text-lg">P3 Home Team Total</h3>
+                                    <div class="table-wrapper"><table>
+                                        <thead>
+                                            <tr>
+                                                <th>Line</th>
+                                                <th class="num-col">Over</th>
+                                                <th class="num-col">Under</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p3TeamHomeTable"></tbody>
+                                    </table></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg">P3 Away Team Total</h3>
+                                    <div class="table-wrapper"><table>
+                                        <thead>
+                                            <tr>
+                                                <th>Line</th>
+                                                <th class="num-col">Over</th>
+                                                <th class="num-col">Under</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p3TeamAwayTable"></tbody>
+                                    </table></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Home</th>
-                                <th class="num-col">Away</th>
-                            </tr>
-                        </thead>
-                        <tbody id="puckLineTable"></tbody>
-                    </table></div>
+
+                <!-- TEAMS TAB PANEL -->
+                <div class="tab-panel" data-tab="teams" id="teamsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="home-team" onclick="switchSubTab('teamsPanel', 'home-team')">Home Team</button>
+                        <button class="sub-tab-btn" data-subtab="away-team" onclick="switchSubTab('teamsPanel', 'away-team')">Away Team</button>
+                    </div>
+
+                    <!-- Home Team Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="home-team">
+                        <div class="tab-content active">
+                            <h3>Home Team Total Goals</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="homeTeamTotalTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Away Team Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="away-team">
+                        <div class="tab-content active">
+                            <h3>Away Team Total Goals</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="num-col">Over</th>
+                                        <th class="num-col">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="awayTeamTotalTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- TOTAL GOALS MARKETS -->
-            <div class="card hidden" id="totalGoalsArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('totalGoalsArea')">
-                    <h2>4. Total Goals</h2>
+                <!-- SPECIALS TAB PANEL -->
+                <div class="tab-panel" data-tab="specials" id="specialsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="exact-score" onclick="switchSubTab('specialsPanel', 'exact-score')">Exact Score</button>
+                    </div>
+
+                    <!-- Exact Score Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="exact-score">
+                        <div class="tab-content active">
+                            <h3>Exact Score (Top 20)</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th>Score</th>
+                                        <th class="num-col">Prob</th>
+                                        <th class="num-col">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="exactScoreTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="totalGoalsTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
 
-            <!-- PERIOD MARKETS -->
-            <div class="card hidden" id="periodMarketsArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('periodMarketsArea')">
-                    <h2>5. Period Markets</h2>
-                </div>
-                <div class="card-content">
-                    <!-- PERIOD 1 -->
-                    <h3 style="font-size: 0.9rem;">Period 1 Winner (1X2)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p1WinTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 1 Total Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p1TotalTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 1 Draw No Bet</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p1DnbTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 1 BTTS</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p1BttsTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 1 Home Team Total</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p1TeamHomeTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 1 Away Team Total</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 30px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p1TeamAwayTable"></tbody>
-                    </table></div>
-
-                    <!-- PERIOD 2 -->
-                    <h3 style="font-size: 0.9rem;">Period 2 Winner (1X2)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p2WinTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 2 Total Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p2TotalTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 2 Draw No Bet</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p2DnbTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 2 BTTS</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p2BttsTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 2 Home Team Total</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p2TeamHomeTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 2 Away Team Total</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 30px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p2TeamAwayTable"></tbody>
-                    </table></div>
-
-                    <!-- PERIOD 3 -->
-                    <h3 style="font-size: 0.9rem;">Period 3 Winner (1X2)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p3WinTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 3 Total Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p3TotalTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 3 Draw No Bet</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p3DnbTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 3 BTTS</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p3BttsTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 3 Home Team Total</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p3TeamHomeTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 3 Away Team Total</h3>
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p3TeamAwayTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- PERIOD 3 DEDICATED MARKETS -->
-            <div class="card hidden" id="period3MarketsArea" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('period3MarketsArea')">
-                    <h2>Period 3 Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Period 3 Winner (1X2)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="period3_1x2Table"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Period 3 Total Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="period3TotalTable"></tbody>
-                    </table></div>
-                    <p style="margin-top: 5px; margin-bottom: 15px; font-size: 0.8rem; color: #64748b;">
-                        Line: 1.5 if FT ≤ 5.5, otherwise 2.5
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- COLUMN 3: ADDITIONAL MARKETS -->
-        <div class="markets-content">
-            <!-- EXACT SCORE -->
-            <div class="card hidden" id="exactScoreArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('exactScoreArea')">
-                    <h2>6. Exact Score (Top 20)</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Score</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="exactScoreTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- TEAM TOTALS -->
-            <div class="card hidden" id="teamTotalsArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('teamTotalsArea')">
-                    <h2>7. Team Totals</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Home Team Total Goals</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="homeTeamTotalTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Away Team Total Goals</h3>
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Line</th>
-                                <th class="num-col">Over</th>
-                                <th class="num-col">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="awayTeamTotalTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- SPECIAL MARKETS -->
-            <div class="card hidden" id="specialMarketsArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('specialMarketsArea')">
-                    <h2>8. Special Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="font-size: 0.9rem;">Both Teams To Score (BTTS)</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bttsTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Double Chance</h3>
-                    <div class="table-wrapper"><table style="margin-bottom: 20px;">
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="doubleChanceTable"></tbody>
-                    </table></div>
-
-                    <h3 style="font-size: 0.9rem;">Draw No Bet (DNB)</h3>
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Outcome</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dnbTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- COMBO BETS -->
-            <div class="card hidden" id="comboBetsArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('comboBetsArea')">
-                    <h2>9. Combo: 1X2 & Total</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Combo</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="comboTable"></tbody>
-                    </table></div>
-                    <p style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
-                        Combined bets on match result AND total goals (regulation time)
-                    </p>
-                </div>
-            </div>
-
-            <!-- EXACT GOALS -->
-            <div class="card hidden" id="exactGoalsArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('exactGoalsArea')">
-                    <h2>10. Exact Total Goals</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Goals</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="exactGoalsTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- MATCH SCORE RANGES -->
-            <div class="card hidden" id="spreadGoalsArea" style="margin-bottom: 20px;">
-                <div class="card-header" onclick="toggleCard('spreadGoalsArea')">
-                    <h2>11. Match Score Ranges</h2>
-                </div>
-                <div class="card-content">
-                    <p style="margin-top: 5px; margin-bottom: 15px; font-size: 0.8rem; color: #64748b;">
-                        Detailed score range markets for the full match (regulation time)
-                    </p>
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th>Range</th>
-                                <th class="num-col">Prob</th>
-                                <th class="num-col">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="spreadGoalsTable"></tbody>
-                    </table></div>
-                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function toggleCard(id) {
-            document.getElementById(id).classList.toggle('collapsed');
-        }
+    <script type="module">
+        import { toggleCard, toggleAllCards, switchTab, switchSubTab } from './js/ui_utils.js';
 
-        function toggleAllCards() {
-            const cards = document.querySelectorAll('.card');
-            const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
-            cards.forEach(c => c.classList.toggle('collapsed', !allCollapsed));
-            document.getElementById('toggleAllBtn').textContent = allCollapsed ? 'Collapse All' : 'Expand All';
-        }
+        window.toggleCard = toggleCard;
+        window.toggleAllCards = toggleAllCards;
+        window.switchTab = switchTab;
+        window.switchSubTab = switchSubTab;
     </script>
     <script type="module" src="ice_hockey_model.js"></script>
 </body>
