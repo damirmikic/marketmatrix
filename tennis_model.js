@@ -25,24 +25,24 @@ class TennisModel extends BaseModel {
 
         if (surface) {
             document.getElementById('surfaceBadge').textContent = surface;
-            currentSurface = surface;
+            this.currentSurface = surface;
         }
 
         if (!odds1 || !odds2) return;
 
         // Fetch Elo-based hold probabilities if player names are available
         let eloHoldProbs = null;
-        if (currentPlayer1 && currentPlayer2) {
+        if (this.currentPlayer1 && this.currentPlayer2) {
             // Use appropriate Elo service based on tour
-            const eloService = currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
+            const eloService = this.currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
             eloHoldProbs = eloService.getEloAdjustedHoldProbs(
-                currentPlayer1,
-                currentPlayer2,
+                this.currentPlayer1,
+                this.currentPlayer2,
                 surface
             );
 
             if (eloHoldProbs) {
-                console.log(`Using ${currentTour} Elo-enhanced priors:`, eloHoldProbs);
+                console.log(`Using ${this.currentTour} Elo-enhanced priors:`, eloHoldProbs);
             }
         }
 
@@ -122,7 +122,8 @@ class TennisModel extends BaseModel {
     } catch (e) {
         console.error("Model Error:", e);
     }
-};
+}
+}
 
 function displayFairValue(fair) {
     document.getElementById('fairP1').textContent = (1 / fair.p1).toFixed(2);
@@ -375,4 +376,9 @@ window.setCurrentPlayers = (p1, p2, surface, tour) => {
     tennisModel.currentPlayer2 = p2;
     tennisModel.currentSurface = surface;
     tennisModel.currentTour = tour;
+    // Also set module-level vars used by standalone display functions
+    currentPlayer1 = p1;
+    currentPlayer2 = p2;
+    currentSurface = surface;
+    currentTour = tour;
 };
