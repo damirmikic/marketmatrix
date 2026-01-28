@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bandy | MarketMatrix</title>
+    <title>Handball | MarketMatrix</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -32,38 +32,38 @@
                 </div>
             </div>
 
-            <!-- 2. MATCH WINNER (1X2) -->
-            <div class="card" id="oddsInputCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('oddsInputCard')">
-                    <h2>2. Match Winner Odds</h2>
-                    <span id="matchWinnerMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
+            <!-- 2. HANDICAP -->
+            <div class="card" id="handicapInputCard" style="margin-top: 20px;">
+                <div class="card-header" onclick="toggleCard('handicapInputCard')">
+                    <h2>2. Handicap Odds</h2>
+                    <span id="handicapMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
                 </div>
                 <div class="card-content">
                     <div class="input-group">
-                        <label>Home</label>
-                        <input type="number" id="homeOdds" step="0.01" placeholder="2.10">
+                        <label>Handicap Line</label>
+                        <input type="number" id="handicapLine" step="0.5" placeholder="-2.5">
                     </div>
                     <div class="input-group">
-                        <label>Draw</label>
-                        <input type="number" id="drawOdds" step="0.01" placeholder="3.80">
+                        <label id="handicapHomeLabel">Home</label>
+                        <input type="number" id="handicapHomeOdds" step="0.01" placeholder="1.90">
                     </div>
                     <div class="input-group">
-                        <label>Away</label>
-                        <input type="number" id="awayOdds" step="0.01" placeholder="2.75">
+                        <label id="handicapAwayLabel">Away</label>
+                        <input type="number" id="handicapAwayOdds" step="0.01" placeholder="1.90">
                     </div>
                 </div>
             </div>
 
-            <!-- 3. TOTAL GOALS (OPTIONAL) -->
+            <!-- 3. TOTAL GOALS -->
             <div class="card" id="totalGoalsInputCard" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('totalGoalsInputCard')">
-                    <h2>3. Total Goals (Optional)</h2>
+                    <h2>3. Total Goals</h2>
                     <span id="totalGoalsMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
                 </div>
                 <div class="card-content">
                     <div class="input-group">
                         <label>Line</label>
-                        <input type="number" id="totalGoalsLine" step="0.5" placeholder="6.5">
+                        <input type="number" id="totalGoalsLine" step="0.5" placeholder="55.5">
                     </div>
                     <div class="input-group">
                         <label id="overLabel">Over</label>
@@ -72,9 +72,6 @@
                     <div class="input-group">
                         <label id="underLabel">Under</label>
                         <input type="number" id="underOdds" step="0.01" placeholder="1.90">
-                    </div>
-                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 10px; line-height: 1.3;">
-                        <strong>Note:</strong> If not available, model will calculate using only match winner odds.
                     </div>
                 </div>
             </div>
@@ -91,12 +88,16 @@
                             <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;" id="expectedTotalValue">-</div>
                         </div>
                         <div style="margin-bottom: 10px;">
-                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">λ HOME</div>
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">EXPECTED HOME GOALS</div>
                             <div style="font-size: 1rem; font-weight: 600; color: #059669;" id="lambdaHome">-</div>
                         </div>
-                        <div>
-                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">λ AWAY</div>
+                        <div style="margin-bottom: 10px;">
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">EXPECTED AWAY GOALS</div>
                             <div style="font-size: 1rem; font-weight: 600; color: #dc2626;" id="lambdaAway">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">CORRELATION (rho)</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: #a78bfa;" id="rhoValue">-</div>
                         </div>
                     </div>
                 </div>
@@ -105,7 +106,7 @@
 
         <!-- RIGHT COLUMN: MARKETS -->
         <div class="main-content">
-            <!-- MATCH WINNER -->
+            <!-- MATCH WINNER (1X2) -->
             <div class="card hidden" id="matchWinnerCard">
                 <div class="card-header" onclick="toggleCard('matchWinnerCard')">
                     <h2>Match Winner (1X2)</h2>
@@ -174,7 +175,7 @@
                 </div>
             </div>
 
-            <!-- BOTH TEAMS TO SCORE (FULL TIME) -->
+            <!-- BOTH TEAMS TO SCORE -->
             <div class="card hidden" id="bttsCard" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('bttsCard')">
                     <h2>Both Teams To Score</h2>
@@ -194,7 +195,7 @@
                 </div>
             </div>
 
-            <!-- DRAW NO BET (FULL TIME) -->
+            <!-- DRAW NO BET -->
             <div class="card hidden" id="dnbCard" style="margin-top: 20px;">
                 <div class="card-header" onclick="toggleCard('dnbCard')">
                     <h2>Draw No Bet</h2>
@@ -250,7 +251,7 @@
         </div>
     </div>
 
-    <script type="module" src="bandy_model.js"></script>
+    <script type="module" src="handball_model.js"></script>
 
     <!-- Quick Sports Menu -->
     <div class="quick-sports-menu" id="quickSportsMenu">
@@ -308,7 +309,6 @@
             const toggle = menu.querySelector('.quick-sports-toggle');
             toggle.textContent = menu.classList.contains('collapsed') ? '▶' : '◀';
         }
-        // Set active icon based on current page
         document.addEventListener('DOMContentLoaded', () => {
             const currentPage = window.location.pathname.split('/').pop();
             document.querySelectorAll('.sport-icon').forEach(icon => {
