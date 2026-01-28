@@ -164,14 +164,11 @@ function displayFrameHandicap(exactScores, framesToWin, expectedFrameDiff) {
     const container = document.getElementById('spreadTable');
     if (!container) return;
 
-    // Generate handicap lines dynamically based on format
-    const maxHandicap = framesToWin - 1;
+    // Generate handicap lines: most balanced line +/- 3 lines using .5 values
+    const baseLine = -Math.round(expectedFrameDiff) + 0.5;
     const spreadLines = [];
-    for (let i = maxHandicap; i >= 1; i--) {
-        spreadLines.push(-i - 0.5);
-    }
-    for (let i = 1; i <= maxHandicap; i++) {
-        spreadLines.push(i - 0.5);
+    for (let i = -3; i <= 3; i++) {
+        spreadLines.push(baseLine + i);
     }
 
     let html = `
@@ -217,10 +214,14 @@ function displayTotalFrames(exactScores, framesToWin, bestOf, expectedTotal) {
     const container = document.getElementById('totalTable');
     if (!container) return;
 
-    // Generate total lines dynamically based on bestOf
+    // Generate total lines: most balanced line +/- 3 lines using .5 values
+    const baseTotal = Math.round(expectedTotal) + 0.5;
     const totalLines = [];
-    for (let i = framesToWin; i < bestOf; i++) {
-        totalLines.push(i + 0.5);
+    for (let i = -3; i <= 3; i++) {
+        const line = baseTotal + i;
+        if (line >= framesToWin + 0.5 && line <= bestOf - 0.5) {
+            totalLines.push(line);
+        }
     }
 
     let html = `
