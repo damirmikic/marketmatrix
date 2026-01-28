@@ -4,6 +4,12 @@ import { tennisEloService } from './js/tennis_elo_service.js';
 import { tennisWtaEloService } from './js/tennis_wta_elo_service.js';
 import { BaseModel } from './js/base_model.js';
 
+// Module-level variables used by standalone display functions
+let currentPlayer1 = null;
+let currentPlayer2 = null;
+let currentSurface = 'Hard';
+let currentTour = 'ATP';
+
 class TennisModel extends BaseModel {
     constructor() {
         super(new TennisMarkovEngine());
@@ -55,7 +61,7 @@ class TennisModel extends BaseModel {
 
         // Step 1: Check if Total Line is missing -> Generate Synthetic Total
         if (!totalLine || isNaN(totalLine)) {
-            targetTotal = engine.estimateSyntheticTotal(odds1, odds2, surface);
+            targetTotal = this.engine.estimateSyntheticTotal(odds1, odds2, surface);
             totalLineInput.value = targetTotal.toFixed(1);
             isSynthetic = true;
 
@@ -66,7 +72,7 @@ class TennisModel extends BaseModel {
         }
         // Step 2: If Over/Under odds are present -> Calculate Fair Total
         else if (oddsOver && oddsUnder && !isNaN(oddsOver) && !isNaN(oddsUnder)) {
-            targetTotal = engine.calculateExpectedTotalFromOdds(totalLine, oddsOver, oddsUnder);
+            targetTotal = this.engine.calculateExpectedTotalFromOdds(totalLine, oddsOver, oddsUnder);
             isAdjusted = true;
 
             // Visual feedback for adjusted data
@@ -97,23 +103,23 @@ class TennisModel extends BaseModel {
         }
 
         // 1. De-vig
-        const fairParams = engine.removeVigorish(odds1, odds2);
+        const fairParams = this.engine.removeVigorish(odds1, odds2);
         displayFairValue(fairParams);
 
         // 2. Calculate Direct Player Expected Games (market-driven, bypasses simulation)
         let directPlayerGames = null;
         if (targetTotal && oddsOver && oddsUnder && !isNaN(oddsOver) && !isNaN(oddsUnder)) {
             // Use the fair total already calculated (or targetTotal if not adjusted)
-            directPlayerGames = engine.getDirectPlayerGames(fairParams.p1, targetTotal);
+            directPlayerGames = this.engine.getDirectPlayerGames(fairParams.p1, targetTotal);
             console.log('Direct Player Games (market-driven):', directPlayerGames);
         }
 
         // 3. Solve (with adjusted/synthetic total and Elo-enhanced priors)
-        const result = engine.solveParameters(fairParams.p1, targetTotal, surface, eloHoldProbs);
+        const result = this.engine.solveParameters(fairParams.p1, targetTotal, surface, eloHoldProbs);
         displayParameters(result, eloHoldProbs, directPlayerGames);
 
         // 4. Derivatives (pass directPlayerGames for market-driven handicap calculation)
-        const derivatives = engine.generateDerivatives(result.pa, result.pb, result.calibration, directPlayerGames);
+        const derivatives = this.engine.generateDerivatives(result.pa, result.pb, result.calibration, directPlayerGames);
         displayDerivatives(derivatives);
 
         // Show all result cards including Elo card
