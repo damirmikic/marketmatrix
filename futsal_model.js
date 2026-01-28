@@ -53,7 +53,7 @@ class FutsalModel extends BaseModel {
             marketInputs.underOdds = underOdds;
         }
 
-        const markets = engine.generateAllMarkets(marketInputs);
+        const markets = this.engine.generateAllMarkets(marketInputs);
 
         // Display all results
         displayExpectedTotal(markets.expectedTotal, markets.lambdas);
