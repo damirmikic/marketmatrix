@@ -273,14 +273,16 @@
                     <div class="sub-tab-content" data-subtab="additional">
                         <div class="tab-content active">
                             <h3>Additional Markets</h3>
-                            <div style="display: flex; flex-direction: column; gap: 15px;">
-                                <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
-                                    <strong>Tie Break Prob (Match):</strong> <span id="tbProb">-</span>
-                                </div>
-                                <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
-                                    <strong>Both to Win Set:</strong> <span id="bothToWinSetProb">-</span>
-                                </div>
-                            </div>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%; text-align: left;">Market</th>
+                                        <th style="width: 30%; text-align: center;">Prob</th>
+                                        <th style="width: 30%; text-align: center;">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="additionalMarketsTable"></tbody>
+                            </table></div>
                         </div>
                     </div>
                 </div>

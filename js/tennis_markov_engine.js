@@ -468,7 +468,7 @@ export class TennisMarkovEngine {
             bothToWinSet: bothToWinSet,
             gameHandicap: handicaps,
             playerTotals: playerTotals,
-            tieBreakProb: pTieBreak
+            tieBreakProb: this.rawOdds(pTieBreak)
         };
     }
 

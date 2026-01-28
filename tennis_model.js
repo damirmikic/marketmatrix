@@ -285,10 +285,25 @@ function displayDerivatives(d) {
         `;
     }
 
-    // Both to Win Set
-    const btwsEl = document.getElementById('bothToWinSetProb');
-    if (btwsEl && d.bothToWinSet) {
-        btwsEl.textContent = `${d.bothToWinSet.prob} (${d.bothToWinSet.odds})`;
+    // Additional Markets (Tie Break + Both to Win Set)
+    const additionalTable = document.getElementById('additionalMarketsTable');
+    if (additionalTable) {
+        let addHtml = '';
+        if (d.tieBreakProb) {
+            addHtml += `<tr>
+                <td style="text-align: left;">Tie Break (Match)</td>
+                <td style="text-align: center;">${d.tieBreakProb.prob}</td>
+                <td style="text-align: center;">${d.tieBreakProb.odds}</td>
+            </tr>`;
+        }
+        if (d.bothToWinSet) {
+            addHtml += `<tr>
+                <td style="text-align: left;">Both to Win Set</td>
+                <td style="text-align: center;">${d.bothToWinSet.prob}</td>
+                <td style="text-align: center;">${d.bothToWinSet.odds}</td>
+            </tr>`;
+        }
+        additionalTable.innerHTML = addHtml;
     }
 
     // Game Handicap
@@ -312,8 +327,6 @@ function displayDerivatives(d) {
         displayPlayerTotals(d.playerTotals);
     }
 
-    // Tie Break
-    document.getElementById('tbProb').textContent = (d.tieBreakProb * 100).toFixed(1) + '%';
 }
 
 /**
