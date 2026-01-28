@@ -13,33 +13,37 @@
     <div class="container">
         <!-- LEFT COLUMN: INPUTS & PARAMETERS -->
         <div class="sidebar-column">
-            <a href="index.html"
-                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
+            <a href="index.html" class="btn btn-home block w-full mb-2\.5 no-underline">
                 &larr; Home
             </a>
+            <button id="toggleAllBtn" onclick="toggleAllCards()" class="mt-0 mb-5">Collapse All</button>
 
-            <!-- 1. MATCH SELECTION -->
-            <div class="card" id="matchSelectionCard">
+            <!-- 0. MATCH SELECTION -->
+            <div class="card mb-5" id="matchSelectionCard">
                 <div class="card-header" onclick="toggleCard('matchSelectionCard')">
-                    <h2>1. Select Match</h2>
+                    <h2>0. Select Match</h2>
                 </div>
                 <div class="card-content">
-                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">TOURNAMENT</label>
-                    <select id="tournamentSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
-
-                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">MATCH</label>
-                    <select id="matchSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;" disabled></select>
-
-                    <div style="font-size: 0.75rem; color: #94a3b8; text-align: right;">
-                        Surface: <span id="surfaceBadge" style="color: #3b82f6; font-weight: bold;">-</span>
+                    <div class="flex-col gap-3">
+                        <div>
+                            <label class="form-label">TOURNAMENT</label>
+                            <select id="tournamentSelect" class="form-select"></select>
+                        </div>
+                        <div>
+                            <label class="form-label">MATCH</label>
+                            <select id="matchSelect" class="form-select-dark" disabled></select>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8; text-align: right;">
+                            Surface: <span id="surfaceBadge" style="color: #3b82f6; font-weight: bold;">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. ODDS INPUT -->
-            <div class="card" id="oddsInputCard" style="margin-top: 20px;">
+            <!-- 1. ODDS INPUT -->
+            <div class="card" id="oddsInputCard">
                 <div class="card-header" onclick="toggleCard('oddsInputCard')">
-                    <h2>2. Input Odds</h2>
+                    <h2>1. Input Odds</h2>
                 </div>
                 <div class="card-content">
                     <h3>Match Winner</h3>
@@ -52,7 +56,7 @@
                         <input type="number" id="player2Odds" step="0.01" placeholder="1.90">
                     </div>
 
-                    <h3 style="margin-top: 15px;">Total Games</h3>
+                    <h3 class="mt-5">Total Games</h3>
                     <div class="input-group">
                         <label>Line <span id="totalInfo" style="font-size: 0.75rem; font-weight: normal;"></span></label>
                         <input type="number" id="totalGamesLine" step="0.5" placeholder="22.5 (or leave empty)">
@@ -74,10 +78,10 @@
                 </div>
             </div>
 
-            <!-- 3. PARAMETERS (SIDE) -->
-            <div class="card hidden" id="paramsCard" style="margin-top: 20px;">
+            <!-- 2. PARAMETERS -->
+            <div class="card hidden mt-5" id="paramsCard">
                 <div class="card-header" onclick="toggleCard('paramsCard')">
-                    <h2>3. Parameters</h2>
+                    <h2>2. Parameters</h2>
                 </div>
                 <div class="card-content">
                     <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
@@ -116,154 +120,183 @@
         </div>
 
         <!-- RIGHT COLUMN: MARKETS -->
-        <div class="main-content">
-            <!-- FAIR VALUE -->
-            <div class="card hidden" id="fairValueCard">
-                <div class="card-header" onclick="toggleCard('fairValueCard')">
-                    <h2>Fair Value (Raw)</h2>
+        <div class="markets-column">
+            <!-- TABBED MARKETS -->
+            <div class="tab-container hidden" id="marketsTabContainer">
+                <!-- Primary Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="match" onclick="switchTab('marketsTabContainer', 'match')">Match</button>
+                    <button class="tab-btn" data-tab="handicaps" onclick="switchTab('marketsTabContainer', 'handicaps')">Handicaps</button>
+                    <button class="tab-btn" data-tab="totals" onclick="switchTab('marketsTabContainer', 'totals')">Totals</button>
                 </div>
-                <div class="card-content">
-                    <div style="display: flex; gap: 20px;">
-                        <div
-                            style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <div style="font-size: 0.8rem; color: #64748b;">Player 1 Fair Odds</div>
-                            <div id="fairP1" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+
+                <!-- MATCH TAB PANEL -->
+                <div class="tab-panel active" data-tab="match" id="matchPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="fair-value" onclick="switchSubTab('matchPanel', 'fair-value')">Fair Value</button>
+                        <button class="sub-tab-btn" data-subtab="elo-ratings" onclick="switchSubTab('matchPanel', 'elo-ratings')">Elo Ratings</button>
+                        <button class="sub-tab-btn" data-subtab="set1-winner" onclick="switchSubTab('matchPanel', 'set1-winner')">Set 1 Winner</button>
+                        <button class="sub-tab-btn" data-subtab="set-betting" onclick="switchSubTab('matchPanel', 'set-betting')">Set Betting</button>
+                    </div>
+
+                    <!-- Fair Value Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="fair-value">
+                        <div class="tab-content active">
+                            <h3>Fair Value (Raw)</h3>
+                            <div style="display: flex; gap: 20px;">
+                                <div
+                                    style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                                    <div style="font-size: 0.8rem; color: #64748b;">Player 1 Fair Odds</div>
+                                    <div id="fairP1" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+                                </div>
+                                <div
+                                    style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                                    <div style="font-size: 0.8rem; color: #64748b;">Player 2 Fair Odds</div>
+                                    <div id="fairP2" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+                                </div>
+                            </div>
                         </div>
-                        <div
-                            style="flex: 1; text-align: center; padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <div style="font-size: 0.8rem; color: #64748b;">Player 2 Fair Odds</div>
-                            <div id="fairP2" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">-</div>
+                    </div>
+
+                    <!-- Elo Ratings Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="elo-ratings">
+                        <div class="tab-content active">
+                            <h3>Elo Ratings (Tennis Abstract)</h3>
+                            <div id="eloInfo">
+                                <p style="font-size: 0.875rem; color: #94a3b8;">Select a match to view Elo ratings</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Set 1 Winner Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="set1-winner">
+                        <div class="tab-content active">
+                            <h3>Set 1 Winner</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%; text-align: left;">Player</th>
+                                        <th style="width: 30%; text-align: center;">Prob</th>
+                                        <th style="width: 30%; text-align: center;">Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="setWinnerTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Set Betting Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="set-betting">
+                        <div class="tab-content active">
+                            <h3>Set Betting (Correct Score)</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 35%; text-align: left;">Score</th>
+                                        <th style="width: 30%; text-align: center;">Prob</th>
+                                        <th style="width: 35%; text-align: center;">Raw Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="correctScoreTable"></tbody>
+                            </table></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- ELO RATINGS -->
-            <div class="card hidden" id="eloCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('eloCard')">
-                    <h2>Elo Ratings (Tennis Abstract)</h2>
-                </div>
-                <div class="card-content">
-                    <div id="eloInfo">
-                        <p style="font-size: 0.875rem; color: #94a3b8;">Select a match to view Elo ratings</p>
+                <!-- HANDICAPS TAB PANEL -->
+                <div class="tab-panel" data-tab="handicaps" id="handicapsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="game-handicap" onclick="switchSubTab('handicapsPanel', 'game-handicap')">Game Handicap</button>
                     </div>
-                </div>
-            </div>
 
-            <!-- SET 1 WINNER -->
-            <div class="card hidden" id="setWinnerCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('setWinnerCard')">
-                    <h2>Set 1 Winner</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th style="width: 40%; text-align: left;">Player</th>
-                                <th style="width: 30%; text-align: center;">Prob</th>
-                                <th style="width: 30%; text-align: center;">Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="setWinnerTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- SET BETTING (CORRECT SCORE) -->
-            <div class="card hidden" id="setBettingCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('setBettingCard')">
-                    <h2>Set Betting (Correct Score)</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th style="width: 35%; text-align: left;">Score</th>
-                                <th style="width: 30%; text-align: center;">Prob</th>
-                                <th style="width: 35%; text-align: center;">Raw Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="correctScoreTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- GAME HANDICAP -->
-            <div class="card hidden" id="gameHandicapCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('gameHandicapCard')">
-                    <h2>Game Handicap</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th style="width: 25%; text-align: left;">Line</th>
-                                <th style="width: 37.5%; text-align: center;">Home Odds</th>
-                                <th style="width: 37.5%; text-align: center;">Away Odds</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gameHandicapTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <!-- TIE BREAK & BOTH TO WIN SET -->
-            <div class="card hidden" id="additionalMarketsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('additionalMarketsCard')">
-                    <h2>Additional Markets</h2>
-                </div>
-                <div class="card-content">
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <strong>Tie Break Prob (Match):</strong> <span id="tbProb">-</span>
-                        </div>
-                        <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
-                            <strong>Both to Win Set:</strong> <span id="bothToWinSetProb">-</span>
+                    <!-- Game Handicap Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="game-handicap">
+                        <div class="tab-content active">
+                            <h3>Game Handicap</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%; text-align: left;">Line</th>
+                                        <th style="width: 37.5%; text-align: center;">Home Odds</th>
+                                        <th style="width: 37.5%; text-align: center;">Away Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gameHandicapTable"></tbody>
+                            </table></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- PLAYER 1 TOTAL GAMES -->
-            <div class="card hidden" id="player1TotalsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('player1TotalsCard')">
-                    <h2>Player 1 Total Games</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th style="width: 30%; text-align: left;">Line</th>
-                                <th style="width: 35%; text-align: center;">Over</th>
-                                <th style="width: 35%; text-align: center;">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="player1TotalsTable"></tbody>
-                    </table></div>
-                </div>
-            </div>
+                <!-- TOTALS TAB PANEL -->
+                <div class="tab-panel" data-tab="totals" id="totalsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="player1-totals" onclick="switchSubTab('totalsPanel', 'player1-totals')">Player 1 Games</button>
+                        <button class="sub-tab-btn" data-subtab="player2-totals" onclick="switchSubTab('totalsPanel', 'player2-totals')">Player 2 Games</button>
+                        <button class="sub-tab-btn" data-subtab="additional" onclick="switchSubTab('totalsPanel', 'additional')">Additional</button>
+                    </div>
 
-            <!-- PLAYER 2 TOTAL GAMES -->
-            <div class="card hidden" id="player2TotalsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('player2TotalsCard')">
-                    <h2>Player 2 Total Games</h2>
+                    <!-- Player 1 Total Games Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="player1-totals">
+                        <div class="tab-content active">
+                            <h3>Player 1 Total Games</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 30%; text-align: left;">Line</th>
+                                        <th style="width: 35%; text-align: center;">Over</th>
+                                        <th style="width: 35%; text-align: center;">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="player1TotalsTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Player 2 Total Games Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="player2-totals">
+                        <div class="tab-content active">
+                            <h3>Player 2 Total Games</h3>
+                            <div class="table-wrapper"><table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 30%; text-align: left;">Line</th>
+                                        <th style="width: 35%; text-align: center;">Over</th>
+                                        <th style="width: 35%; text-align: center;">Under</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="player2TotalsTable"></tbody>
+                            </table></div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Markets Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="additional">
+                        <div class="tab-content active">
+                            <h3>Additional Markets</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+                                    <strong>Tie Break Prob (Match):</strong> <span id="tbProb">-</span>
+                                </div>
+                                <div style="padding: 10px; background: #f8fafc; border-radius: 6px;">
+                                    <strong>Both to Win Set:</strong> <span id="bothToWinSetProb">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper"><table>
-                        <thead>
-                            <tr>
-                                <th style="width: 30%; text-align: left;">Line</th>
-                                <th style="width: 35%; text-align: center;">Over</th>
-                                <th style="width: 35%; text-align: center;">Under</th>
-                            </tr>
-                        </thead>
-                        <tbody id="player2TotalsTable"></tbody>
-                    </table></div>
-                </div>
+
             </div>
         </div>
     </div>
 
+    <script type="module">
+        import { toggleCard, toggleAllCards, switchTab, switchSubTab } from './js/ui_utils.js';
+
+        window.toggleCard = toggleCard;
+        window.toggleAllCards = toggleAllCards;
+        window.switchTab = switchTab;
+        window.switchSubTab = switchSubTab;
+    </script>
     <script type="module" src="tennis_model.js"></script>
 
     <!-- Quick Sports Menu -->

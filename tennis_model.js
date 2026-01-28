@@ -122,8 +122,9 @@ class TennisModel extends BaseModel {
         const derivatives = this.engine.generateDerivatives(result.pa, result.pb, result.calibration, directPlayerGames);
         displayDerivatives(derivatives);
 
-        // Show all result cards including Elo card
-        document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
+        // Show params card and tab container
+        document.getElementById('paramsCard').classList.remove('hidden');
+        document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     } catch (e) {
         console.error("Model Error:", e);
