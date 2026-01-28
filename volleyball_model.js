@@ -3,15 +3,6 @@ import { VolleyballEngine } from './volleyball_engine.js';
 
 const engine = new VolleyballEngine();
 
-// UI Helper - Toggle card collapse/expand
-function toggleCard(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('collapsed');
-}
-
-// Expose to window for HTML onclick handlers
-window.toggleCard = toggleCard;
-
 window.runModel = function () {
     try {
         const team1Odds = parseFloat(document.getElementById('firstSetTeam1Odds').value);
@@ -33,8 +24,8 @@ window.runModel = function () {
         displayTotalSetsMarkets(derivatives.totalSets);
         displayExpectedSets(derivatives.expectedSets);
 
-        // Show all result cards
-        document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
+        // Show tab container
+        document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     } catch (e) {
         console.error("Model Error:", e);
