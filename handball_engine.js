@@ -9,12 +9,12 @@
  * - No overtime in regular season (draws allowed)
  *
  * Model Approach:
- * - Bivariate Poisson distribution for goal probabilities
+ * - Independent Poisson distribution for goal probabilities
  * - Skellam distribution for efficient handicap calculations
  * - Inputs: Handicap line/odds + Total Goals line/odds
  * - Solves for lambdaHome and lambdaAway (expected goals)
  * - Probability matrix up to 50 goals per team
- * - Correlation parameter (rho) for draw deflation
+ * - No correlation needed: high-scoring sport makes independent Poisson accurate
  *
  * Handicaps: +/-1.5 through +/-8.5
  * Total lines: typically 48.5 - 62.5
@@ -295,21 +295,14 @@ export class HandballEngine {
     // ==========================================
 
     /**
-     * Estimate correlation (rho) for Bivariate Poisson
-     * Handball has positive correlation due to game pace:
-     * - Fast game = both teams score more
-     * - Slow game = both teams score less
-     *
-     * Higher totals tend to have slightly more correlation
-     * Typical rho range: 0.5 - 2.0 for handball
+     * Correlation parameter for Poisson model.
+     * For handball (high-scoring, lambdas ~25-30), independent Poisson
+     * already provides accurate 1X2 and handicap probabilities.
+     * Bivariate Poisson rho artificially inflates draw probability
+     * and compresses outsider odds in high-scoring sports.
      */
     estimateRho(lambdaHome, lambdaAway) {
-        const total = lambdaHome + lambdaAway;
-        // Scale rho with total goals - more goals = more pace-driven correlation
-        if (total <= 48) return 0.5;
-        if (total >= 62) return 2.0;
-        // Linear interpolation
-        return 0.5 + (total - 48) * (1.5 / 14);
+        return 0;
     }
 
     // ==========================================
@@ -366,7 +359,7 @@ export class HandballEngine {
             const totalAdj = errorTotal * learningRate * 3;
 
             lambdaHome += handicapAdj + totalAdj;
-            lambdaAway -= handicapAdj + totalAdj;
+            lambdaAway += -handicapAdj + totalAdj;
 
             // Constrain to reasonable handball ranges
             lambdaHome = Math.max(15, Math.min(40, lambdaHome));
