@@ -4,17 +4,19 @@
  * Sport Characteristics:
  * - Two 30-minute halves (60 minutes total)
  * - High-scoring: typical total ~50-60 goals per match
- * - Each team scores ~25-30 goals
- * - Fast pace with positive scoring correlation (game state effects)
+ * - Each team scores ~25-30 goals (xG)
+ * - Fast pace with consistent scoring patterns
  * - No overtime in regular season (draws allowed)
  *
  * Model Approach:
- * - Independent Poisson distribution for goal probabilities
- * - Skellam distribution for efficient handicap calculations
+ * - Conway-Maxwell-Poisson (CMP) distribution for goal probabilities
+ * - CMP adds dispersion parameter (nu) to model under/over-dispersion
+ * - nu > 1: under-dispersion (more consistent than Poisson)
+ * - nu = 1: standard Poisson
+ * - nu < 1: over-dispersion (more variable than Poisson)
  * - Inputs: Handicap line/odds + Total Goals line/odds
- * - Solves for lambdaHome and lambdaAway (expected goals)
+ * - Solves for lambdaHome and lambdaAway (xG for each team)
  * - Probability matrix up to 50 goals per team
- * - No correlation needed: high-scoring sport makes independent Poisson accurate
  *
  * Handicaps: +/-1.5 through +/-8.5
  * Total lines: typically 48.5 - 62.5
@@ -27,6 +29,11 @@ export class HandballEngine {
         this.MAX_GOALS = 50;
         this.SOLVER_MAX_ITERATIONS = 1500;
         this.SOLVER_THRESHOLD = 0.0001;
+
+        // CMP dispersion parameters (nu > 1 for under-dispersion)
+        // Handball scoring is more consistent than pure Poisson
+        this.nuHome = 1.1;
+        this.nuAway = 1.1;
     }
 
     // ==========================================
@@ -34,20 +41,63 @@ export class HandballEngine {
     // ==========================================
 
     /**
-     * Poisson Probability Mass Function
-     * P(X = k) = (lambda^k * e^-lambda) / k!
+     * Conway-Maxwell-Poisson Normalization Constant
+     * Z(lambda, nu) = sum_{j=0}^{maxGoals} (lambda^j / (j!)^nu)
+     *
+     * Cached normalization constants to avoid recomputation
      */
-    poissonPMF(k, lambda) {
+    cmpNormalizationCache = new Map();
+
+    cmpNormalization(lambda, nu, maxGoals = this.MAX_GOALS) {
+        const key = `${lambda.toFixed(2)}_${nu.toFixed(2)}`;
+        if (this.cmpNormalizationCache.has(key)) {
+            return this.cmpNormalizationCache.get(key);
+        }
+
+        let Z = 0;
+        let logFactorial = 0;
+
+        for (let j = 0; j <= maxGoals; j++) {
+            // Compute log((lambda^j) / (j!)^nu)
+            const logTerm = j * Math.log(lambda) - nu * logFactorial;
+            Z += Math.exp(logTerm);
+
+            // Update log(j!) for next iteration
+            if (j > 0) {
+                logFactorial += Math.log(j + 1);
+            }
+        }
+
+        this.cmpNormalizationCache.set(key, Z);
+        return Z;
+    }
+
+    /**
+     * Conway-Maxwell-Poisson Probability Mass Function
+     * P(X = k) = (lambda^k / (k!)^nu) / Z(lambda, nu)
+     *
+     * @param {number} k - Number of goals
+     * @param {number} lambda - Rate parameter (xG)
+     * @param {number} nu - Dispersion parameter (nu > 1 = under-dispersion)
+     */
+    cmpPMF(k, lambda, nu) {
         if (lambda <= 0) return k === 0 ? 1 : 0;
         if (k < 0) return 0;
 
-        // Log-space for numerical stability with large lambdas (~25-30)
-        let logFact = 0;
+        // Compute log-factorial for k
+        let logFactorial = 0;
         for (let i = 2; i <= k; i++) {
-            logFact += Math.log(i);
+            logFactorial += Math.log(i);
         }
-        const logProb = k * Math.log(lambda) - lambda - logFact;
-        return Math.exp(logProb);
+
+        // Compute numerator: (lambda^k) / (k!)^nu
+        const logNumerator = k * Math.log(lambda) - nu * logFactorial;
+        const numerator = Math.exp(logNumerator);
+
+        // Get normalization constant
+        const Z = this.cmpNormalization(lambda, nu);
+
+        return numerator / Z;
     }
 
     /**
@@ -92,66 +142,29 @@ export class HandballEngine {
     }
 
     /**
-     * Generate probability matrix for all score combinations
-     * Uses Bivariate Poisson when rho > 0 (positive correlation)
+     * Generate probability matrix for all score combinations using CMP
+     * Uses independent Conway-Maxwell-Poisson distributions for each team
      *
-     * Bivariate Poisson: adjusts joint probability to account for
-     * shared scoring intensity (game pace correlation)
-     *
-     * @param {number} lambdaHome - Expected home goals
-     * @param {number} lambdaAway - Expected away goals
-     * @param {number} rho - Correlation parameter (0 = independent, >0 = positive correlation)
+     * @param {number} lambdaHome - Expected home goals (xG)
+     * @param {number} lambdaAway - Expected away goals (xG)
+     * @param {number} nuHome - Home team dispersion parameter
+     * @param {number} nuAway - Away team dispersion parameter
      * @param {number} maxGoals - Maximum goals per team in matrix
      */
-    generateMatrix(lambdaHome, lambdaAway, rho = 0, maxGoals = this.MAX_GOALS) {
+    generateMatrix(lambdaHome, lambdaAway, nuHome = this.nuHome, nuAway = this.nuAway, maxGoals = this.MAX_GOALS) {
         const matrix = [];
         let totalProb = 0;
 
-        if (rho === 0) {
-            // Standard independent Poisson
-            for (let h = 0; h <= maxGoals; h++) {
-                matrix[h] = [];
-                for (let a = 0; a <= maxGoals; a++) {
-                    matrix[h][a] = this.poissonPMF(h, lambdaHome) * this.poissonPMF(a, lambdaAway);
-                    totalProb += matrix[h][a];
-                }
-            }
-        } else {
-            // Bivariate Poisson with correlation
-            // P(X=h, Y=a) = sum_{s=0}^{min(h,a)} C(h,s)*C(a,s)*s! * lh^(h-s)*la^(a-s)*lc^s * e^{-(lh+la+lc)} / (h! * a!)
-            // where lc = rho (common component), lh' = lambdaHome - rho, la' = lambdaAway - rho
-            const lc = rho;
-            const lh = Math.max(0.01, lambdaHome - lc);
-            const la = Math.max(0.01, lambdaAway - lc);
-
-            for (let h = 0; h <= maxGoals; h++) {
-                matrix[h] = [];
-                for (let a = 0; a <= maxGoals; a++) {
-                    let prob = 0;
-                    const sMax = Math.min(h, a);
-                    for (let s = 0; s <= sMax; s++) {
-                        // log-space computation for stability
-                        let logTerm = 0;
-                        // (h-s)*log(lh) + (a-s)*log(la) + s*log(lc)
-                        if (h - s > 0) logTerm += (h - s) * Math.log(lh);
-                        if (a - s > 0) logTerm += (a - s) * Math.log(la);
-                        if (s > 0) logTerm += s * Math.log(lc);
-                        // -(lh + la + lc)
-                        logTerm += -(lh + la + lc);
-                        // -log((h-s)!) - log((a-s)!) - log(s!)
-                        for (let i = 2; i <= h - s; i++) logTerm -= Math.log(i);
-                        for (let i = 2; i <= a - s; i++) logTerm -= Math.log(i);
-                        for (let i = 2; i <= s; i++) logTerm -= Math.log(i);
-
-                        prob += Math.exp(logTerm);
-                    }
-                    matrix[h][a] = prob;
-                    totalProb += prob;
-                }
+        // Independent CMP distribution
+        for (let h = 0; h <= maxGoals; h++) {
+            matrix[h] = [];
+            for (let a = 0; a <= maxGoals; a++) {
+                matrix[h][a] = this.cmpPMF(h, lambdaHome, nuHome) * this.cmpPMF(a, lambdaAway, nuAway);
+                totalProb += matrix[h][a];
             }
         }
 
-        // Normalize
+        // Normalize (should be close to 1.0 already)
         if (totalProb > 0 && Math.abs(totalProb - 1.0) > 0.001) {
             for (let h = 0; h <= maxGoals; h++) {
                 for (let a = 0; a <= maxGoals; a++) {
@@ -246,19 +259,6 @@ export class HandballEngine {
         return { homeCovers, awayCovers: 1 - homeCovers };
     }
 
-    calcBTTS(matrix) {
-        let bttsYes = 0;
-        const maxGoals = matrix.length - 1;
-
-        for (let h = 1; h <= maxGoals; h++) {
-            for (let a = 1; a <= maxGoals; a++) {
-                bttsYes += matrix[h][a];
-            }
-        }
-
-        return { yes: bttsYes, no: 1 - bttsYes };
-    }
-
     calcTeamTotal(matrix, line, isHome) {
         let over = 0;
         const maxGoals = matrix.length - 1;
@@ -291,32 +291,21 @@ export class HandballEngine {
     }
 
     // ==========================================
-    // CORRELATION ESTIMATION
+    // XG SOLVER
     // ==========================================
 
     /**
-     * Correlation parameter for Poisson model.
-     * For handball (high-scoring, lambdas ~25-30), independent Poisson
-     * already provides accurate 1X2 and handicap probabilities.
-     * Bivariate Poisson rho artificially inflates draw probability
-     * and compresses outsider odds in high-scoring sports.
-     */
-    estimateRho(lambdaHome, lambdaAway) {
-        return 0;
-    }
-
-    // ==========================================
-    // LAMBDA SOLVER
-    // ==========================================
-
-    /**
-     * Solve for lambdas using handicap and total goals inputs
+     * Solve for xG (lambdas) using handicap and total goals inputs
      *
      * Inputs:
      * - handicapLine: e.g., -2.5 (home favored by 2.5)
      * - targetHomeCovers: fair probability home covers handicap
      * - totalLine: e.g., 55.5
      * - targetOver: fair probability of over totalLine
+     *
+     * Outputs:
+     * - lambdaHome: Expected goals (xG) for home team
+     * - lambdaAway: Expected goals (xG) for away team
      *
      * Solving system:
      * 1. Total = lambdaHome + lambdaAway = expectedTotal (from over/under)
@@ -339,7 +328,8 @@ export class HandballEngine {
         let learningRate = 0.08;
 
         for (let iter = 0; iter < this.SOLVER_MAX_ITERATIONS; iter++) {
-            const matrix = this.generateMatrix(lambdaHome, lambdaAway, 0, this.MAX_GOALS);
+            // Generate matrix using CMP distribution
+            const matrix = this.generateMatrix(lambdaHome, lambdaAway, this.nuHome, this.nuAway, this.MAX_GOALS);
 
             // Calculate current model predictions
             const modelHandicap = this.calcHandicap(matrix, handicapLine);
@@ -361,7 +351,7 @@ export class HandballEngine {
             lambdaHome += handicapAdj + totalAdj;
             lambdaAway += -handicapAdj + totalAdj;
 
-            // Constrain to reasonable handball ranges
+            // Constrain to reasonable handball xG ranges
             lambdaHome = Math.max(15, Math.min(40, lambdaHome));
             lambdaAway = Math.max(15, Math.min(40, lambdaAway));
 
@@ -398,27 +388,32 @@ export class HandballEngine {
         const fairTotal = this.removeVig2Way(overOdds, underOdds);
         const targetOver = fairTotal[0];
 
-        // Solve for lambdas
+        // Solve for xG (lambdas)
         const lambdas = this.solveLambdas(handicapLine, targetHomeCovers, totalLine, targetOver);
 
-        // Estimate correlation
-        const rho = this.estimateRho(lambdas.lambdaHome, lambdas.lambdaAway);
+        // Generate full-time matrix using CMP distribution
+        const matrixFT = this.generateMatrix(
+            lambdas.lambdaHome,
+            lambdas.lambdaAway,
+            this.nuHome,
+            this.nuAway,
+            this.MAX_GOALS
+        );
 
-        // Generate matrices with Bivariate Poisson correlation
-        const matrixFT = this.generateMatrix(lambdas.lambdaHome, lambdas.lambdaAway, rho, this.MAX_GOALS);
-
-        // Half-time matrix (50% of full-time lambdas, proportional rho)
+        // Half-time matrix (50% of full-time xG)
         const matrixHT = this.generateMatrix(
             lambdas.lambdaHome * 0.5,
             lambdas.lambdaAway * 0.5,
-            rho * 0.5,
+            this.nuHome,
+            this.nuAway,
             30
         );
 
         // Calculate all markets
         const markets = {
             lambdas,
-            rho,
+            nuHome: this.nuHome,
+            nuAway: this.nuAway,
             expectedTotal: lambdas.lambdaHome + lambdas.lambdaAway,
 
             // 1X2 Markets (derived from matrix)
@@ -434,7 +429,8 @@ export class HandballEngine {
             firstHalf: this.generateHalfMarkets(
                 lambdas.lambdaHome * 0.5,
                 lambdas.lambdaAway * 0.5,
-                rho * 0.5,
+                this.nuHome,
+                this.nuAway,
                 'First Half',
                 totalLine
             ),
@@ -443,7 +439,6 @@ export class HandballEngine {
             htft: this.generateHTFT(matrixHT, matrixFT),
 
             // Special Markets
-            btts: this.calcBTTS(matrixFT),
             doubleChance: this.generateDoubleChance(matrixFT),
             drawNoBet: this.generateDrawNoBet(matrixFT),
 
@@ -512,11 +507,10 @@ export class HandballEngine {
         return markets;
     }
 
-    generateHalfMarkets(lambdaHome, lambdaAway, rho, name, totalLine) {
-        const matrix = this.generateMatrix(lambdaHome, lambdaAway, rho, 30);
+    generateHalfMarkets(lambdaHome, lambdaAway, nuHome, nuAway, name, totalLine) {
+        const matrix = this.generateMatrix(lambdaHome, lambdaAway, nuHome, nuAway, 30);
 
         const result1X2 = this.calc1X2FromMatrix(matrix);
-        const btts = this.calcBTTS(matrix);
 
         // Half totals
         const halfCentral = Math.floor(totalLine / 2) + 0.5;
@@ -569,7 +563,6 @@ export class HandballEngine {
             name,
             winner: result1X2,
             totals,
-            btts,
             dnb,
             teamTotals,
             handicap: {

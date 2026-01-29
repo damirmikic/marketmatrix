@@ -59,7 +59,6 @@ window.runModel = function () {
         displayTotalGoals(markets.totals, totalLine);
         displayFirstHalf(markets.firstHalf);
         displayHTFT(markets.htft);
-        displayBTTS(markets.btts);
         displayDoubleChance(markets.doubleChance);
         displayDrawNoBet(markets.drawNoBet);
         displayTeamTotals(markets.teamTotals);
@@ -104,8 +103,8 @@ function displayModelParams(markets) {
     const awayEl = document.getElementById('lambdaAway');
     if (awayEl) awayEl.textContent = markets.lambdas.lambdaAway.toFixed(2);
 
-    const rhoEl = document.getElementById('rhoValue');
-    if (rhoEl) rhoEl.textContent = markets.rho.toFixed(3);
+    const nuEl = document.getElementById('rhoValue');
+    if (nuEl) nuEl.textContent = `${markets.nuHome.toFixed(2)} / ${markets.nuAway.toFixed(2)}`;
 }
 
 function displayMatchWinner(matchWinner) {
@@ -212,7 +211,6 @@ function displayTotalGoals(totals, baseLine) {
 function displayHalfMarkets(half, containerId) {
     const winnerEl = document.getElementById(`${containerId}WinnerTable`);
     const totalEl = document.getElementById(`${containerId}TotalTable`);
-    const bttsEl = document.getElementById(`${containerId}BttsTable`);
     const homeTeamEl = document.getElementById(`${containerId}HomeTeamTable`);
     const awayTeamEl = document.getElementById(`${containerId}AwayTeamTable`);
     const handicapEl = document.getElementById(`${containerId}HandicapTable`);
@@ -250,26 +248,6 @@ function displayHalfMarkets(half, containerId) {
         });
         html += `</tbody></table>`;
         totalEl.innerHTML = html;
-    }
-
-    if (bttsEl) {
-        bttsEl.innerHTML = `
-            <table>
-                <thead><tr><th>Outcome</th><th>Probability</th><th>Fair Odds</th></tr></thead>
-                <tbody>
-                    <tr>
-                        <td class="line-col">Yes</td>
-                        <td class="num-col" style="color: #10b981; font-weight: 600;">${(half.btts.yes * 100).toFixed(1)}%</td>
-                        <td class="num-col" style="color: #f59e0b; font-weight: 600;">${probToOdds(half.btts.yes)}</td>
-                    </tr>
-                    <tr>
-                        <td class="line-col">No</td>
-                        <td class="num-col" style="color: #10b981; font-weight: 600;">${(half.btts.no * 100).toFixed(1)}%</td>
-                        <td class="num-col" style="color: #f59e0b; font-weight: 600;">${probToOdds(half.btts.no)}</td>
-                    </tr>
-                </tbody>
-            </table>
-        `;
     }
 
     if (homeTeamEl) {
@@ -349,29 +327,6 @@ function displayHTFT(htft) {
 
     html += `</tbody></table>`;
     container.innerHTML = html;
-}
-
-function displayBTTS(btts) {
-    const container = document.getElementById('bttsTable');
-    if (!container) return;
-
-    container.innerHTML = `
-        <table>
-            <thead><tr><th>Outcome</th><th>Probability</th><th>Fair Odds</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="line-col">Yes</td>
-                    <td class="num-col" style="color: #10b981; font-weight: 600;">${(btts.yes * 100).toFixed(1)}%</td>
-                    <td class="num-col" style="color: #f59e0b; font-weight: 600;">${probToOdds(btts.yes)}</td>
-                </tr>
-                <tr>
-                    <td class="line-col">No</td>
-                    <td class="num-col" style="color: #10b981; font-weight: 600;">${(btts.no * 100).toFixed(1)}%</td>
-                    <td class="num-col" style="color: #f59e0b; font-weight: 600;">${probToOdds(btts.no)}</td>
-                </tr>
-            </tbody>
-        </table>
-    `;
 }
 
 function displayDoubleChance(dc) {
