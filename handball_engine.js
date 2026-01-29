@@ -244,6 +244,10 @@ export class HandballEngine {
     /**
      * Efficient handicap calculation using Skellam distribution
      * Avoids full matrix summation for alternative handicap lines
+     *
+     * WARNING: This assumes standard Poisson (nu=1.0) and will give
+     * inconsistent results with CMP models (nu≠1.0). Use calcHandicap()
+     * with the CMP matrix instead for accurate probabilities.
      */
     calcHandicapSkellam(lambdaHome, lambdaAway, line) {
         // P(home covers) = P(X - Y > -line) = P(X - Y >= ceil(-line))
@@ -477,8 +481,8 @@ export class HandballEngine {
 
         const markets = [];
         for (const line of uniqueLines) {
-            // Use Skellam for efficiency
-            const result = this.calcHandicapSkellam(lambdas.lambdaHome, lambdas.lambdaAway, line);
+            // Use matrix-based calculation for consistency with solver and match winner
+            const result = this.calcHandicap(matrix, line);
             markets.push({
                 line,
                 homeCovers: result.homeCovers,
