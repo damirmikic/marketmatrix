@@ -592,11 +592,11 @@ export class HandballEngine {
         // Half team totals - find most balanced lines (closest to 50/50)
         let bestHomeLine = null;
         let bestHomeDiff = Infinity;
-        // Round to nearest 0.5 to ensure clean betting lines
-        const homeMin = Math.max(5.5, Math.floor((expectedHome - 4) * 2) / 2 + 0.5);
-        const homeMax = Math.ceil((expectedHome + 4) * 2) / 2 - 0.5;
+        // Ensure lines are always X.5 (half-goals only)
+        const homeMin = Math.max(5.5, Math.floor(expectedHome - 4) + 0.5);
+        const homeMax = Math.ceil(expectedHome + 4) - 0.5;
 
-        for (let testLine = homeMin; testLine <= homeMax; testLine += 0.5) {
+        for (let testLine = homeMin; testLine <= homeMax; testLine += 1.0) {
             const result = this.calcTeamTotal(matrix, testLine, true);
             const diff = Math.abs(result.over - 0.5);
             if (diff < bestHomeDiff) {
@@ -607,11 +607,11 @@ export class HandballEngine {
 
         let bestAwayLine = null;
         let bestAwayDiff = Infinity;
-        // Round to nearest 0.5 to ensure clean betting lines
-        const awayMin = Math.max(5.5, Math.floor((expectedAway - 4) * 2) / 2 + 0.5);
-        const awayMax = Math.ceil((expectedAway + 4) * 2) / 2 - 0.5;
+        // Ensure lines are always X.5 (half-goals only)
+        const awayMin = Math.max(5.5, Math.floor(expectedAway - 4) + 0.5);
+        const awayMax = Math.ceil(expectedAway + 4) - 0.5;
 
-        for (let testLine = awayMin; testLine <= awayMax; testLine += 0.5) {
+        for (let testLine = awayMin; testLine <= awayMax; testLine += 1.0) {
             const result = this.calcTeamTotal(matrix, testLine, false);
             const diff = Math.abs(result.over - 0.5);
             if (diff < bestAwayDiff) {
@@ -621,8 +621,8 @@ export class HandballEngine {
         }
 
         // Use fallback if no balanced line found
-        if (bestHomeLine === null) bestHomeLine = Math.max(5.5, Math.round(expectedHome - 0.5) + 0.5);
-        if (bestAwayLine === null) bestAwayLine = Math.max(5.5, Math.round(expectedAway - 0.5) + 0.5);
+        if (bestHomeLine === null) bestHomeLine = Math.max(5.5, Math.floor(expectedHome) + 0.5);
+        if (bestAwayLine === null) bestAwayLine = Math.max(5.5, Math.floor(expectedAway) + 0.5);
 
         const teamTotals = { home: [], away: [] };
 
@@ -710,11 +710,11 @@ export class HandballEngine {
         // Find most balanced line for home team (closest to 50/50)
         let bestHomeLine = null;
         let bestHomeDiff = Infinity;
-        // Round to nearest 0.5 to ensure clean betting lines
-        const homeMin = Math.max(15.5, Math.floor((expectedHome - 6) * 2) / 2 + 0.5);
-        const homeMax = Math.ceil((expectedHome + 6) * 2) / 2 - 0.5;
+        // Ensure lines are always X.5 (half-goals only)
+        const homeMin = Math.max(15.5, Math.floor(expectedHome - 6) + 0.5);
+        const homeMax = Math.ceil(expectedHome + 6) - 0.5;
 
-        for (let testLine = homeMin; testLine <= homeMax; testLine += 0.5) {
+        for (let testLine = homeMin; testLine <= homeMax; testLine += 1.0) {
             const result = this.calcTeamTotal(matrix, testLine, true);
             const diff = Math.abs(result.over - 0.5);
             if (diff < bestHomeDiff) {
@@ -726,11 +726,11 @@ export class HandballEngine {
         // Find most balanced line for away team (closest to 50/50)
         let bestAwayLine = null;
         let bestAwayDiff = Infinity;
-        // Round to nearest 0.5 to ensure clean betting lines
-        const awayMin = Math.max(15.5, Math.floor((expectedAway - 6) * 2) / 2 + 0.5);
-        const awayMax = Math.ceil((expectedAway + 6) * 2) / 2 - 0.5;
+        // Ensure lines are always X.5 (half-goals only)
+        const awayMin = Math.max(15.5, Math.floor(expectedAway - 6) + 0.5);
+        const awayMax = Math.ceil(expectedAway + 6) - 0.5;
 
-        for (let testLine = awayMin; testLine <= awayMax; testLine += 0.5) {
+        for (let testLine = awayMin; testLine <= awayMax; testLine += 1.0) {
             const result = this.calcTeamTotal(matrix, testLine, false);
             const diff = Math.abs(result.over - 0.5);
             if (diff < bestAwayDiff) {
@@ -740,8 +740,8 @@ export class HandballEngine {
         }
 
         // Use fallback if no balanced line found
-        if (bestHomeLine === null) bestHomeLine = Math.max(20.5, Math.round(expectedHome - 0.5) + 0.5);
-        if (bestAwayLine === null) bestAwayLine = Math.max(20.5, Math.round(expectedAway - 0.5) + 0.5);
+        if (bestHomeLine === null) bestHomeLine = Math.max(20.5, Math.floor(expectedHome) + 0.5);
+        if (bestAwayLine === null) bestAwayLine = Math.max(20.5, Math.floor(expectedAway) + 0.5);
 
         const homeLines = [bestHomeLine - 2, bestHomeLine - 1, bestHomeLine, bestHomeLine + 1, bestHomeLine + 2].filter(l => l >= 15.5);
         const awayLines = [bestAwayLine - 2, bestAwayLine - 1, bestAwayLine, bestAwayLine + 1, bestAwayLine + 2].filter(l => l >= 15.5);
