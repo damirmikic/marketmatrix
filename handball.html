@@ -104,153 +104,200 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: MARKETS -->
-        <div class="main-content">
-            <!-- MATCH WINNER (1X2) -->
-            <div class="card hidden" id="matchWinnerCard">
-                <div class="card-header" onclick="toggleCard('matchWinnerCard')">
-                    <h2>Match Winner (1X2)</h2>
+        <!-- MARKETS TAB CONTAINER -->
+        <div class="markets-column">
+            <!-- TABBED MARKETS -->
+            <div class="tab-container hidden" id="marketsTabContainer">
+                <!-- Primary Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="fulltime" onclick="switchTab('marketsTabContainer', 'fulltime')">Full Time</button>
+                    <button class="tab-btn" data-tab="firsthalf" onclick="switchTab('marketsTabContainer', 'firsthalf')">1st Half</button>
+                    <button class="tab-btn" data-tab="teams" onclick="switchTab('marketsTabContainer', 'teams')">Teams</button>
+                    <button class="tab-btn" data-tab="combos" onclick="switchTab('marketsTabContainer', 'combos')">Combinations</button>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="matchWinnerTable"></div>
-                </div>
-            </div>
 
-            <!-- ASIAN HANDICAP -->
-            <div class="card hidden" id="handicapCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('handicapCard')">
-                    <h2>Asian Handicap</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="handicapTable"></div>
-                </div>
-            </div>
+                <!-- FULL TIME TAB PANEL -->
+                <div class="tab-panel active" data-tab="fulltime" id="fulltimePanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="ft-result" onclick="switchSubTab('fulltimePanel', 'ft-result')">Match Result</button>
+                        <button class="sub-tab-btn" data-subtab="ft-totals" onclick="switchSubTab('fulltimePanel', 'ft-totals')">Total Goals</button>
+                        <button class="sub-tab-btn" data-subtab="ft-handicap" onclick="switchSubTab('fulltimePanel', 'ft-handicap')">Asian Handicap</button>
+                        <button class="sub-tab-btn" data-subtab="ft-btts" onclick="switchSubTab('fulltimePanel', 'ft-btts')">BTTS</button>
+                        <button class="sub-tab-btn" data-subtab="ft-dc" onclick="switchSubTab('fulltimePanel', 'ft-dc')">Double Chance</button>
+                    </div>
 
-            <!-- TOTAL GOALS -->
-            <div class="card hidden" id="totalGoalsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('totalGoalsCard')">
-                    <h2>Total Goals Over/Under</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="totalGoalsTable"></div>
-                </div>
-            </div>
+                    <!-- FT Match Result Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="ft-result">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Match Winner</h3>
+                            <div class="table-wrapper"><div id="matchWinnerTable"></div></div>
+                        </div>
+                    </div>
 
-            <!-- FIRST HALF MARKETS -->
-            <div class="card hidden" id="firstHalfCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('firstHalfCard')">
-                    <h2>First Half Markets</h2>
-                </div>
-                <div class="card-content">
-                    <h3 style="margin-top: 0;">Winner</h3>
-                    <div class="table-wrapper" id="h1WinnerTable"></div>
+                    <!-- FT Total Goals Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-totals">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Total Goals Over/Under</h3>
+                            <div class="table-wrapper"><div id="totalGoalsTable"></div></div>
+                        </div>
+                    </div>
 
-                    <h3 style="margin-top: 20px;">Total Goals</h3>
-                    <div class="table-wrapper" id="h1TotalTable"></div>
+                    <!-- FT Asian Handicap Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-handicap">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Asian Handicap</h3>
+                            <div class="table-wrapper"><div id="handicapTable"></div></div>
+                        </div>
+                    </div>
 
-                    <h3 style="margin-top: 20px;">Both Teams To Score</h3>
-                    <div class="table-wrapper" id="h1BttsTable"></div>
+                    <!-- FT BTTS Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-btts">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Both Teams To Score</h3>
+                            <div class="table-wrapper"><div id="bttsTable"></div></div>
+                        </div>
+                    </div>
 
-                    <h3 style="margin-top: 20px;">Asian Handicap</h3>
-                    <div class="table-wrapper" id="h1HandicapTable"></div>
+                    <!-- FT Double Chance Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="ft-dc">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Double Chance</h3>
+                            <div class="table-wrapper"><div id="doubleChanceTable"></div></div>
+                        </div>
+                    </div>
+                </div>
 
-                    <h3 style="margin-top: 20px;">Draw No Bet</h3>
-                    <div class="table-wrapper" id="h1DnbTable"></div>
+                <!-- 1ST HALF TAB PANEL -->
+                <div class="tab-panel" data-tab="firsthalf" id="firsthalfPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="fh-result" onclick="switchSubTab('firsthalfPanel', 'fh-result')">Match Result</button>
+                        <button class="sub-tab-btn" data-subtab="fh-totals" onclick="switchSubTab('firsthalfPanel', 'fh-totals')">Total Goals</button>
+                        <button class="sub-tab-btn" data-subtab="fh-btts" onclick="switchSubTab('firsthalfPanel', 'fh-btts')">BTTS</button>
+                        <button class="sub-tab-btn" data-subtab="fh-handicap" onclick="switchSubTab('firsthalfPanel', 'fh-handicap')">Asian Handicap</button>
+                        <button class="sub-tab-btn" data-subtab="fh-dnb" onclick="switchSubTab('firsthalfPanel', 'fh-dnb')">Draw No Bet</button>
+                        <button class="sub-tab-btn" data-subtab="fh-team" onclick="switchSubTab('firsthalfPanel', 'fh-team')">Team Totals</button>
+                    </div>
 
-                    <h3 style="margin-top: 20px;">Home Team Total</h3>
-                    <div class="table-wrapper" id="h1HomeTeamTable"></div>
+                    <!-- 1H Match Result Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="fh-result">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">1H Match Winner</h3>
+                            <div class="table-wrapper"><div id="h1WinnerTable"></div></div>
+                        </div>
+                    </div>
 
-                    <h3 style="margin-top: 20px;">Away Team Total</h3>
-                    <div class="table-wrapper" id="h1AwayTeamTable"></div>
-                </div>
-            </div>
+                    <!-- 1H Total Goals Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="fh-totals">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">1H Total Goals</h3>
+                            <div class="table-wrapper"><div id="h1TotalTable"></div></div>
+                        </div>
+                    </div>
 
-            <!-- HT/FT MARKETS -->
-            <div class="card hidden" id="htftCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('htftCard')">
-                    <h2>Half-Time / Full-Time</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="htftTable"></div>
-                </div>
-            </div>
+                    <!-- 1H BTTS Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="fh-btts">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">1H Both Teams To Score</h3>
+                            <div class="table-wrapper"><div id="h1BttsTable"></div></div>
+                        </div>
+                    </div>
 
-            <!-- BOTH TEAMS TO SCORE -->
-            <div class="card hidden" id="bttsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('bttsCard')">
-                    <h2>Both Teams To Score</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="bttsTable"></div>
-                </div>
-            </div>
+                    <!-- 1H Asian Handicap Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="fh-handicap">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">1H Asian Handicap</h3>
+                            <div class="table-wrapper"><div id="h1HandicapTable"></div></div>
+                        </div>
+                    </div>
 
-            <!-- DOUBLE CHANCE -->
-            <div class="card hidden" id="doubleChanceCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('doubleChanceCard')">
-                    <h2>Double Chance</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="doubleChanceTable"></div>
-                </div>
-            </div>
+                    <!-- 1H Draw No Bet Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="fh-dnb">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">1H Draw No Bet</h3>
+                            <div class="table-wrapper"><div id="h1DnbTable"></div></div>
+                        </div>
+                    </div>
 
-            <!-- DRAW NO BET -->
-            <div class="card hidden" id="dnbCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('dnbCard')">
-                    <h2>Draw No Bet</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="dnbTable"></div>
-                </div>
-            </div>
+                    <!-- 1H Team Totals Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="fh-team">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">1H Home Team Total</h3>
+                            <div class="table-wrapper"><div id="h1HomeTeamTable"></div></div>
 
-            <!-- TEAM TOTALS -->
-            <div class="card hidden" id="teamTotalsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('teamTotalsCard')">
-                    <h2>Team Totals</h2>
+                            <h3 class="text-lg mt-5">1H Away Team Total</h3>
+                            <div class="table-wrapper"><div id="h1AwayTeamTable"></div></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <h3 style="margin-top: 0;">Home Team Total</h3>
-                    <div class="table-wrapper" id="homeTeamTotalTable"></div>
 
-                    <h3 style="margin-top: 20px;">Away Team Total</h3>
-                    <div class="table-wrapper" id="awayTeamTotalTable"></div>
-                </div>
-            </div>
+                <!-- TEAMS TAB PANEL -->
+                <div class="tab-panel" data-tab="teams" id="teamsPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="home-team" onclick="switchSubTab('teamsPanel', 'home-team')">Home Team</button>
+                        <button class="sub-tab-btn" data-subtab="away-team" onclick="switchSubTab('teamsPanel', 'away-team')">Away Team</button>
+                    </div>
 
-            <!-- EXACT GOALS -->
-            <div class="card hidden" id="exactGoalsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('exactGoalsCard')">
-                    <h2>Exact Goals</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="exactGoalsTable"></div>
-                </div>
-            </div>
+                    <!-- Home Team Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="home-team">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Home Team Total (FT)</h3>
+                            <div class="table-wrapper"><div id="homeTeamTotalTable"></div></div>
+                        </div>
+                    </div>
 
-            <!-- COMBO BETS -->
-            <div class="card hidden" id="comboCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('comboCard')">
-                    <h2>Combo Bets (1X2 & Total)</h2>
+                    <!-- Away Team Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="away-team">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Away Team Total (FT)</h3>
+                            <div class="table-wrapper"><div id="awayTeamTotalTable"></div></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="comboTable"></div>
-                </div>
-            </div>
 
-            <!-- GOAL RANGES -->
-            <div class="card hidden" id="goalRangesCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('goalRangesCard')">
-                    <h2>Goal Ranges</h2>
+                <!-- COMBINATIONS TAB PANEL -->
+                <div class="tab-panel" data-tab="combos" id="combosPanel">
+                    <div class="sub-tab-nav">
+                        <button class="sub-tab-btn active" data-subtab="combo-bets" onclick="switchSubTab('combosPanel', 'combo-bets')">Combo Bets</button>
+                        <button class="sub-tab-btn" data-subtab="goal-ranges" onclick="switchSubTab('combosPanel', 'goal-ranges')">Goal Ranges</button>
+                        <button class="sub-tab-btn" data-subtab="htft" onclick="switchSubTab('combosPanel', 'htft')">HT/FT</button>
+                    </div>
+
+                    <!-- Combo Bets Sub-tab -->
+                    <div class="sub-tab-content active" data-subtab="combo-bets">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Combo Bets (Match Result & Total)</h3>
+                            <div class="table-wrapper"><div id="comboTable"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Goal Ranges Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="goal-ranges">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Goal Ranges</h3>
+                            <div class="table-wrapper"><div id="goalRangesTable"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- HT/FT Sub-tab -->
+                    <div class="sub-tab-content" data-subtab="htft">
+                        <div class="tab-content active">
+                            <h3 class="text-lg">Half-Time / Full-Time</h3>
+                            <div class="table-wrapper"><div id="htftTable"></div></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="table-wrapper" id="goalRangesTable"></div>
-                </div>
+
             </div>
         </div>
     </div>
 
+    <script type="module">
+        import { toggleCard, switchTab, switchSubTab } from './js/ui_utils.js';
+
+        window.toggleCard = toggleCard;
+        window.switchTab = switchTab;
+        window.switchSubTab = switchSubTab;
+    </script>
     <script type="module" src="handball_model.js"></script>
 
     <!-- Quick Sports Menu -->

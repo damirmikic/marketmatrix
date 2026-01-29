@@ -63,12 +63,14 @@ window.runModel = function () {
         displayDoubleChance(markets.doubleChance);
         displayDrawNoBet(markets.drawNoBet);
         displayTeamTotals(markets.teamTotals);
-        displayExactGoals(markets.exactGoals);
         displayComboBets(markets.comboBets, totalLine);
         displayGoalRanges(markets.goalRanges);
 
-        // Show all result cards
-        document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
+        // Show markets tab container
+        const tabContainer = document.getElementById('marketsTabContainer');
+        if (tabContainer) {
+            tabContainer.classList.remove('hidden');
+        }
 
     } catch (e) {
         console.error("Model Error:", e);
@@ -446,25 +448,6 @@ function displayTeamTotals(teamTotals) {
     }
 }
 
-function displayExactGoals(exactGoals) {
-    const container = document.getElementById('exactGoalsTable');
-    if (!container) return;
-
-    let html = `<table><thead><tr><th>Goals</th><th>Probability</th><th>Fair Odds</th></tr></thead><tbody>`;
-
-    exactGoals.forEach(eg => {
-        html += `
-            <tr>
-                <td class="line-col">${eg.goals} Goals</td>
-                <td class="num-col" style="color: #10b981; font-weight: 600;">${(eg.probability * 100).toFixed(1)}%</td>
-                <td class="num-col" style="color: #f59e0b; font-weight: 600;">${probToOdds(eg.probability)}</td>
-            </tr>
-        `;
-    });
-
-    html += `</tbody></table>`;
-    container.innerHTML = html;
-}
 
 function displayComboBets(comboBets, totalLine) {
     const container = document.getElementById('comboTable');
