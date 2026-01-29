@@ -101,6 +101,27 @@ export class HandballEngine {
     }
 
     /**
+     * Calculate expected value (mean) from CMP distribution
+     * E[X] = sum(k * P(X=k)) for k=0 to maxGoals
+     *
+     * For CMP with nu > 1: E[X] < lambda
+     * For CMP with nu < 1: E[X] > lambda
+     * For nu = 1 (Poisson): E[X] = lambda
+     *
+     * @param {number} lambda - CMP rate parameter
+     * @param {number} nu - CMP dispersion parameter
+     * @param {number} maxGoals - Maximum goals to consider
+     * @returns {number} Expected value (mean)
+     */
+    cmpExpectedValue(lambda, nu, maxGoals = this.MAX_GOALS) {
+        let expectedValue = 0;
+        for (let k = 0; k <= maxGoals; k++) {
+            expectedValue += k * this.cmpPMF(k, lambda, nu);
+        }
+        return expectedValue;
+    }
+
+    /**
      * Modified Bessel function of the first kind I_k(x)
      * Used in the Skellam distribution for handicap pricing
      * Computed via series expansion for numerical stability
@@ -145,8 +166,8 @@ export class HandballEngine {
      * Generate probability matrix for all score combinations using CMP
      * Uses independent Conway-Maxwell-Poisson distributions for each team
      *
-     * @param {number} lambdaHome - Expected home goals (xG)
-     * @param {number} lambdaAway - Expected away goals (xG)
+     * @param {number} lambdaHome - CMP lambda parameter for home team (not equal to xG when nu≠1)
+     * @param {number} lambdaAway - CMP lambda parameter for away team (not equal to xG when nu≠1)
      * @param {number} nuHome - Home team dispersion parameter
      * @param {number} nuAway - Away team dispersion parameter
      * @param {number} maxGoals - Maximum goals per team in matrix
@@ -299,7 +320,10 @@ export class HandballEngine {
     // ==========================================
 
     /**
-     * Solve for xG (lambdas) using handicap and total goals inputs
+     * Solve for CMP lambda parameters using handicap and total goals inputs
+     *
+     * Note: Lambda parameters are NOT equal to expected goals when nu≠1.
+     * Use cmpExpectedValue() to calculate actual xG from lambda.
      *
      * Inputs:
      * - handicapLine: e.g., -2.5 (home favored by 2.5)
@@ -308,12 +332,12 @@ export class HandballEngine {
      * - targetOver: fair probability of over totalLine
      *
      * Outputs:
-     * - lambdaHome: Expected goals (xG) for home team
-     * - lambdaAway: Expected goals (xG) for away team
+     * - lambdaHome: CMP lambda parameter for home team
+     * - lambdaAway: CMP lambda parameter for away team
      *
      * Solving system:
-     * 1. Total = lambdaHome + lambdaAway = expectedTotal (from over/under)
-     * 2. Handicap probability constrains the difference (lambdaHome - lambdaAway)
+     * 1. Total goals probability matches targetOver
+     * 2. Handicap probability matches targetHomeCovers
      */
     solveLambdas(handicapLine, targetHomeCovers, totalLine, targetOver) {
         // Initial estimates
@@ -440,12 +464,21 @@ export class HandballEngine {
             30
         );
 
+        // Calculate actual expected values from CMP distribution
+        const expectedHome = this.cmpExpectedValue(lambdas.lambdaHome, this.nuHome);
+        const expectedAway = this.cmpExpectedValue(lambdas.lambdaAway, this.nuAway);
+
         // Calculate all markets
         const markets = {
             lambdas,
             nuHome: this.nuHome,
             nuAway: this.nuAway,
-            expectedTotal: lambdas.lambdaHome + lambdas.lambdaAway,
+            expectedGoals: {
+                home: expectedHome,
+                away: expectedAway,
+                total: expectedHome + expectedAway
+            },
+            expectedTotal: expectedHome + expectedAway,
 
             // 1X2 Markets (derived from matrix)
             matchWinner: this.calc1X2FromMatrix(matrixFT),

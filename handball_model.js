@@ -95,10 +95,10 @@ function displayMargins(handicapHome, handicapAway, overOdds, underOdds) {
 
 function displayModelParams(markets) {
     const homeEl = document.getElementById('lambdaHome');
-    if (homeEl) homeEl.textContent = markets.lambdas.lambdaHome.toFixed(2);
+    if (homeEl) homeEl.textContent = markets.expectedGoals.home.toFixed(2);
 
     const awayEl = document.getElementById('lambdaAway');
-    if (awayEl) awayEl.textContent = markets.lambdas.lambdaAway.toFixed(2);
+    if (awayEl) awayEl.textContent = markets.expectedGoals.away.toFixed(2);
 }
 
 function displayMatchWinner(matchWinner) {
