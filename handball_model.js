@@ -105,6 +105,18 @@ function displayModelParams(markets) {
 
     const nuEl = document.getElementById('rhoValue');
     if (nuEl) nuEl.textContent = `${markets.nuHome.toFixed(2)} / ${markets.nuAway.toFixed(2)}`;
+
+    // Display balanced team total lines
+    const balancedHomeEl = document.getElementById('balancedHomeTeamLine');
+    const balancedAwayEl = document.getElementById('balancedAwayTeamLine');
+
+    if (balancedHomeEl && markets.teamTotals && markets.teamTotals.balancedLines) {
+        balancedHomeEl.textContent = markets.teamTotals.balancedLines.home.toFixed(1);
+    }
+
+    if (balancedAwayEl && markets.teamTotals && markets.teamTotals.balancedLines) {
+        balancedAwayEl.textContent = markets.teamTotals.balancedLines.away.toFixed(1);
+    }
 }
 
 function displayMatchWinner(matchWinner) {
@@ -384,10 +396,15 @@ function displayTeamTotals(teamTotals) {
     const homeEl = document.getElementById('homeTeamTotalTable');
     const awayEl = document.getElementById('awayTeamTotalTable');
 
+    const balancedHomeLine = teamTotals.balancedLines ? teamTotals.balancedLines.home : null;
+    const balancedAwayLine = teamTotals.balancedLines ? teamTotals.balancedLines.away : null;
+
     if (homeEl) {
         let html = `<table><thead><tr><th>Line</th><th>Over Odds</th><th>Under Odds</th></tr></thead><tbody>`;
         teamTotals.home.forEach(t => {
-            html += `<tr><td class="line-col">${t.line.toFixed(1)}</td><td class="num-col">${probToOdds(t.over)}</td><td class="num-col">${probToOdds(t.under)}</td></tr>`;
+            const isBalanced = balancedHomeLine !== null && Math.abs(t.line - balancedHomeLine) < 0.1;
+            const rowStyle = isBalanced ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
+            html += `<tr${rowStyle}><td class="line-col">${t.line.toFixed(1)}</td><td class="num-col">${probToOdds(t.over)}</td><td class="num-col">${probToOdds(t.under)}</td></tr>`;
         });
         html += `</tbody></table>`;
         homeEl.innerHTML = html;
@@ -396,7 +413,9 @@ function displayTeamTotals(teamTotals) {
     if (awayEl) {
         let html = `<table><thead><tr><th>Line</th><th>Over Odds</th><th>Under Odds</th></tr></thead><tbody>`;
         teamTotals.away.forEach(t => {
-            html += `<tr><td class="line-col">${t.line.toFixed(1)}</td><td class="num-col">${probToOdds(t.over)}</td><td class="num-col">${probToOdds(t.under)}</td></tr>`;
+            const isBalanced = balancedAwayLine !== null && Math.abs(t.line - balancedAwayLine) < 0.1;
+            const rowStyle = isBalanced ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
+            html += `<tr${rowStyle}><td class="line-col">${t.line.toFixed(1)}</td><td class="num-col">${probToOdds(t.over)}</td><td class="num-col">${probToOdds(t.under)}</td></tr>`;
         });
         html += `</tbody></table>`;
         awayEl.innerHTML = html;

@@ -552,19 +552,44 @@ export class HandballEngine {
             totals.push({ line, over: result.over, under: result.under });
         }
 
-        // Half team totals
-        const homeCentral = Math.max(5.5, Math.round(lambdaHome - 0.5) + 0.5);
-        const awayCentral = Math.max(5.5, Math.round(lambdaAway - 0.5) + 0.5);
+        // Half team totals - find most balanced lines (closest to 50/50)
+        let bestHomeLine = Math.max(5.5, Math.round(lambdaHome - 0.5) + 0.5);
+        let bestHomeDiff = 1.0;
+        const homeMin = Math.max(5.5, lambdaHome - 3);
+        const homeMax = lambdaHome + 3;
+
+        for (let testLine = homeMin; testLine <= homeMax; testLine += 0.5) {
+            const result = this.calcTeamTotal(matrix, testLine, true);
+            const diff = Math.abs(result.over - 0.5);
+            if (diff < bestHomeDiff) {
+                bestHomeDiff = diff;
+                bestHomeLine = testLine;
+            }
+        }
+
+        let bestAwayLine = Math.max(5.5, Math.round(lambdaAway - 0.5) + 0.5);
+        let bestAwayDiff = 1.0;
+        const awayMin = Math.max(5.5, lambdaAway - 3);
+        const awayMax = lambdaAway + 3;
+
+        for (let testLine = awayMin; testLine <= awayMax; testLine += 0.5) {
+            const result = this.calcTeamTotal(matrix, testLine, false);
+            const diff = Math.abs(result.over - 0.5);
+            if (diff < bestAwayDiff) {
+                bestAwayDiff = diff;
+                bestAwayLine = testLine;
+            }
+        }
 
         const teamTotals = { home: [], away: [] };
 
-        const homeLines = [homeCentral - 1, homeCentral, homeCentral + 1].filter(l => l >= 5.5);
+        const homeLines = [bestHomeLine - 1, bestHomeLine, bestHomeLine + 1].filter(l => l >= 5.5);
         for (const line of homeLines) {
             const result = this.calcTeamTotal(matrix, line, true);
             teamTotals.home.push({ line, over: result.over, under: result.under });
         }
 
-        const awayLines = [awayCentral - 1, awayCentral, awayCentral + 1].filter(l => l >= 5.5);
+        const awayLines = [bestAwayLine - 1, bestAwayLine, bestAwayLine + 1].filter(l => l >= 5.5);
         for (const line of awayLines) {
             const result = this.calcTeamTotal(matrix, line, false);
             teamTotals.away.push({ line, over: result.over, under: result.under });
@@ -639,11 +664,38 @@ export class HandballEngine {
     }
 
     generateTeamTotals(matrix, lambdaHome, lambdaAway) {
-        const homeCentral = Math.max(20.5, Math.round(lambdaHome - 0.5) + 0.5);
-        const awayCentral = Math.max(20.5, Math.round(lambdaAway - 0.5) + 0.5);
+        // Find most balanced line for home team (closest to 50/50)
+        let bestHomeLine = Math.max(20.5, Math.round(lambdaHome - 0.5) + 0.5);
+        let bestHomeDiff = 1.0;
+        const homeMin = Math.max(15.5, lambdaHome - 5);
+        const homeMax = lambdaHome + 5;
 
-        const homeLines = [homeCentral - 2, homeCentral - 1, homeCentral, homeCentral + 1, homeCentral + 2].filter(l => l >= 15.5);
-        const awayLines = [awayCentral - 2, awayCentral - 1, awayCentral, awayCentral + 1, awayCentral + 2].filter(l => l >= 15.5);
+        for (let testLine = homeMin; testLine <= homeMax; testLine += 0.5) {
+            const result = this.calcTeamTotal(matrix, testLine, true);
+            const diff = Math.abs(result.over - 0.5);
+            if (diff < bestHomeDiff) {
+                bestHomeDiff = diff;
+                bestHomeLine = testLine;
+            }
+        }
+
+        // Find most balanced line for away team (closest to 50/50)
+        let bestAwayLine = Math.max(20.5, Math.round(lambdaAway - 0.5) + 0.5);
+        let bestAwayDiff = 1.0;
+        const awayMin = Math.max(15.5, lambdaAway - 5);
+        const awayMax = lambdaAway + 5;
+
+        for (let testLine = awayMin; testLine <= awayMax; testLine += 0.5) {
+            const result = this.calcTeamTotal(matrix, testLine, false);
+            const diff = Math.abs(result.over - 0.5);
+            if (diff < bestAwayDiff) {
+                bestAwayDiff = diff;
+                bestAwayLine = testLine;
+            }
+        }
+
+        const homeLines = [bestHomeLine - 2, bestHomeLine - 1, bestHomeLine, bestHomeLine + 1, bestHomeLine + 2].filter(l => l >= 15.5);
+        const awayLines = [bestAwayLine - 2, bestAwayLine - 1, bestAwayLine, bestAwayLine + 1, bestAwayLine + 2].filter(l => l >= 15.5);
 
         const home = [];
         const away = [];
@@ -658,7 +710,11 @@ export class HandballEngine {
             away.push({ line, over: result.over, under: result.under });
         }
 
-        return { home, away };
+        return {
+            home,
+            away,
+            balancedLines: { home: bestHomeLine, away: bestAwayLine }
+        };
     }
 
     generateExactGoals(matrix) {
