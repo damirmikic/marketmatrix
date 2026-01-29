@@ -325,11 +325,20 @@ export class HandballEngine {
         let lambdaHome = (expectedTotal + diff) / 2;
         let lambdaAway = (expectedTotal - diff) / 2;
 
+        // Dynamic lambda limits based on total line
+        // For high-scoring matches (>60), increase upper limit
+        // CMP with nu>1 requires higher lambdas than Poisson for same total
+        const minLambda = 10;
+        const maxLambda = Math.max(50, totalLine * 0.9);
+
         // Clamp initial values
-        lambdaHome = Math.max(15, Math.min(40, lambdaHome));
-        lambdaAway = Math.max(15, Math.min(40, lambdaAway));
+        lambdaHome = Math.max(minLambda, Math.min(maxLambda, lambdaHome));
+        lambdaAway = Math.max(minLambda, Math.min(maxLambda, lambdaAway));
 
         let learningRate = 0.08;
+        let bestError = Infinity;
+        let bestLambdaHome = lambdaHome;
+        let bestLambdaAway = lambdaAway;
 
         for (let iter = 0; iter < this.SOLVER_MAX_ITERATIONS; iter++) {
             // Generate matrix using CMP distribution
@@ -345,6 +354,13 @@ export class HandballEngine {
 
             const totalError = Math.abs(errorHandicap) + Math.abs(errorTotal);
 
+            // Track best solution
+            if (totalError < bestError) {
+                bestError = totalError;
+                bestLambdaHome = lambdaHome;
+                bestLambdaAway = lambdaAway;
+            }
+
             if (totalError < this.SOLVER_THRESHOLD) break;
 
             // Handicap error adjusts difference (lambdaHome up, lambdaAway down or vice versa)
@@ -356,14 +372,25 @@ export class HandballEngine {
             lambdaAway += -handicapAdj + totalAdj;
 
             // Constrain to reasonable handball xG ranges
-            lambdaHome = Math.max(15, Math.min(40, lambdaHome));
-            lambdaAway = Math.max(15, Math.min(40, lambdaAway));
+            lambdaHome = Math.max(minLambda, Math.min(maxLambda, lambdaHome));
+            lambdaAway = Math.max(minLambda, Math.min(maxLambda, lambdaAway));
 
             // Decay learning rate
             learningRate *= 0.997;
         }
 
-        return { lambdaHome, lambdaAway };
+        // Log warning if convergence failed
+        if (bestError > 0.01) {
+            console.warn(`Solver convergence warning: Total error ${(bestError * 100).toFixed(2)}%`);
+            console.warn(`This may indicate incompatible constraints for the CMP model`);
+        }
+
+        return {
+            lambdaHome: bestLambdaHome,
+            lambdaAway: bestLambdaAway,
+            converged: bestError < this.SOLVER_THRESHOLD,
+            convergenceError: bestError
+        };
     }
 
     // ==========================================
