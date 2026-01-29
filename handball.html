@@ -96,7 +96,7 @@
                             <div style="font-size: 1rem; font-weight: 600; color: #dc2626;" id="lambdaAway">-</div>
                         </div>
                         <div>
-                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">CORRELATION (rho)</div>
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: bold;">DISPERSION (nu H/A)</div>
                             <div style="font-size: 1rem; font-weight: 600; color: #a78bfa;" id="rhoValue">-</div>
                         </div>
                     </div>
@@ -122,7 +122,6 @@
                         <button class="sub-tab-btn active" data-subtab="ft-result" onclick="switchSubTab('fulltimePanel', 'ft-result')">Match Result</button>
                         <button class="sub-tab-btn" data-subtab="ft-totals" onclick="switchSubTab('fulltimePanel', 'ft-totals')">Total Goals</button>
                         <button class="sub-tab-btn" data-subtab="ft-handicap" onclick="switchSubTab('fulltimePanel', 'ft-handicap')">Asian Handicap</button>
-                        <button class="sub-tab-btn" data-subtab="ft-btts" onclick="switchSubTab('fulltimePanel', 'ft-btts')">BTTS</button>
                         <button class="sub-tab-btn" data-subtab="ft-dc" onclick="switchSubTab('fulltimePanel', 'ft-dc')">Double Chance</button>
                     </div>
 
@@ -150,14 +149,6 @@
                         </div>
                     </div>
 
-                    <!-- FT BTTS Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="ft-btts">
-                        <div class="tab-content active">
-                            <h3 class="text-lg">Both Teams To Score</h3>
-                            <div class="table-wrapper"><div id="bttsTable"></div></div>
-                        </div>
-                    </div>
-
                     <!-- FT Double Chance Sub-tab -->
                     <div class="sub-tab-content" data-subtab="ft-dc">
                         <div class="tab-content active">
@@ -172,7 +163,6 @@
                     <div class="sub-tab-nav">
                         <button class="sub-tab-btn active" data-subtab="fh-result" onclick="switchSubTab('firsthalfPanel', 'fh-result')">Match Result</button>
                         <button class="sub-tab-btn" data-subtab="fh-totals" onclick="switchSubTab('firsthalfPanel', 'fh-totals')">Total Goals</button>
-                        <button class="sub-tab-btn" data-subtab="fh-btts" onclick="switchSubTab('firsthalfPanel', 'fh-btts')">BTTS</button>
                         <button class="sub-tab-btn" data-subtab="fh-handicap" onclick="switchSubTab('firsthalfPanel', 'fh-handicap')">Asian Handicap</button>
                         <button class="sub-tab-btn" data-subtab="fh-dnb" onclick="switchSubTab('firsthalfPanel', 'fh-dnb')">Draw No Bet</button>
                         <button class="sub-tab-btn" data-subtab="fh-team" onclick="switchSubTab('firsthalfPanel', 'fh-team')">Team Totals</button>
@@ -191,14 +181,6 @@
                         <div class="tab-content active">
                             <h3 class="text-lg">1H Total Goals</h3>
                             <div class="table-wrapper"><div id="h1TotalTable"></div></div>
-                        </div>
-                    </div>
-
-                    <!-- 1H BTTS Sub-tab -->
-                    <div class="sub-tab-content" data-subtab="fh-btts">
-                        <div class="tab-content active">
-                            <h3 class="text-lg">1H Both Teams To Score</h3>
-                            <div class="table-wrapper"><div id="h1BttsTable"></div></div>
                         </div>
                     </div>
 
