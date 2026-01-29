@@ -30,10 +30,16 @@ export class HandballEngine {
         this.SOLVER_MAX_ITERATIONS = 1500;
         this.SOLVER_THRESHOLD = 0.0001;
 
-        // CMP dispersion parameters (nu > 1 for under-dispersion)
-        // Handball scoring is more consistent than pure Poisson
-        this.nuHome = 1.1;
-        this.nuAway = 1.1;
+        // CMP dispersion parameters (nu < 1 for over-dispersion)
+        // Handball scoring shows more variability than pure Poisson
+        this.nuHome = 0.92;
+        this.nuAway = 0.92;
+
+        // Correlation factor to boost diagonal probabilities (draw scenarios)
+        this.rho = 0.05;
+
+        // First half ratio (48.5% of full-time xG)
+        this.H1_RATIO = 0.485;
     }
 
     // ==========================================
@@ -165,14 +171,16 @@ export class HandballEngine {
     /**
      * Generate probability matrix for all score combinations using CMP
      * Uses independent Conway-Maxwell-Poisson distributions for each team
+     * with correlation adjustment to boost diagonal probabilities (draws)
      *
      * @param {number} lambdaHome - CMP lambda parameter for home team (not equal to xG when nu≠1)
      * @param {number} lambdaAway - CMP lambda parameter for away team (not equal to xG when nu≠1)
      * @param {number} nuHome - Home team dispersion parameter
      * @param {number} nuAway - Away team dispersion parameter
      * @param {number} maxGoals - Maximum goals per team in matrix
+     * @param {number} rho - Correlation factor to boost diagonal probabilities (default: this.rho)
      */
-    generateMatrix(lambdaHome, lambdaAway, nuHome = this.nuHome, nuAway = this.nuAway, maxGoals = this.MAX_GOALS) {
+    generateMatrix(lambdaHome, lambdaAway, nuHome = this.nuHome, nuAway = this.nuAway, maxGoals = this.MAX_GOALS, rho = this.rho) {
         const matrix = [];
         let totalProb = 0;
 
@@ -185,8 +193,22 @@ export class HandballEngine {
             }
         }
 
-        // Normalize (should be close to 1.0 already)
-        if (totalProb > 0 && Math.abs(totalProb - 1.0) > 0.001) {
+        // Apply rho correlation to boost diagonal probabilities (draw scenarios)
+        if (rho !== 0) {
+            for (let h = 0; h <= maxGoals; h++) {
+                matrix[h][h] *= (1 + rho);
+            }
+        }
+
+        // Normalize to ensure probabilities sum to 1.0
+        totalProb = 0;
+        for (let h = 0; h <= maxGoals; h++) {
+            for (let a = 0; a <= maxGoals; a++) {
+                totalProb += matrix[h][a];
+            }
+        }
+
+        if (totalProb > 0) {
             for (let h = 0; h <= maxGoals; h++) {
                 for (let a = 0; a <= maxGoals; a++) {
                     matrix[h][a] /= totalProb;
@@ -376,7 +398,8 @@ export class HandballEngine {
             const errorHandicap = targetHomeCovers - modelHandicap.homeCovers;
             const errorTotal = targetOver - modelTotal.over;
 
-            const totalError = Math.abs(errorHandicap) + Math.abs(errorTotal);
+            // Weight handicap error 3x to prioritize spread accuracy
+            const totalError = Math.abs(errorHandicap) * 3.0 + Math.abs(errorTotal);
 
             // Track best solution
             if (totalError < bestError) {
@@ -455,10 +478,10 @@ export class HandballEngine {
             this.MAX_GOALS
         );
 
-        // Half-time matrix (50% of full-time xG)
+        // Half-time matrix (48.5% of full-time xG)
         const matrixHT = this.generateMatrix(
-            lambdas.lambdaHome * 0.5,
-            lambdas.lambdaAway * 0.5,
+            lambdas.lambdaHome * this.H1_RATIO,
+            lambdas.lambdaAway * this.H1_RATIO,
             this.nuHome,
             this.nuAway,
             30
@@ -491,8 +514,8 @@ export class HandballEngine {
 
             // First Half Markets
             firstHalf: this.generateHalfMarkets(
-                lambdas.lambdaHome * 0.5,
-                lambdas.lambdaAway * 0.5,
+                lambdas.lambdaHome * this.H1_RATIO,
+                lambdas.lambdaAway * this.H1_RATIO,
                 this.nuHome,
                 this.nuAway,
                 'First Half',
