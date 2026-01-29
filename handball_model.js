@@ -94,29 +94,11 @@ function displayMargins(handicapHome, handicapAway, overOdds, underOdds) {
 }
 
 function displayModelParams(markets) {
-    const el = document.getElementById('expectedTotalValue');
-    if (el) el.textContent = markets.expectedTotal.toFixed(2);
-
     const homeEl = document.getElementById('lambdaHome');
     if (homeEl) homeEl.textContent = markets.lambdas.lambdaHome.toFixed(2);
 
     const awayEl = document.getElementById('lambdaAway');
     if (awayEl) awayEl.textContent = markets.lambdas.lambdaAway.toFixed(2);
-
-    const nuEl = document.getElementById('rhoValue');
-    if (nuEl) nuEl.textContent = `${markets.nuHome.toFixed(2)} / ${markets.nuAway.toFixed(2)}`;
-
-    // Display balanced team total lines
-    const balancedHomeEl = document.getElementById('balancedHomeTeamLine');
-    const balancedAwayEl = document.getElementById('balancedAwayTeamLine');
-
-    if (balancedHomeEl && markets.teamTotals && markets.teamTotals.balancedLines) {
-        balancedHomeEl.textContent = markets.teamTotals.balancedLines.home.toFixed(1);
-    }
-
-    if (balancedAwayEl && markets.teamTotals && markets.teamTotals.balancedLines) {
-        balancedAwayEl.textContent = markets.teamTotals.balancedLines.away.toFixed(1);
-    }
 }
 
 function displayMatchWinner(matchWinner) {
