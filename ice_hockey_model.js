@@ -9,7 +9,8 @@ import {
     setRunModelCallback
 } from './js/ice_hockey_api.js';
 
-import { factorial, probToOdds } from './js/core/math_utils.js';
+import { factorial, probToOdds, isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
 // --- Statistical Helper Functions ---
 
@@ -217,7 +218,10 @@ function solveLambdas(targetHomeWin, targetDraw, targetOver, totalLine) {
 }
 
 // --- Main Controller ---
-function runModel() {
+class IceHockeyModel extends BaseModel {
+    constructor() { super(); }
+
+    runModel() {
     // Get Inputs
     const hOdds = parseFloat(document.getElementById('homeOdds').value);
     const dOdds = parseFloat(document.getElementById('drawOdds').value);
@@ -235,7 +239,13 @@ function runModel() {
     const p3Ratio = parseFloat(document.getElementById('p3Ratio').value) || 0.334;
 
     // Basic validation
-    if ([hOdds, dOdds, aOdds, totalGoalsLine, overOdds, underOdds].some(isNaN)) return;
+    if (isNaN(hOdds) || isNaN(dOdds) || isNaN(aOdds) || isNaN(totalGoalsLine) || isNaN(overOdds) || isNaN(underOdds)) return;
+    if (!isValidOdds(hOdds) || !isValidOdds(dOdds) || !isValidOdds(aOdds) || !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
+        this.showError('Odds must be between 1.01 and 1001');
+        return;
+    }
+    this.clearError();
+    try {
 
     // Update Labels
     document.getElementById('overLabel').textContent = `Over ${totalGoalsLine}`;
@@ -784,19 +794,23 @@ function runModel() {
             </tr>
         `;
     }
+    } catch (e) {
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
+    }
+    }
 }
 
-// Make global
-window.runModel = runModel;
+const iceHockeyModel = new IceHockeyModel();
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    setRunModelCallback(runModel);
+    setRunModelCallback(window.runModel);
     initIceHockeyLoader();
 
     document.getElementById('apiCountrySelect').addEventListener('change', handleCountryChange);
     document.getElementById('apiLeagueSelect').addEventListener('change', handleLeagueChange);
     document.getElementById('apiMatchSelect').addEventListener('change', handleMatchChange);
 
-    runModel();
+    window.runModel();
 });

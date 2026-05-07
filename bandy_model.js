@@ -3,21 +3,15 @@
 
 import * as BandyAPI from './js/bandy_api.js';
 import { BandyEngine } from './bandy_engine.js';
-import { probToOdds } from './js/core/math_utils.js';
+import { probToOdds, isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
-const engine = new BandyEngine();
+class BandyModel extends BaseModel {
+    constructor() {
+        super(new BandyEngine());
+    }
 
-// UI Helper - Toggle card collapse/expand
-function toggleCard(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('collapsed');
-}
-
-// Expose to window for HTML onclick handlers
-window.toggleCard = toggleCard;
-
-// Main model execution
-window.runModel = function () {
+    runModel() {
     try {
         // Get inputs
         const homeOdds = parseFloat(document.getElementById('homeOdds').value);
@@ -28,13 +22,15 @@ window.runModel = function () {
         const underOdds = parseFloat(document.getElementById('underOdds').value);
 
         // Validate required inputs (1X2 odds)
-        if ([homeOdds, drawOdds, awayOdds].some(isNaN)) {
-            console.log('Waiting for match winner odds...');
+        if (isNaN(homeOdds) || isNaN(drawOdds) || isNaN(awayOdds)) return;
+        if (!isValidOdds(homeOdds) || !isValidOdds(drawOdds) || !isValidOdds(awayOdds)) {
+            this.showError('Match winner odds must be between 1.01 and 1001');
             return;
         }
+        this.clearError();
 
         // Check if total goals is available
-        const hasTotalGoals = !isNaN(totalLine) && !isNaN(overOdds) && !isNaN(underOdds);
+        const hasTotalGoals = !isNaN(totalLine) && isValidOdds(overOdds) && isValidOdds(underOdds);
 
         // Update dynamic labels if total goals is present
         if (hasTotalGoals) {
@@ -59,7 +55,7 @@ window.runModel = function () {
             marketInputs.underOdds = underOdds;
         }
 
-        const markets = engine.generateAllMarkets(marketInputs);
+        const markets = this.engine.generateAllMarkets(marketInputs);
 
         // Display all results
         displayExpectedTotal(markets.expectedTotal, markets.lambdas);
@@ -80,9 +76,13 @@ window.runModel = function () {
         document.querySelectorAll('.card.hidden').forEach(c => c.classList.remove('hidden'));
 
     } catch (e) {
-        console.error("Model Error:", e);
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
     }
-};
+    }
+}
+
+const bandyModel = new BandyModel();
 
 // Display functions
 function displayMargins(homeOdds, drawOdds, awayOdds, overOdds, underOdds) {

@@ -9,10 +9,14 @@ import {
     setRunModelCallback
 } from './js/snooker_api.js';
 
-import { probToOdds, solveShin } from './js/core/math_utils.js';
+import { probToOdds, solveShin, isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
 // --- Main Controller ---
-function runModel() {
+class SnookerModel extends BaseModel {
+    constructor() { super(); }
+
+    runModel() {
     try {
         // Get Inputs
         const hOdds = parseFloat(document.getElementById('homeOdds').value);
@@ -21,6 +25,11 @@ function runModel() {
 
         // Basic validation
         if (isNaN(hOdds) || isNaN(aOdds) || isNaN(bestOf)) return;
+        if (!isValidOdds(hOdds) || !isValidOdds(aOdds)) {
+            this.showError('Odds must be between 1.01 and 1001');
+            return;
+        }
+        this.clearError();
 
         // Calculate margins
         displayMargin(hOdds, aOdds);
@@ -72,9 +81,13 @@ function runModel() {
         showMarkets();
 
     } catch (e) {
-        console.error("Model Error:", e);
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
+    }
     }
 }
+
+const snookerModel = new SnookerModel();
 
 // --- Display Functions ---
 
@@ -640,13 +653,10 @@ function solveImpliedFrameProb(targetMatchProb, bestOf) {
     return mid;
 }
 
-// Make global
-window.runModel = runModel;
-
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     // Set up API loader
-    setRunModelCallback(runModel);
+    setRunModelCallback(window.runModel);
     initSnookerLoader();
 
     // Wire up dropdowns
@@ -655,5 +665,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('apiMatchSelect').addEventListener('change', handleMatchChange);
 
     // Initial run
-    runModel();
+    window.runModel();
 });

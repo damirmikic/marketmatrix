@@ -1,20 +1,30 @@
 import * as VolleyballAPI from './js/volleyball_api.js';
 import { VolleyballEngine } from './volleyball_engine.js';
+import { isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
-const engine = new VolleyballEngine();
+class VolleyballModel extends BaseModel {
+    constructor() {
+        super(new VolleyballEngine());
+    }
 
-window.runModel = function () {
+    runModel() {
     try {
         const team1Odds = parseFloat(document.getElementById('firstSetTeam1Odds').value);
         const team2Odds = parseFloat(document.getElementById('firstSetTeam2Odds').value);
 
-        if (!team1Odds || !team2Odds) return;
+        if (isNaN(team1Odds) || isNaN(team2Odds)) return;
+        if (!isValidOdds(team1Odds) || !isValidOdds(team2Odds)) {
+            this.showError('Odds must be between 1.01 and 1001');
+            return;
+        }
+        this.clearError();
 
         // 1. De-vig first set winner odds
-        const fairFirstSet = engine.removeVigorish(team1Odds, team2Odds);
+        const fairFirstSet = this.engine.removeVigorish(team1Odds, team2Odds);
 
         // 2. Generate all derivatives from first set winner probability
-        const derivatives = engine.generateDerivatives(fairFirstSet.p1);
+        const derivatives = this.engine.generateDerivatives(fairFirstSet.p1);
 
         // 3. Display results
         displayFirstSetWinner(derivatives.firstSetWinner, fairFirstSet);
@@ -28,9 +38,13 @@ window.runModel = function () {
         document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     } catch (e) {
-        console.error("Model Error:", e);
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
     }
-};
+    }
+}
+
+const volleyballModel = new VolleyballModel();
 
 function displayFirstSetWinner(firstSetWinner, fairOdds) {
     const container = document.getElementById('firstSetWinnerTable');

@@ -3,7 +3,7 @@
 
 import * as FutsalAPI from './js/futsal_api.js';
 import { FutsalEngine } from './futsal_engine.js';
-import { probToOdds } from './js/core/math_utils.js';
+import { probToOdds, isValidOdds } from './js/core/math_utils.js';
 import { BaseModel } from './js/base_model.js';
 
 class FutsalModel extends BaseModel {
@@ -22,13 +22,15 @@ class FutsalModel extends BaseModel {
         const underOdds = parseFloat(document.getElementById('underOdds').value);
 
         // Validate required inputs (1X2 odds)
-        if ([homeOdds, drawOdds, awayOdds].some(isNaN)) {
-            console.log('Waiting for match winner odds...');
+        if (isNaN(homeOdds) || isNaN(drawOdds) || isNaN(awayOdds)) return;
+        if (!isValidOdds(homeOdds) || !isValidOdds(drawOdds) || !isValidOdds(awayOdds)) {
+            this.showError('Match winner odds must be between 1.01 and 1001');
             return;
         }
+        this.clearError();
 
         // Check if total goals is available
-        const hasTotalGoals = !isNaN(totalLine) && !isNaN(overOdds) && !isNaN(underOdds);
+        const hasTotalGoals = !isNaN(totalLine) && isValidOdds(overOdds) && isValidOdds(underOdds);
 
         // Update dynamic labels if total goals is present
         if (hasTotalGoals) {
@@ -82,13 +84,13 @@ class FutsalModel extends BaseModel {
         }
 
     } catch (e) {
-        console.error("Model Error:", e);
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
     }
     }
 }
 
 const futsalModel = new FutsalModel();
-window.runModel = () => futsalModel.runModel();
 
 // Display functions
 function displayMargins(homeOdds, drawOdds, awayOdds, overOdds, underOdds) {

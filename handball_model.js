@@ -4,20 +4,15 @@
 
 import * as HandballAPI from './js/handball_api.js';
 import { HandballEngine } from './handball_engine.js';
-import { probToOdds } from './js/core/math_utils.js';
+import { probToOdds, isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
-const engine = new HandballEngine();
+class HandballModel extends BaseModel {
+    constructor() {
+        super(new HandballEngine());
+    }
 
-// UI Helper - Toggle card collapse/expand
-function toggleCard(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('collapsed');
-}
-
-window.toggleCard = toggleCard;
-
-// Main model execution
-window.runModel = function () {
+    runModel() {
     try {
         // Get inputs
         const handicapLine = parseFloat(document.getElementById('handicapLine').value);
@@ -28,10 +23,14 @@ window.runModel = function () {
         const underOdds = parseFloat(document.getElementById('underOdds').value);
 
         // Validate all inputs required
-        if ([handicapLine, handicapHomeOdds, handicapAwayOdds, totalLine, overOdds, underOdds].some(isNaN)) {
-            console.log('Waiting for all inputs...');
+        if (isNaN(handicapLine) || isNaN(handicapHomeOdds) || isNaN(handicapAwayOdds) ||
+            isNaN(totalLine) || isNaN(overOdds) || isNaN(underOdds)) return;
+        if (!isValidOdds(handicapHomeOdds) || !isValidOdds(handicapAwayOdds) ||
+            !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
+            this.showError('Odds must be between 1.01 and 1001');
             return;
         }
+        this.clearError();
 
         // Update dynamic labels
         document.getElementById('handicapHomeLabel').textContent = `Home (${handicapLine > 0 ? '+' : ''}${handicapLine})`;
@@ -43,7 +42,7 @@ window.runModel = function () {
         displayMargins(handicapHomeOdds, handicapAwayOdds, overOdds, underOdds);
 
         // Generate all markets
-        const markets = engine.generateAllMarkets({
+        const markets = this.engine.generateAllMarkets({
             handicapLine,
             handicapHomeOdds,
             handicapAwayOdds,
@@ -72,9 +71,13 @@ window.runModel = function () {
         }
 
     } catch (e) {
-        console.error("Model Error:", e);
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
     }
-};
+    }
+}
+
+const handballModel = new HandballModel();
 
 // Display functions
 function displayMargins(handicapHome, handicapAway, overOdds, underOdds) {

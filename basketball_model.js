@@ -9,10 +9,14 @@ import {
     setRunModelCallback
 } from './js/basketball_api.js';
 
-import { probToOdds, solveShin } from './js/core/math_utils.js';
+import { probToOdds, solveShin, isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
 // --- Main Controller ---
-function runModel() {
+class BasketballModel extends BaseModel {
+    constructor() { super(); }
+
+    runModel() {
     // Get Inputs
     const hOdds = parseFloat(document.getElementById('homeOdds').value);
     const aOdds = parseFloat(document.getElementById('awayOdds').value);
@@ -34,7 +38,13 @@ function runModel() {
     const halfRatio2H = q3Ratio + q4Ratio;
 
     // Basic validation
-    if ([hOdds, aOdds, totalLine, overOdds, underOdds].some(isNaN)) return;
+    if (isNaN(hOdds) || isNaN(aOdds) || isNaN(totalLine) || isNaN(overOdds) || isNaN(underOdds)) return;
+    if (!isValidOdds(hOdds) || !isValidOdds(aOdds) || !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
+        this.showError('Odds must be between 1.01 and 1001');
+        return;
+    }
+    this.clearError();
+    try {
 
     // Update Labels
     document.getElementById('overLabel').textContent = `Over ${totalLine}`;
@@ -485,6 +495,11 @@ function runModel() {
         });
     });
     document.getElementById('handicapTotalTable').innerHTML = handicapTotalHtml;
+    } catch (e) {
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
+    }
+    }
 }
 
 // Helper function to estimate margin probability bands
@@ -526,13 +541,12 @@ function normalInRange(mean, std, low, high) {
     return Math.max(0.02, Math.exp(-0.5 * distance * distance) * (high - low) / (std * 2.5));
 }
 
-// Make global
-window.runModel = runModel;
+const basketballModel = new BasketballModel();
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     // Set up API loader
-    setRunModelCallback(runModel);
+    setRunModelCallback(window.runModel);
     initBasketballLoader();
 
     // Wire up dropdowns
@@ -541,5 +555,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('apiMatchSelect').addEventListener('change', handleMatchChange);
 
     // Initial run
-    runModel();
+    window.runModel();
 });

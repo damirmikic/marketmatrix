@@ -9,7 +9,8 @@ import {
     setRunModelCallback
 } from './js/nfl_api.js';
 
-import { probToOdds, solveShin } from './js/core/math_utils.js';
+import { probToOdds, solveShin, isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
 // Helper function to ensure lines ALWAYS end in .5 (never whole numbers)
 // Rounds to nearest .5 value: 3.0→3.5, 3.2→3.5, 3.8→3.5, 4.3→4.5
@@ -18,7 +19,10 @@ function toHalfPoint(value) {
 }
 
 // --- Main Controller ---
-function runModel() {
+class NFLModel extends BaseModel {
+    constructor() { super(); }
+
+    runModel() {
     // Get Inputs
     const hOdds = parseFloat(document.getElementById('homeOdds').value);
     const aOdds = parseFloat(document.getElementById('awayOdds').value);
@@ -40,7 +44,13 @@ function runModel() {
     const halfRatio2H = q3Ratio + q4Ratio;
 
     // Basic validation
-    if ([hOdds, aOdds, totalLine, overOdds, underOdds].some(isNaN)) return;
+    if (isNaN(hOdds) || isNaN(aOdds) || isNaN(totalLine) || isNaN(overOdds) || isNaN(underOdds)) return;
+    if (!isValidOdds(hOdds) || !isValidOdds(aOdds) || !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
+        this.showError('Odds must be between 1.01 and 1001');
+        return;
+    }
+    this.clearError();
+    try {
 
     // Update Labels
     document.getElementById('overLabel').textContent = `Over ${totalLine}`;
@@ -469,6 +479,11 @@ function runModel() {
         });
     });
     document.getElementById('handicapTotalTable').innerHTML = handicapTotalHtml;
+    } catch (e) {
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
+    }
+    }
 }
 
 // Helper function to estimate margin probability bands for NFL
@@ -509,12 +524,11 @@ function normalInRange(mean, std, low, high) {
     return Math.max(0.02, Math.exp(-0.5 * distance * distance) * (high - low) / (std * 2.5));
 }
 
-// Make global
-window.runModel = runModel;
+const nflModel = new NFLModel();
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    setRunModelCallback(runModel);
+    setRunModelCallback(window.runModel);
     initNFLLoader();
 
     // Wire up dropdowns
@@ -523,5 +537,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('apiMatchSelect').addEventListener('change', handleMatchChange);
 
     // Initial run
-    runModel();
+    window.runModel();
 });
