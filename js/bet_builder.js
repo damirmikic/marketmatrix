@@ -80,12 +80,16 @@ function renderLegs() {
         div.className = 'bb-leg-item';
         div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #334155; padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 0.9rem;";
 
-        let text = formatLegText(leg);
+        const span = document.createElement('span');
+        span.textContent = formatLegText(leg);
 
-        div.innerHTML = `
-            <span>${text}</span>
-            <button onclick="removeLeg(${idx})" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-weight: bold;">✕</button>
-        `;
+        const btn = document.createElement('button');
+        btn.style.cssText = "background: transparent; border: none; color: #f87171; cursor: pointer; font-weight: bold;";
+        btn.textContent = '✕';
+        btn.addEventListener('click', () => removeLeg(idx));
+
+        div.appendChild(span);
+        div.appendChild(btn);
         listEl.appendChild(div);
     });
 
@@ -169,10 +173,9 @@ export function addLeg() {
     }
 }
 
-// Make removeLeg global so HTML onclick can find it
-window.removeLeg = function (idx) {
+function removeLeg(idx) {
     activeLegs.splice(idx, 1);
     renderLegs();
-};
+}
 
 window.addBbLeg = addLeg;
