@@ -3,6 +3,7 @@ import { TennisMarkovEngine } from './js/tennis_markov_engine.js';
 import { tennisEloService } from './js/tennis_elo_service.js';
 import { tennisWtaEloService } from './js/tennis_wta_elo_service.js';
 import { BaseModel } from './js/base_model.js';
+import { isValidOdds } from './js/core/math_utils.js';
 
 // Module-level variables used by standalone display functions
 let currentPlayer1 = null;
@@ -34,7 +35,12 @@ class TennisModel extends BaseModel {
             this.currentSurface = surface;
         }
 
-        if (!odds1 || !odds2) return;
+        if (isNaN(odds1) || isNaN(odds2)) return;
+        if (!isValidOdds(odds1) || !isValidOdds(odds2)) {
+            this.showError('Match odds must be between 1.01 and 1001');
+            return;
+        }
+        this.clearError();
 
         // Fetch Elo-based hold probabilities if player names are available
         let eloHoldProbs = null;
@@ -127,7 +133,8 @@ class TennisModel extends BaseModel {
         document.getElementById('marketsTabContainer').classList.remove('hidden');
 
     } catch (e) {
-        console.error("Model Error:", e);
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
     }
 }
 }
@@ -390,7 +397,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 const tennisModel = new TennisModel();
-window.runModel = (surface) => tennisModel.runModel(surface);
 window.setCurrentPlayers = (p1, p2, surface, tour) => {
     tennisModel.currentPlayer1 = p1;
     tennisModel.currentPlayer2 = p2;

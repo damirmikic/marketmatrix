@@ -9,10 +9,15 @@ import {
     setRunModelCallback
 } from './js/table_tennis_api.js';
 
-import { probToOdds, solveShin } from './js/core/math_utils.js';
+import { probToOdds, solveShin, isValidOdds } from './js/core/math_utils.js';
+import { BaseModel } from './js/base_model.js';
 
 // --- Main Controller ---
-function runModel() {
+class TableTennisModel extends BaseModel {
+    constructor() { super(); }
+
+    runModel() {
+    try {
     // Get Inputs - only Match Winner odds
     const hOdds = parseFloat(document.getElementById('homeOdds').value);
     const aOdds = parseFloat(document.getElementById('awayOdds').value);
@@ -26,6 +31,11 @@ function runModel() {
 
     // Basic validation
     if (isNaN(hOdds) || isNaN(aOdds)) return;
+    if (!isValidOdds(hOdds) || !isValidOdds(aOdds)) {
+        this.showError('Odds must be between 1.01 and 1001');
+        return;
+    }
+    this.clearError();
 
     // --- Margin Calculations ---
     // Match Winner Margin
@@ -236,7 +246,14 @@ function runModel() {
         winnerTotalHtml += `<tr><td>Player 2 & Under ${line.toFixed(1)}</td><td class="num-col prob-col">${(awayUnder * 100).toFixed(1)}%</td><td class="num-col">${probToOdds(awayUnder)}</td></tr>`;
     });
     document.getElementById('winnerTotalTable').innerHTML = winnerTotalHtml;
+    } catch (e) {
+        console.error('Model Error:', e);
+        this.showError(e.message || 'Calculation failed');
+    }
+    }
 }
+
+const tableTennisModel = new TableTennisModel();
 
 // Helper function to calculate exact score probabilities
 function calculateExactScores(setWinProb) {
@@ -283,13 +300,10 @@ function calculateExactScores(setWinProb) {
     ];
 }
 
-// Make global
-window.runModel = runModel;
-
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     // Set up API loader
-    setRunModelCallback(runModel);
+    setRunModelCallback(window.runModel);
     initTableTennisLoader();
 
     // Wire up dropdowns
@@ -298,5 +312,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('apiMatchSelect').addEventListener('change', handleMatchChange);
 
     // Initial run
-    runModel();
+    window.runModel();
 });

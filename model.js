@@ -476,7 +476,6 @@ class FootballModel extends BaseModel {
 }
 
 const footballModel = new FootballModel();
-window.runModel = () => footballModel.runModel();
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     // Inject API Styles

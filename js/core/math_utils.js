@@ -52,3 +52,12 @@ export function solveShin(oddsArr) {
 export function probToOdds(p) {
     return p > 0 ? (1 / p).toFixed(2) : "∞";
 }
+
+/**
+ * Validate that a value is a legal decimal odds number (1.01–1001)
+ * @param {number} v
+ * @returns {boolean}
+ */
+export function isValidOdds(v) {
+    return Number.isFinite(v) && v >= 1.01 && v <= 1001;
+}
