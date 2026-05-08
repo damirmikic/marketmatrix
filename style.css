@@ -58,6 +58,9 @@ h3 {
     gap: 20px;
 }
 
+.sidebar-column { min-width: 0; overflow: auto; }
+.markets-column { min-width: 0; }
+
 .two-col-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
