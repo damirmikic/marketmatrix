@@ -20,9 +20,9 @@
 
             <!-- 0. MATCH SELECTION -->
             <div class="card mb-5" id="matchSelectionCard">
-                <div class="card-header" onclick="toggleCard('matchSelectionCard')">
+                <button class="card-header" onclick="toggleCard('matchSelectionCard')" aria-expanded="true" aria-controls="matchSelectionCard">
                     <h2>0. Select Match</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="flex-col gap-3">
                         <div>
@@ -42,9 +42,9 @@
 
             <!-- 1. ODDS INPUT -->
             <div class="card" id="oddsInputCard">
-                <div class="card-header" onclick="toggleCard('oddsInputCard')">
+                <button class="card-header" onclick="toggleCard('oddsInputCard')" aria-expanded="true" aria-controls="oddsInputCard">
                     <h2>1. Input Odds</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <h3>Match Winner</h3>
                     <div class="input-group">
@@ -80,9 +80,9 @@
 
             <!-- 2. PARAMETERS -->
             <div class="card hidden mt-5" id="paramsCard">
-                <div class="card-header" onclick="toggleCard('paramsCard')">
+                <button class="card-header" onclick="toggleCard('paramsCard')" aria-expanded="true" aria-controls="paramsCard">
                     <h2>2. Parameters</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
                         <div class="stat-box">

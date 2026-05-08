@@ -20,9 +20,9 @@
 
             <!-- 1. MATCH SELECTION -->
             <div class="card mb-5" id="matchSelectionCard">
-                <div class="card-header" onclick="toggleCard('matchSelectionCard')">
+                <button class="card-header" onclick="toggleCard('matchSelectionCard')" aria-expanded="true" aria-controls="matchSelectionCard">
                     <h2>1. Select Match</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="flex-col gap-3">
                         <div>
@@ -47,10 +47,10 @@
 
             <!-- 2. MATCH WINNER ODDS -->
             <div class="card" id="oddsInputCard">
-                <div class="card-header" onclick="toggleCard('oddsInputCard')">
+                <button class="card-header" onclick="toggleCard('oddsInputCard')" aria-expanded="true" aria-controls="oddsInputCard">
                     <h2>2. Match Winner Odds</h2>
                     <span id="moneylineMargin" class="margin-info">Margin: -</span>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="input-group">
                         <label>Player 1</label>
@@ -65,9 +65,9 @@
 
             <!-- 3. MATCH FORMAT -->
             <div class="card" id="formatCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('formatCard')">
+                <button class="card-header" onclick="toggleCard('formatCard')" aria-expanded="true" aria-controls="formatCard">
                     <h2>3. Match Format</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="input-group">
                         <label>Best of (Frames)</label>
@@ -88,9 +88,9 @@
 
             <!-- 4. MODEL PARAMETERS -->
             <div class="card hidden" id="modelParamsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('modelParamsCard')">
+                <button class="card-header" onclick="toggleCard('modelParamsCard')" aria-expanded="true" aria-controls="modelParamsCard">
                     <h2>4. Model Parameters</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div style="padding: 10px;">
                         <div style="margin-bottom: 10px;">

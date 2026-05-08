@@ -21,9 +21,9 @@
 
             <!-- 0. MATCH SELECTION -->
             <div class="card mb-5" id="matchSelectionCard">
-                <div class="card-header" onclick="toggleCard('matchSelectionCard')">
+                <button class="card-header" onclick="toggleCard('matchSelectionCard')" aria-expanded="true" aria-controls="matchSelectionCard">
                     <h2>0. Select Match</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="flex-col gap-3">
                         <div>
@@ -40,9 +40,9 @@
 
             <!-- 1. FIRST SET WINNER INPUT -->
             <div class="card" id="oddsInputCard">
-                <div class="card-header" onclick="toggleCard('oddsInputCard')">
+                <button class="card-header" onclick="toggleCard('oddsInputCard')" aria-expanded="true" aria-controls="oddsInputCard">
                     <h2>1. First Set Winner Odds</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="input-group">
                         <label>Team 1</label>
