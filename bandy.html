@@ -105,6 +105,12 @@
 
         <!-- RIGHT COLUMN: MARKETS -->
         <div class="main-content">
+            <!-- EXPORT ACTIONS -->
+            <div id="exportBar" style="display:flex; justify-content:flex-end; gap:6px; margin-bottom:12px;">
+                <button class="btn-export" onclick="exportMarketsToClipboard()" title="Copy all markets to clipboard">Copy</button>
+                <button class="btn-export" onclick="exportMarketsToCSV()" title="Download markets as CSV">CSV</button>
+            </div>
+
             <!-- MATCH WINNER -->
             <div class="card hidden" id="matchWinnerCard">
                 <button class="card-header" onclick="toggleCard('matchWinnerCard')" aria-expanded="true" aria-controls="matchWinnerCard">
@@ -250,6 +256,11 @@
         </div>
     </div>
 
+    <script type="module">
+        import { exportMarketsToCSV, exportMarketsToClipboard } from './js/export_utils.js';
+        window.exportMarketsToCSV = exportMarketsToCSV;
+        window.exportMarketsToClipboard = exportMarketsToClipboard;
+    </script>
     <script type="module" src="bandy_model.js"></script>
 
     <!-- Quick Sports Menu -->
