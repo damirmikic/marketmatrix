@@ -1,7 +1,4 @@
-/**
- * Tennis Elo Rating Service
- * Fetches and manages player Elo ratings by surface from Tennis Abstract
- */
+import { SURFACE_SERVE_PRIORS } from './core/constants.js';
 
 class TennisEloService {
     constructor() {
@@ -20,11 +17,8 @@ class TennisEloService {
         try {
             // Check cache validity
             if (this.lastFetchTime && (Date.now() - this.lastFetchTime < this.CACHE_DURATION)) {
-                console.log('Using cached Elo ratings');
                 return this.eloCache;
             }
-
-            console.log('Fetching fresh Elo ratings from Tennis Abstract...');
 
             // Fetch the HTML page
             const response = await fetch(this.ELO_API_URL);
@@ -87,14 +81,10 @@ class TennisEloService {
             });
 
             this.lastFetchTime = Date.now();
-            console.log(`Loaded ${this.eloCache.size} player Elo ratings`);
-
             return this.eloCache;
         } catch (error) {
             console.error('Error fetching Elo ratings:', error);
-            // Return cached data if available
             if (this.eloCache.size > 0) {
-                console.log('Returning cached Elo data due to fetch error');
                 return this.eloCache;
             }
             throw error;
@@ -188,15 +178,7 @@ class TennisEloService {
      * @returns {number} Estimated serve hold probability
      */
     matchProbToHoldProb(matchWinProb, surface = 'Hard') {
-        // Surface-specific base hold rates
-        const surfaceBases = {
-            'Grass': 0.75,
-            'Indoor': 0.73,
-            'Hard': 0.68,
-            'Clay': 0.60
-        };
-
-        const baseHold = surfaceBases[surface] || 0.68;
+        const baseHold = SURFACE_SERVE_PRIORS[surface] ?? SURFACE_SERVE_PRIORS.Hard;
 
         // Convert match probability to hold percentage
         // Formula based on empirical tennis data:

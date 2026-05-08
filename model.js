@@ -22,6 +22,10 @@ import {
 import { updateBuilderMatrices } from './js/bet_builder.js';
 
 import { BaseModel } from './js/base_model.js';
+
+// Cached DOM element references — populated in DOMContentLoaded
+const el = {};
+
 // --- Main Controller ---
 class FootballModel extends BaseModel {
     constructor() {
@@ -29,22 +33,22 @@ class FootballModel extends BaseModel {
     }
     runModel() {
     // Get Inputs
-    const h = parseFloat(document.getElementById('homeOdds').value);
-    const d = parseFloat(document.getElementById('drawOdds').value);
-    const a = parseFloat(document.getElementById('awayOdds').value);
-    const line = parseFloat(document.getElementById('goalLine').value);
-    const o = parseFloat(document.getElementById('overOdds').value);
-    const u = parseFloat(document.getElementById('underOdds').value);
+    const homeOdds = parseFloat(el.homeOdds.value);
+    const drawOdds = parseFloat(el.drawOdds.value);
+    const awayOdds = parseFloat(el.awayOdds.value);
+    const goalLine = parseFloat(el.goalLine.value);
+    const overOdds = parseFloat(el.overOdds.value);
+    const underOdds = parseFloat(el.underOdds.value);
 
     // Basic validation
-    if ([h, d, a, line, o, u].some(isNaN)) return;
+    if ([homeOdds, drawOdds, awayOdds, goalLine, overOdds, underOdds].some(isNaN)) return;
 
     // Update Labels
-    document.getElementById('overLabel').textContent = `Over ${line} Odds`;
-    document.getElementById('underLabel').textContent = `Under ${line} Odds`;
+    document.getElementById('overLabel').textContent = `Over ${goalLine} Odds`;
+    document.getElementById('underLabel').textContent = `Under ${goalLine} Odds`;
 
     // Margin Calculation (1x2)
-    const margin = ((1 / h + 1 / d + 1 / a) - 1) * 100;
+    const margin = ((1 / homeOdds + 1 / drawOdds + 1 / awayOdds) - 1) * 100;
     const marginEl = document.getElementById('oneWtMargin');
     if (marginEl) {
         marginEl.textContent = `Margin: ${margin.toFixed(2)}%`;
@@ -53,7 +57,7 @@ class FootballModel extends BaseModel {
     }
 
     // Margin Calculation (Goals)
-    const marginGoals = ((1 / o + 1 / u) - 1) * 100;
+    const marginGoals = ((1 / overOdds + 1 / underOdds) - 1) * 100;
     const marginGoalsEl = document.getElementById('goalsMargin');
     if (marginGoalsEl) {
         marginGoalsEl.textContent = `Margin: ${marginGoals.toFixed(2)}%`;
@@ -61,8 +65,8 @@ class FootballModel extends BaseModel {
     }
 
     // 1. Get True Probabilities (Shin Method)
-    const true1x2 = solveShin([h, d, a]);
-    const trueOU = solveShin([o, u]);
+    const true1x2 = solveShin([homeOdds, drawOdds, awayOdds]);
+    const trueOU = solveShin([overOdds, underOdds]);
 
     // Display Shin 1x2 Probs
     document.getElementById('shinHome').textContent = (true1x2[0] * 100).toFixed(1) + "%";
@@ -79,7 +83,7 @@ class FootballModel extends BaseModel {
     const targetOver = trueOU[0];
 
     // 2. Solve for xG (and Omega)
-    const params = solveParameters(targetHome, targetOver, line, targetDraw);
+    const params = solveParameters(targetHome, targetOver, goalLine, targetDraw);
 
     // Display Parameters
     document.getElementById('xgHome').textContent = params.lambda.toFixed(3);
@@ -91,10 +95,8 @@ class FootballModel extends BaseModel {
 
     // 3. Generate Matrices (Pass Omega)
     // Read half ratios from input (default 45/55 if unavailable)
-    const ratio1HEl = document.getElementById('ratio1H');
-    const ratio2HEl = document.getElementById('ratio2H');
-    const ratio1H = ratio1HEl ? parseFloat(ratio1HEl.value) / 100 : 0.45;
-    const ratio2H = ratio2HEl ? parseFloat(ratio2HEl.value) / 100 : 0.55;
+    const ratio1H = el.ratio1H ? parseFloat(el.ratio1H.value) / 100 : 0.45;
+    const ratio2H = el.ratio2H ? parseFloat(el.ratio2H.value) / 100 : 0.55;
 
     const matrixFT = calculateMatrix(params.lambda, params.mu, params.omega);
 
@@ -478,6 +480,16 @@ class FootballModel extends BaseModel {
 const footballModel = new FootballModel();
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Cache DOM elements
+    el.homeOdds = document.getElementById('homeOdds');
+    el.drawOdds = document.getElementById('drawOdds');
+    el.awayOdds = document.getElementById('awayOdds');
+    el.goalLine = document.getElementById('goalLine');
+    el.overOdds = document.getElementById('overOdds');
+    el.underOdds = document.getElementById('underOdds');
+    el.ratio1H = document.getElementById('ratio1H');
+    el.ratio2H = document.getElementById('ratio2H');
+
     // Inject API Styles
     const style = document.createElement('style');
     style.textContent = `

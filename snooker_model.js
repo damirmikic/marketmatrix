@@ -19,23 +19,23 @@ class SnookerModel extends BaseModel {
     runModel() {
     try {
         // Get Inputs
-        const hOdds = parseFloat(document.getElementById('homeOdds').value);
-        const aOdds = parseFloat(document.getElementById('awayOdds').value);
+        const homeOdds = parseFloat(document.getElementById('homeOdds').value);
+        const awayOdds = parseFloat(document.getElementById('awayOdds').value);
         const bestOf = parseInt(document.getElementById('bestOf').value);
 
         // Basic validation
-        if (isNaN(hOdds) || isNaN(aOdds) || isNaN(bestOf)) return;
-        if (!isValidOdds(hOdds) || !isValidOdds(aOdds)) {
+        if (isNaN(homeOdds) || isNaN(awayOdds) || isNaN(bestOf)) return;
+        if (!isValidOdds(homeOdds) || !isValidOdds(awayOdds)) {
             this.showError('Odds must be between 1.01 and 1001');
             return;
         }
         this.clearError();
 
         // Calculate margins
-        displayMargin(hOdds, aOdds);
+        displayMargin(homeOdds, awayOdds);
 
         // Fair Probabilities
-        const fairML = solveShin([hOdds, aOdds]);
+        const fairML = solveShin([homeOdds, awayOdds]);
         const homeWinProb = fairML[0];
         const awayWinProb = fairML[1];
 
@@ -91,8 +91,8 @@ const snookerModel = new SnookerModel();
 
 // --- Display Functions ---
 
-function displayMargin(hOdds, aOdds) {
-    const mlMargin = ((1 / hOdds + 1 / aOdds) - 1) * 100;
+function displayMargin(homeOdds, awayOdds) {
+    const mlMargin = ((1 / homeOdds + 1 / awayOdds) - 1) * 100;
     const mlMarginEl = document.getElementById('moneylineMargin');
     if (mlMarginEl) {
         mlMarginEl.textContent = `Margin: ${mlMargin.toFixed(2)}%`;

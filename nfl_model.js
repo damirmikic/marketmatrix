@@ -12,6 +12,9 @@ import {
 import { probToOdds, solveShin, isValidOdds } from './js/core/math_utils.js';
 import { BaseModel } from './js/base_model.js';
 
+// Cached DOM element references — populated in DOMContentLoaded
+const el = {};
+
 // Helper function to ensure lines ALWAYS end in .5 (never whole numbers)
 // Rounds to nearest .5 value: 3.0→3.5, 3.2→3.5, 3.8→3.5, 4.3→4.5
 function toHalfPoint(value) {
@@ -24,28 +27,28 @@ class NFLModel extends BaseModel {
 
     runModel() {
     // Get Inputs
-    const hOdds = parseFloat(document.getElementById('homeOdds').value);
-    const aOdds = parseFloat(document.getElementById('awayOdds').value);
-    const spreadLine = parseFloat(document.getElementById('spreadLine').value);
-    const spreadHomeOdds = parseFloat(document.getElementById('spreadHomeOdds').value);
-    const spreadAwayOdds = parseFloat(document.getElementById('spreadAwayOdds').value);
-    const totalLine = parseFloat(document.getElementById('totalLine').value);
-    const overOdds = parseFloat(document.getElementById('overOdds').value);
-    const underOdds = parseFloat(document.getElementById('underOdds').value);
+    const homeOdds = parseFloat(el.homeOdds.value);
+    const awayOdds = parseFloat(el.awayOdds.value);
+    const spreadLine = parseFloat(el.spreadLine.value);
+    const spreadHomeOdds = parseFloat(el.spreadHomeOdds.value);
+    const spreadAwayOdds = parseFloat(el.spreadAwayOdds.value);
+    const totalLine = parseFloat(el.totalLine.value);
+    const overOdds = parseFloat(el.overOdds.value);
+    const underOdds = parseFloat(el.underOdds.value);
 
-    // Get Quarter Ratios (NFL typically has more balanced scoring than basketball)
-    const q1Ratio = parseFloat(document.getElementById('q1Ratio').value) || 0.25;
-    const q2Ratio = parseFloat(document.getElementById('q2Ratio').value) || 0.27; // Slightly higher Q2 (teams often score before half)
-    const q3Ratio = parseFloat(document.getElementById('q3Ratio').value) || 0.23; // Slightly lower Q3 (halftime adjustments)
-    const q4Ratio = parseFloat(document.getElementById('q4Ratio').value) || 0.25; // Q4 normal variance
+    // Get Quarter Ratios
+    const q1Ratio = parseFloat(el.q1Ratio.value) || 0.25;
+    const q2Ratio = parseFloat(el.q2Ratio.value) || 0.27;
+    const q3Ratio = parseFloat(el.q3Ratio.value) || 0.23;
+    const q4Ratio = parseFloat(el.q4Ratio.value) || 0.25;
 
     // Calculate half ratios from quarter ratios
     const halfRatio1H = q1Ratio + q2Ratio;
     const halfRatio2H = q3Ratio + q4Ratio;
 
     // Basic validation
-    if (isNaN(hOdds) || isNaN(aOdds) || isNaN(totalLine) || isNaN(overOdds) || isNaN(underOdds)) return;
-    if (!isValidOdds(hOdds) || !isValidOdds(aOdds) || !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
+    if (isNaN(homeOdds) || isNaN(awayOdds) || isNaN(totalLine) || isNaN(overOdds) || isNaN(underOdds)) return;
+    if (!isValidOdds(homeOdds) || !isValidOdds(awayOdds) || !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
         this.showError('Odds must be between 1.01 and 1001');
         return;
     }
@@ -58,7 +61,7 @@ class NFLModel extends BaseModel {
 
     // --- Margin Calculations ---
     // Moneyline Margin
-    const mlMargin = ((1 / hOdds + 1 / aOdds) - 1) * 100;
+    const mlMargin = ((1 / homeOdds + 1 / awayOdds) - 1) * 100;
     const mlMarginEl = document.getElementById('moneylineMargin');
     if (mlMarginEl) {
         mlMarginEl.textContent = `Margin: ${mlMargin.toFixed(2)}%`;
@@ -84,7 +87,7 @@ class NFLModel extends BaseModel {
     }
 
     // --- Fair Probabilities ---
-    const fairML = solveShin([hOdds, aOdds]);
+    const fairML = solveShin([homeOdds, awayOdds]);
     const homeWinProb = fairML[0];
     const awayWinProb = fairML[1];
 
@@ -528,6 +531,20 @@ const nflModel = new NFLModel();
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
+    // Cache DOM elements
+    el.homeOdds = document.getElementById('homeOdds');
+    el.awayOdds = document.getElementById('awayOdds');
+    el.spreadLine = document.getElementById('spreadLine');
+    el.spreadHomeOdds = document.getElementById('spreadHomeOdds');
+    el.spreadAwayOdds = document.getElementById('spreadAwayOdds');
+    el.totalLine = document.getElementById('totalLine');
+    el.overOdds = document.getElementById('overOdds');
+    el.underOdds = document.getElementById('underOdds');
+    el.q1Ratio = document.getElementById('q1Ratio');
+    el.q2Ratio = document.getElementById('q2Ratio');
+    el.q3Ratio = document.getElementById('q3Ratio');
+    el.q4Ratio = document.getElementById('q4Ratio');
+
     setRunModelCallback(window.runModel);
     initNFLLoader();
 
