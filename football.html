@@ -170,6 +170,10 @@
                     <button class="tab-btn" data-tab="teams" onclick="switchTab('marketsTabContainer', 'teams')">Teams</button>
                     <button class="tab-btn" data-tab="combos" onclick="switchTab('marketsTabContainer', 'combos')">Combinations</button>
                     <button class="tab-btn" data-tab="specials" onclick="switchTab('marketsTabContainer', 'specials')">Specials</button>
+                    <div class="export-actions">
+                        <button class="btn-export" onclick="exportMarketsToClipboard()" title="Copy all markets to clipboard">Copy</button>
+                        <button class="btn-export" onclick="exportMarketsToCSV()" title="Download markets as CSV">CSV</button>
+                    </div>
                 </div>
 
                 <!-- FULL TIME TAB PANEL -->
@@ -758,12 +762,15 @@
 
     <script type="module">
         import { toggleCard, syncRatio, toggleAllCards, switchTab, switchSubTab } from './js/ui_utils.js';
+        import { exportMarketsToCSV, exportMarketsToClipboard } from './js/export_utils.js';
 
         window.toggleCard = toggleCard;
         window.syncRatio = syncRatio;
         window.toggleAllCards = toggleAllCards;
         window.switchTab = switchTab;
         window.switchSubTab = switchSubTab;
+        window.exportMarketsToCSV = exportMarketsToCSV;
+        window.exportMarketsToClipboard = exportMarketsToClipboard;
     </script>
     <script type="module" src="model.js"></script>
 

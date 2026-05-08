@@ -103,6 +103,10 @@
                     <button class="tab-btn" data-tab="firsthalf" onclick="switchTab('marketsTabContainer', 'firsthalf')">1st Half</button>
                     <button class="tab-btn" data-tab="teams" onclick="switchTab('marketsTabContainer', 'teams')">Teams</button>
                     <button class="tab-btn" data-tab="combos" onclick="switchTab('marketsTabContainer', 'combos')">Combinations</button>
+                    <div class="export-actions">
+                        <button class="btn-export" onclick="exportMarketsToClipboard()" title="Copy all markets to clipboard">Copy</button>
+                        <button class="btn-export" onclick="exportMarketsToCSV()" title="Download markets as CSV">CSV</button>
+                    </div>
                 </div>
 
                 <!-- FULL TIME TAB PANEL -->
@@ -264,10 +268,13 @@
 
     <script type="module">
         import { toggleCard, switchTab, switchSubTab } from './js/ui_utils.js';
+        import { exportMarketsToCSV, exportMarketsToClipboard } from './js/export_utils.js';
 
         window.toggleCard = toggleCard;
         window.switchTab = switchTab;
         window.switchSubTab = switchSubTab;
+        window.exportMarketsToCSV = exportMarketsToCSV;
+        window.exportMarketsToClipboard = exportMarketsToClipboard;
     </script>
     <script type="module" src="handball_model.js"></script>
 
