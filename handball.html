@@ -13,10 +13,7 @@
     <div class="container">
         <!-- LEFT COLUMN: INPUTS -->
         <div class="sidebar-column">
-            <a href="index.html"
-                style="display: block; width: 100%; padding: 10px; background: #3b82f6; color: white; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
-                &larr; Home
-            </a>
+            <a href="index.html" class="btn btn-home">&larr; Home</a>
 
             <!-- 1. MATCH SELECTION -->
             <div class="card" id="matchSelectionCard">
@@ -24,19 +21,19 @@
                     <h2>1. Select Match</h2>
                 </button>
                 <div class="card-content">
-                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">LEAGUE</label>
-                    <select id="leagueSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
+                    <label class="form-label">LEAGUE</label>
+                    <select id="leagueSelect" class="form-select"></select>
 
-                    <label style="font-size: 0.75rem; font-weight: bold; color: #64748b;">MATCH</label>
-                    <select id="matchSelect" style="width: 100%; padding: 8px; margin-bottom: 10px;" disabled></select>
+                    <label class="form-label">MATCH</label>
+                    <select id="matchSelect" class="form-select" disabled></select>
                 </div>
             </div>
 
             <!-- 2. HANDICAP -->
-            <div class="card" id="handicapInputCard" style="margin-top: 20px;">
+            <div class="card" id="handicapInputCard">
                 <button class="card-header" onclick="toggleCard('handicapInputCard')" aria-expanded="true" aria-controls="handicapInputCard">
                     <h2>2. Handicap Odds</h2>
-                    <span id="handicapMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
+                    <span id="handicapMargin" class="margin-info"></span>
                 </button>
                 <div class="card-content">
                     <div class="input-group">
@@ -55,10 +52,10 @@
             </div>
 
             <!-- 3. TOTAL GOALS -->
-            <div class="card" id="totalGoalsInputCard" style="margin-top: 20px;">
+            <div class="card" id="totalGoalsInputCard">
                 <button class="card-header" onclick="toggleCard('totalGoalsInputCard')" aria-expanded="true" aria-controls="totalGoalsInputCard">
                     <h2>3. Total Goals</h2>
-                    <span id="totalGoalsMargin" style="font-size: 0.75rem; color: #94a3b8;"></span>
+                    <span id="totalGoalsMargin" class="margin-info"></span>
                 </button>
                 <div class="card-content">
                     <div class="input-group">
@@ -77,7 +74,7 @@
             </div>
 
             <!-- 4. EXPECTED GOALS -->
-            <div class="card" id="modelParamsCard" style="margin-top: 20px;">
+            <div class="card" id="modelParamsCard">
                 <button class="card-header" onclick="toggleCard('modelParamsCard')" aria-expanded="true" aria-controls="modelParamsCard">
                     <h2>Expected Goals</h2>
                 </button>
