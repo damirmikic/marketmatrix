@@ -223,13 +223,13 @@ class IceHockeyModel extends BaseModel {
 
     runModel() {
     // Get Inputs
-    const hOdds = parseFloat(document.getElementById('homeOdds').value);
-    const dOdds = parseFloat(document.getElementById('drawOdds').value);
-    const aOdds = parseFloat(document.getElementById('awayOdds').value);
+    const homeOdds = parseFloat(document.getElementById('homeOdds').value);
+    const drawOdds = parseFloat(document.getElementById('drawOdds').value);
+    const awayOdds = parseFloat(document.getElementById('awayOdds').value);
     const puckLine = parseFloat(document.getElementById('puckLine').value);
     const puckHomeOdds = parseFloat(document.getElementById('puckHomeOdds').value);
     const puckAwayOdds = parseFloat(document.getElementById('puckAwayOdds').value);
-    const totalGoalsLine = parseFloat(document.getElementById('totalGoalsLine').value);
+    const totalLine = parseFloat(document.getElementById('totalGoalsLine').value);
     const overOdds = parseFloat(document.getElementById('overOdds').value);
     const underOdds = parseFloat(document.getElementById('underOdds').value);
 
@@ -239,8 +239,8 @@ class IceHockeyModel extends BaseModel {
     const p3Ratio = parseFloat(document.getElementById('p3Ratio').value) || 0.334;
 
     // Basic validation
-    if (isNaN(hOdds) || isNaN(dOdds) || isNaN(aOdds) || isNaN(totalGoalsLine) || isNaN(overOdds) || isNaN(underOdds)) return;
-    if (!isValidOdds(hOdds) || !isValidOdds(dOdds) || !isValidOdds(aOdds) || !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
+    if (isNaN(homeOdds) || isNaN(drawOdds) || isNaN(awayOdds) || isNaN(totalLine) || isNaN(overOdds) || isNaN(underOdds)) return;
+    if (!isValidOdds(homeOdds) || !isValidOdds(drawOdds) || !isValidOdds(awayOdds) || !isValidOdds(overOdds) || !isValidOdds(underOdds)) {
         this.showError('Odds must be between 1.01 and 1001');
         return;
     }
@@ -248,11 +248,11 @@ class IceHockeyModel extends BaseModel {
     try {
 
     // Update Labels
-    document.getElementById('overLabel').textContent = `Over ${totalGoalsLine}`;
-    document.getElementById('underLabel').textContent = `Under ${totalGoalsLine}`;
+    document.getElementById('overLabel').textContent = `Over ${totalLine}`;
+    document.getElementById('underLabel').textContent = `Under ${totalLine}`;
 
     // --- Margin Calculations ---
-    const mlMargin = ((1 / hOdds + 1 / dOdds + 1 / aOdds) - 1) * 100;
+    const mlMargin = ((1 / homeOdds + 1 / drawOdds + 1 / awayOdds) - 1) * 100;
     const mlMarginEl = document.getElementById('moneylineMargin');
     if (mlMarginEl) {
         mlMarginEl.textContent = `Margin: ${mlMargin.toFixed(2)}%`;
@@ -276,7 +276,7 @@ class IceHockeyModel extends BaseModel {
     }
 
     // --- Remove Vig (Get Fair Probabilities) ---
-    const fair1X2 = removeVig([hOdds, dOdds, aOdds]);
+    const fair1X2 = removeVig([homeOdds, drawOdds, awayOdds]);
     const fairOU = removeVig([overOdds, underOdds]);
 
     const targetHomeWin = fair1X2[0];
@@ -294,7 +294,7 @@ class IceHockeyModel extends BaseModel {
     document.getElementById('fairAway').textContent = probToOdds(targetAwayWin);
 
     // --- Solve for Lambdas using Gradient Descent ---
-    const lambdas = solveLambdas(targetHomeWin, targetDraw, targetOver, totalGoalsLine);
+    const lambdas = solveLambdas(targetHomeWin, targetDraw, targetOver, totalLine);
 
     const expectedTotal = lambdas.lambdaHome + lambdas.lambdaAway;
     document.getElementById('expectedTotal').textContent = expectedTotal.toFixed(2);
@@ -333,7 +333,7 @@ class IceHockeyModel extends BaseModel {
 
     let puckLineHtml = '';
     puckLines.forEach(line => {
-        const result = calcHandicap(matrixFT, line, totalGoalsLine);
+        const result = calcHandicap(matrixFT, line, totalLine);
         puckLineHtml += `<tr>
             <td class="line-col">${line > 0 ? '+' : ''}${line.toFixed(1)}</td>
             <td class="num-col">${probToOdds(result.homeCovers)}</td>
@@ -348,7 +348,7 @@ class IceHockeyModel extends BaseModel {
 
     totalGoalsLines.forEach(line => {
         const result = calcTotalFromMatrix(matrixFT, line);
-        const isBaseLine = Math.abs(line - totalGoalsLine) < 0.6;
+        const isBaseLine = Math.abs(line - totalLine) < 0.6;
         const rowStyle = isBaseLine ? ' style="background: rgba(59, 130, 246, 0.15);"' : '';
         totalGoalsHtml += `<tr${rowStyle}>
             <td class="line-col">${line.toFixed(1)}</td>
@@ -491,7 +491,7 @@ class IceHockeyModel extends BaseModel {
 
     // --- COMBO BET: 1X2 & Total (Regular Time) ---
     const comboResults = [];
-    const comboTotalLine = totalGoalsLine;
+    const comboTotalLine = totalLine;
 
     // Calculate probabilities for each combination
     for (let h = 0; h <= 14; h++) {

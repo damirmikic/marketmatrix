@@ -11,27 +11,30 @@ let currentPlayer2 = null;
 let currentSurface = 'Hard';
 let currentTour = 'ATP';
 
+// Cached DOM element references — populated in DOMContentLoaded
+const el = {};
+
 class TennisModel extends BaseModel {
     constructor() {
         super(new TennisMarkovEngine());
         this.currentPlayer1 = null;
         this.currentPlayer2 = null;
         this.currentSurface = 'Hard';
-        this.currentTour = 'ATP'; // Default to ATP
+        this.currentTour = 'ATP';
     }
 
     runModel(surface = 'Hard') {
     try {
-        const odds1 = parseFloat(document.getElementById('player1Odds').value);
-        const odds2 = parseFloat(document.getElementById('player2Odds').value);
-        let totalLine = parseFloat(document.getElementById('totalGamesLine').value);
+        const odds1 = parseFloat(el.player1Odds.value);
+        const odds2 = parseFloat(el.player2Odds.value);
+        let totalLine = parseFloat(el.totalGamesLine.value);
 
         // Read Over/Under odds if present
-        const oddsOver = parseFloat(document.getElementById('oddsOver')?.value);
-        const oddsUnder = parseFloat(document.getElementById('oddsUnder')?.value);
+        const oddsOver = parseFloat(el.oddsOver?.value);
+        const oddsUnder = parseFloat(el.oddsUnder?.value);
 
         if (surface) {
-            document.getElementById('surfaceBadge').textContent = surface;
+            el.surfaceBadge.textContent = surface;
             this.currentSurface = surface;
         }
 
@@ -45,17 +48,12 @@ class TennisModel extends BaseModel {
         // Fetch Elo-based hold probabilities if player names are available
         let eloHoldProbs = null;
         if (this.currentPlayer1 && this.currentPlayer2) {
-            // Use appropriate Elo service based on tour
             const eloService = this.currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
             eloHoldProbs = eloService.getEloAdjustedHoldProbs(
                 this.currentPlayer1,
                 this.currentPlayer2,
                 surface
             );
-
-            if (eloHoldProbs) {
-                console.log(`Using ${this.currentTour} Elo-enhanced priors:`, eloHoldProbs);
-            }
         }
 
         // PHASE 2: Handle Synthetic Total and Fair Total Adjustment
@@ -63,18 +61,16 @@ class TennisModel extends BaseModel {
         let isAdjusted = false;
         let targetTotal = totalLine;
 
-        const totalLineInput = document.getElementById('totalGamesLine');
-
         // Step 1: Check if Total Line is missing -> Generate Synthetic Total
         if (!totalLine || isNaN(totalLine)) {
             targetTotal = this.engine.estimateSyntheticTotal(odds1, odds2, surface);
-            totalLineInput.value = targetTotal.toFixed(1);
+            el.totalGamesLine.value = targetTotal.toFixed(1);
             isSynthetic = true;
 
             // Visual feedback for synthetic data
-            totalLineInput.style.borderColor = '#f97316'; // Orange
-            totalLineInput.style.borderWidth = '2px';
-            totalLineInput.title = 'Estimated based on Match Odds & Surface';
+            el.totalGamesLine.style.borderColor = '#f97316'; // Orange
+            el.totalGamesLine.style.borderWidth = '2px';
+            el.totalGamesLine.title = 'Estimated based on Match Odds & Surface';
         }
         // Step 2: If Over/Under odds are present -> Calculate Fair Total
         else if (oddsOver && oddsUnder && !isNaN(oddsOver) && !isNaN(oddsUnder)) {
@@ -82,29 +78,27 @@ class TennisModel extends BaseModel {
             isAdjusted = true;
 
             // Visual feedback for adjusted data
-            totalLineInput.style.borderColor = '#3b82f6'; // Blue
-            totalLineInput.style.borderWidth = '2px';
-            totalLineInput.title = `Fair Total: ${targetTotal.toFixed(2)} (Adjusted from ${totalLine} using O/U odds)`;
+            el.totalGamesLine.style.borderColor = '#3b82f6'; // Blue
+            el.totalGamesLine.style.borderWidth = '2px';
+            el.totalGamesLine.title = `Fair Total: ${targetTotal.toFixed(2)} (Adjusted from ${totalLine} using O/U odds)`;
         }
         // Step 3: Normal case - use raw line
         else {
-            // Reset styling for normal input
-            totalLineInput.style.borderColor = '';
-            totalLineInput.style.borderWidth = '';
-            totalLineInput.title = '';
+            el.totalGamesLine.style.borderColor = '';
+            el.totalGamesLine.style.borderWidth = '';
+            el.totalGamesLine.title = '';
         }
 
         // Display total info
-        const totalInfoEl = document.getElementById('totalInfo');
-        if (totalInfoEl) {
+        if (el.totalInfo) {
             if (isSynthetic) {
-                totalInfoEl.textContent = `(Est)`;
-                totalInfoEl.style.color = '#f97316';
+                el.totalInfo.textContent = `(Est)`;
+                el.totalInfo.style.color = '#f97316';
             } else if (isAdjusted) {
-                totalInfoEl.textContent = `(Fair: ${targetTotal.toFixed(2)})`;
-                totalInfoEl.style.color = '#3b82f6';
+                el.totalInfo.textContent = `(Fair: ${targetTotal.toFixed(2)})`;
+                el.totalInfo.style.color = '#3b82f6';
             } else {
-                totalInfoEl.textContent = '';
+                el.totalInfo.textContent = '';
             }
         }
 
@@ -115,9 +109,7 @@ class TennisModel extends BaseModel {
         // 2. Calculate Direct Player Expected Games (market-driven, bypasses simulation)
         let directPlayerGames = null;
         if (targetTotal && oddsOver && oddsUnder && !isNaN(oddsOver) && !isNaN(oddsUnder)) {
-            // Use the fair total already calculated (or targetTotal if not adjusted)
             directPlayerGames = this.engine.getDirectPlayerGames(fairParams.p1, targetTotal);
-            console.log('Direct Player Games (market-driven):', directPlayerGames);
         }
 
         // 3. Solve (with adjusted/synthetic total and Elo-enhanced priors)
@@ -129,8 +121,8 @@ class TennisModel extends BaseModel {
         displayDerivatives(derivatives);
 
         // Show params card and tab container
-        document.getElementById('paramsCard').classList.remove('hidden');
-        document.getElementById('marketsTabContainer').classList.remove('hidden');
+        el.paramsCard.classList.remove('hidden');
+        el.marketsTabContainer.classList.remove('hidden');
 
     } catch (e) {
         console.error('Model Error:', e);
@@ -140,85 +132,60 @@ class TennisModel extends BaseModel {
 }
 
 function displayFairValue(fair) {
-    document.getElementById('fairP1').textContent = (1 / fair.p1).toFixed(2);
-    document.getElementById('fairP2').textContent = (1 / fair.p2).toFixed(2);
+    el.fairP1.textContent = (1 / fair.p1).toFixed(2);
+    el.fairP2.textContent = (1 / fair.p2).toFixed(2);
 }
 
 function displayParameters(result, eloHoldProbs = null, directPlayerGames = null) {
-    document.getElementById('p1Hold').textContent = (result.pa * 100).toFixed(1) + '%';
-    document.getElementById('p2Hold').textContent = (result.pb * 100).toFixed(1) + '%';
-    document.getElementById('modelTotal').textContent = result.calibration.expTotal.toFixed(2);
-    document.getElementById('fairWin').textContent = (result.calibration.pMatch * 100).toFixed(1) + '%';
+    el.p1Hold.textContent = (result.pa * 100).toFixed(1) + '%';
+    el.p2Hold.textContent = (result.pb * 100).toFixed(1) + '%';
+    el.modelTotal.textContent = result.calibration.expTotal.toFixed(2);
+    el.fairWin.textContent = (result.calibration.pMatch * 100).toFixed(1) + '%';
 
-    // Display expected games per player
     // Prioritize direct market-driven calculation if available, otherwise use simulation
     if (directPlayerGames) {
-        // Use direct statistical calculation (bypasses solver/simulation)
-        document.getElementById('p1Games').textContent = directPlayerGames.p1.toFixed(1);
-        document.getElementById('p2Games').textContent = directPlayerGames.p2.toFixed(1);
-
-        // Visual indicator that this is using direct calculation
-        const p1GamesEl = document.getElementById('p1Games');
-        const p2GamesEl = document.getElementById('p2Games');
-        if (p1GamesEl && p2GamesEl) {
-            p1GamesEl.title = `Direct calculation from market odds (Spread: ${directPlayerGames.spread > 0 ? '+' : ''}${directPlayerGames.spread.toFixed(1)})`;
-            p2GamesEl.title = `Direct calculation from market odds (Spread: ${directPlayerGames.spread > 0 ? '+' : ''}${directPlayerGames.spread.toFixed(1)})`;
-        }
+        el.p1Games.textContent = directPlayerGames.p1.toFixed(1);
+        el.p2Games.textContent = directPlayerGames.p2.toFixed(1);
+        el.p1Games.title = `Direct calculation from market odds (Spread: ${directPlayerGames.spread > 0 ? '+' : ''}${directPlayerGames.spread.toFixed(1)})`;
+        el.p2Games.title = `Direct calculation from market odds (Spread: ${directPlayerGames.spread > 0 ? '+' : ''}${directPlayerGames.spread.toFixed(1)})`;
     } else if (result.calibration.expGamesPlayer1 !== undefined) {
-        // Fallback to simulation-based calculation
-        document.getElementById('p1Games').textContent = result.calibration.expGamesPlayer1.toFixed(1);
-        document.getElementById('p2Games').textContent = result.calibration.expGamesPlayer2.toFixed(1);
-
-        const p1GamesEl = document.getElementById('p1Games');
-        const p2GamesEl = document.getElementById('p2Games');
-        if (p1GamesEl && p2GamesEl) {
-            p1GamesEl.title = 'Simulation-based calculation';
-            p2GamesEl.title = 'Simulation-based calculation';
-        }
+        el.p1Games.textContent = result.calibration.expGamesPlayer1.toFixed(1);
+        el.p2Games.textContent = result.calibration.expGamesPlayer2.toFixed(1);
+        el.p1Games.title = 'Simulation-based calculation';
+        el.p2Games.title = 'Simulation-based calculation';
     }
 
-    // Display Elo ratings if available
     displayEloRatings(eloHoldProbs);
 }
 
-/**
- * Display Elo ratings and related data
- */
 function displayEloRatings(eloHoldProbs) {
-    const eloInfoEl = document.getElementById('eloInfo');
-    if (!eloInfoEl) return;
+    if (!el.eloInfo) return;
 
     if (!currentPlayer1 || !currentPlayer2) {
-        eloInfoEl.innerHTML = '<p class="text-sm text-gray-500">Select a match to see Elo ratings</p>';
+        el.eloInfo.innerHTML = '<p class="text-sm text-gray-500">Select a match to see Elo ratings</p>';
         return;
     }
 
-    // Use appropriate Elo service based on tour
     const eloService = currentTour === 'WTA' ? tennisWtaEloService : tennisEloService;
 
     const player1Data = eloService.getPlayerData(currentPlayer1);
     const player2Data = eloService.getPlayerData(currentPlayer2);
 
     if (!player1Data || !player2Data) {
-        eloInfoEl.innerHTML = `<p class="text-sm text-yellow-600">⚠️ ${currentTour} Elo data not available for these players</p>`;
+        el.eloInfo.innerHTML = `<p class="text-sm text-yellow-600">⚠️ ${currentTour} Elo data not available for these players</p>`;
         return;
     }
 
-    // Get surface-specific Elo
     const player1Elo = eloService.getPlayerElo(currentPlayer1, currentSurface);
     const player2Elo = eloService.getPlayerElo(currentPlayer2, currentSurface);
-
-    // Calculate Elo-based win probability
     const eloWinProb = eloService.calculateWinProbability(currentPlayer1, currentPlayer2, currentSurface);
 
     const eloEnhanced = eloHoldProbs ? '✓ Elo-Enhanced' : '';
-
-    // Get appropriate ranking field name based on tour
     const rankLabel = currentTour === 'WTA' ? 'WTA' : 'ATP';
     const player1Rank = currentTour === 'WTA' ? player1Data.wtaRank : player1Data.atpRank;
     const player2Rank = currentTour === 'WTA' ? player2Data.wtaRank : player2Data.atpRank;
 
-    eloInfoEl.innerHTML = `
+    el.eloInfo.innerHTML = `
         <div class="space-y-2">
             <div class="flex justify-between items-center">
                 <h4 class="font-semibold text-sm">${currentTour} Elo Ratings (${currentSurface})</h4>
@@ -249,17 +216,6 @@ function displayEloRatings(eloHoldProbs) {
     `;
 }
 
-/**
- * Update current match players (called from tennis_api.js)
- */
-window.setCurrentPlayers = function(player1, player2, surface = 'Hard', tour = 'ATP') {
-    currentPlayer1 = player1;
-    currentPlayer2 = player2;
-    currentSurface = surface;
-    currentTour = tour;
-    console.log('Players set:', player1, 'vs', player2, 'on', surface, '(' + tour + ')');
-};
-
 function displayDerivatives(d) {
     // Set Betting
     const sb = d.setBetting;
@@ -272,13 +228,12 @@ function displayDerivatives(d) {
             <td style="text-align: center;">${sb[s].odds}</td>
         </tr>`;
     });
-    document.getElementById('correctScoreTable').innerHTML = html;
+    el.correctScoreTable.innerHTML = html;
 
     // Set Winner (Set 1)
     const sw = d.setWinner;
-    const swTable = document.getElementById('setWinnerTable');
-    if (swTable) {
-        swTable.innerHTML = `
+    if (el.setWinnerTable) {
+        el.setWinnerTable.innerHTML = `
             <tr>
                 <td style="text-align: left;">Player 1</td>
                 <td style="text-align: center;">${sw.player1.prob}</td>
@@ -293,8 +248,7 @@ function displayDerivatives(d) {
     }
 
     // Additional Markets (Tie Break + Both to Win Set)
-    const additionalTable = document.getElementById('additionalMarketsTable');
-    if (additionalTable) {
+    if (el.additionalMarketsTable) {
         let addHtml = '';
         if (d.tieBreakProb) {
             addHtml += `<tr>
@@ -310,7 +264,7 @@ function displayDerivatives(d) {
                 <td style="text-align: center;">${d.bothToWinSet.odds}</td>
             </tr>`;
         }
-        additionalTable.innerHTML = addHtml;
+        el.additionalMarketsTable.innerHTML = addHtml;
     }
 
     // Game Handicap
@@ -327,22 +281,15 @@ function displayDerivatives(d) {
             </tr>`;
         }
     });
-    document.getElementById('gameHandicapTable').innerHTML = ghHtml;
+    el.gameHandicapTable.innerHTML = ghHtml;
 
-    // Player Total Games
     if (d.playerTotals) {
         displayPlayerTotals(d.playerTotals);
     }
-
 }
 
-/**
- * Display Player Total Games markets
- */
 function displayPlayerTotals(playerTotals) {
-    // Player 1 Totals
-    const p1Table = document.getElementById('player1TotalsTable');
-    if (p1Table && playerTotals.player1) {
+    if (el.player1TotalsTable && playerTotals.player1) {
         let html = '';
         Object.keys(playerTotals.player1).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(line => {
             const market = playerTotals.player1[line];
@@ -352,12 +299,10 @@ function displayPlayerTotals(playerTotals) {
                 <td style="text-align: center; padding: 8px;">${market.under.odds}</td>
             </tr>`;
         });
-        p1Table.innerHTML = html;
+        el.player1TotalsTable.innerHTML = html;
     }
 
-    // Player 2 Totals
-    const p2Table = document.getElementById('player2TotalsTable');
-    if (p2Table && playerTotals.player2) {
+    if (el.player2TotalsTable && playerTotals.player2) {
         let html = '';
         Object.keys(playerTotals.player2).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(line => {
             const market = playerTotals.player2[line];
@@ -367,33 +312,59 @@ function displayPlayerTotals(playerTotals) {
                 <td style="text-align: center; padding: 8px;">${market.under.odds}</td>
             </tr>`;
         });
-        p2Table.innerHTML = html;
+        el.player2TotalsTable.innerHTML = html;
     }
 }
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
+    // Cache DOM elements
+    el.player1Odds = document.getElementById('player1Odds');
+    el.player2Odds = document.getElementById('player2Odds');
+    el.totalGamesLine = document.getElementById('totalGamesLine');
+    el.oddsOver = document.getElementById('oddsOver');
+    el.oddsUnder = document.getElementById('oddsUnder');
+    el.surfaceBadge = document.getElementById('surfaceBadge');
+    el.totalInfo = document.getElementById('totalInfo');
+    el.paramsCard = document.getElementById('paramsCard');
+    el.marketsTabContainer = document.getElementById('marketsTabContainer');
+    el.fairP1 = document.getElementById('fairP1');
+    el.fairP2 = document.getElementById('fairP2');
+    el.p1Hold = document.getElementById('p1Hold');
+    el.p2Hold = document.getElementById('p2Hold');
+    el.modelTotal = document.getElementById('modelTotal');
+    el.fairWin = document.getElementById('fairWin');
+    el.p1Games = document.getElementById('p1Games');
+    el.p2Games = document.getElementById('p2Games');
+    el.eloInfo = document.getElementById('eloInfo');
+    el.correctScoreTable = document.getElementById('correctScoreTable');
+    el.setWinnerTable = document.getElementById('setWinnerTable');
+    el.additionalMarketsTable = document.getElementById('additionalMarketsTable');
+    el.gameHandicapTable = document.getElementById('gameHandicapTable');
+    el.player1TotalsTable = document.getElementById('player1TotalsTable');
+    el.player2TotalsTable = document.getElementById('player2TotalsTable');
+    el.tournamentSelect = document.getElementById('tournamentSelect');
+    el.matchSelect = document.getElementById('matchSelect');
+
     // Initialize both ATP and WTA Elo services
     try {
         await Promise.all([
             tennisEloService.fetchEloRatings(),
             tennisWtaEloService.fetchEloRatings()
         ]);
-        console.log('ATP and WTA Elo ratings loaded successfully');
     } catch (error) {
         console.warn('Failed to load Elo ratings:', error);
-        // Continue even if Elo data fails to load
     }
 
     // Initialize Tennis API
     TennisAPI.setRunModelCallback(window.runModel);
     await TennisAPI.initLoader();
 
-    document.getElementById('tournamentSelect').addEventListener('change', TennisAPI.handleTournamentChange);
-    document.getElementById('matchSelect').addEventListener('change', TennisAPI.handleMatchChange);
+    el.tournamentSelect.addEventListener('change', TennisAPI.handleTournamentChange);
+    el.matchSelect.addEventListener('change', TennisAPI.handleMatchChange);
 
     const inputs = document.querySelectorAll('input');
-    inputs.forEach(i => i.addEventListener('input', () => window.runModel(document.getElementById('surfaceBadge').textContent)));
+    inputs.forEach(i => i.addEventListener('input', () => window.runModel(el.surfaceBadge.textContent)));
 });
 
 const tennisModel = new TennisModel();
@@ -402,7 +373,6 @@ window.setCurrentPlayers = (p1, p2, surface, tour) => {
     tennisModel.currentPlayer2 = p2;
     tennisModel.currentSurface = surface;
     tennisModel.currentTour = tour;
-    // Also set module-level vars used by standalone display functions
     currentPlayer1 = p1;
     currentPlayer2 = p2;
     currentSurface = surface;

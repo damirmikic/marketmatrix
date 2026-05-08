@@ -132,7 +132,6 @@ export async function handleLeagueChange() {
 
 export async function loadEventDetails(eventId) {
     try {
-        console.log(`Fetching full match-specific details for event ${eventId}...`);
         const ncid = Date.now();
         const url = `https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/${eventId}.json?lang=en_GB&market=GB&client_id=200&channel_id=7&ncid=${ncid}&includeParticipants=true`;
 
@@ -155,8 +154,6 @@ function loadMatchData(item) {
         const offers = item.betOffers || [];
         const event = item.event || {};
 
-        console.log("Processing Detail Data for:", event.name);
-
         // 1. Find 1X2 Market
         const matchOffer = offers.find(bo => {
             const isMain = bo.tags && bo.tags.includes("MAIN");
@@ -169,7 +166,6 @@ function loadMatchData(item) {
         }) || offers.find(bo => bo.outcomes && bo.outcomes.length === 3 && bo.betOfferType && bo.betOfferType.id === 2);
 
         if (matchOffer) {
-            console.log("Selected 1X2 Market:", matchOffer.criterion.label, matchOffer.id);
             const h = matchOffer.outcomes.find(o => o.type === "OT_ONE" || o.label === "1" || (event.homeName && o.label === event.homeName));
             const d = matchOffer.outcomes.find(o => o.type === "OT_CROSS" || o.label === "X" || o.label === "Draw");
             const a = matchOffer.outcomes.find(o => o.type === "OT_TWO" || o.label === "2" || (event.awayName && o.label === event.awayName));
@@ -203,7 +199,6 @@ function loadMatchData(item) {
             if (!selectedOffer) selectedOffer = goalOffers[0];
 
             if (selectedOffer) {
-                console.log("Selected Goals Market:", selectedOffer.criterion.label, "Line:", selectedOffer.outcomes[0].line);
                 const over = selectedOffer.outcomes.find(o => (o.type && o.type.includes("OVER")) || (o.label && o.label.toLowerCase().includes("over")));
                 const under = selectedOffer.outcomes.find(o => (o.type && o.type.includes("UNDER")) || (o.label && o.label.toLowerCase().includes("under")));
 

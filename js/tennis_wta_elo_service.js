@@ -1,8 +1,3 @@
-/**
- * Tennis WTA Elo Rating Service
- * Fetches and manages WTA player Elo ratings by surface from Tennis Abstract
- */
-
 class TennisWtaEloService {
     constructor() {
         this.eloCache = new Map(); // Cache player Elo data
@@ -20,11 +15,8 @@ class TennisWtaEloService {
         try {
             // Check cache validity
             if (this.lastFetchTime && (Date.now() - this.lastFetchTime < this.CACHE_DURATION)) {
-                console.log('Using cached WTA Elo ratings');
                 return this.eloCache;
             }
-
-            console.log('Fetching fresh WTA Elo ratings from Tennis Abstract...');
 
             // Fetch the HTML page
             const response = await fetch(this.ELO_API_URL);
@@ -87,14 +79,10 @@ class TennisWtaEloService {
             });
 
             this.lastFetchTime = Date.now();
-            console.log(`Loaded ${this.eloCache.size} WTA player Elo ratings`);
-
             return this.eloCache;
         } catch (error) {
             console.error('Error fetching WTA Elo ratings:', error);
-            // Return cached data if available
             if (this.eloCache.size > 0) {
-                console.log('Returning cached WTA Elo data due to fetch error');
                 return this.eloCache;
             }
             throw error;

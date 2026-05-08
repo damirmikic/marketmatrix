@@ -19,8 +19,8 @@ class TableTennisModel extends BaseModel {
     runModel() {
     try {
     // Get Inputs - only Match Winner odds
-    const hOdds = parseFloat(document.getElementById('homeOdds').value);
-    const aOdds = parseFloat(document.getElementById('awayOdds').value);
+    const homeOdds = parseFloat(document.getElementById('homeOdds').value);
+    const awayOdds = parseFloat(document.getElementById('awayOdds').value);
 
     // Get Set Ratios (optional - used for individual set probabilities)
     const set1Ratio = parseFloat(document.getElementById('set1Ratio').value) || 0.20;
@@ -30,8 +30,8 @@ class TableTennisModel extends BaseModel {
     const set5Ratio = parseFloat(document.getElementById('set5Ratio').value) || 0.20;
 
     // Basic validation
-    if (isNaN(hOdds) || isNaN(aOdds)) return;
-    if (!isValidOdds(hOdds) || !isValidOdds(aOdds)) {
+    if (isNaN(homeOdds) || isNaN(awayOdds)) return;
+    if (!isValidOdds(homeOdds) || !isValidOdds(awayOdds)) {
         this.showError('Odds must be between 1.01 and 1001');
         return;
     }
@@ -39,7 +39,7 @@ class TableTennisModel extends BaseModel {
 
     // --- Margin Calculations ---
     // Match Winner Margin
-    const mlMargin = ((1 / hOdds + 1 / aOdds) - 1) * 100;
+    const mlMargin = ((1 / homeOdds + 1 / awayOdds) - 1) * 100;
     const mlMarginEl = document.getElementById('moneylineMargin');
     if (mlMarginEl) {
         mlMarginEl.textContent = `Margin: ${mlMargin.toFixed(2)}%`;
@@ -47,7 +47,7 @@ class TableTennisModel extends BaseModel {
     }
 
     // --- Fair Probabilities ---
-    const fairML = solveShin([hOdds, aOdds]);
+    const fairML = solveShin([homeOdds, awayOdds]);
     const homeWinProb = fairML[0];
     const awayWinProb = fairML[1];
 

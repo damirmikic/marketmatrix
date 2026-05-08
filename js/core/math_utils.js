@@ -1,6 +1,8 @@
 // js/core/math_utils.js
 // Core mathematical utility functions used across all sports models
 
+import { SHIN_ITERATIONS } from './constants.js';
+
 /**
  * Factorial function with caching for performance
  * Used in Poisson distributions and other statistical calculations
@@ -25,7 +27,7 @@ export function solveShin(oddsArr) {
     if (m <= 0) return oddsArr.map(o => 1 / o);
 
     let z = 0.01;
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < SHIN_ITERATIONS; i++) {
         let sumProb = oddsArr.reduce((sum, o) => {
             const pImplied = 1 / o;
             const p = (Math.sqrt(z ** 2 + 4 * (1 - z) * (pImplied ** 2 / sumImplied)) - z) / (2 * (1 - z));

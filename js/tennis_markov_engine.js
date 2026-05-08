@@ -7,6 +7,15 @@
  */
 
 import { solveShin } from './core/math_utils.js';
+import {
+    SURFACE_SERVE_PRIORS,
+    SURFACE_BASE_TOTALS,
+    ELO_WEIGHT,
+    SURFACE_WEIGHT,
+    TOTAL_SLOPE_FACTOR,
+    SPREAD_FACTOR,
+    COMPETITIVENESS_FACTOR,
+} from './core/constants.js';
 
 export class TennisMarkovEngine {
     constructor() {
@@ -36,15 +45,13 @@ export class TennisMarkovEngine {
         try {
             const fairProbs = this.removeVigorish(oddsOver, oddsUnder);
             const pOver = fairProbs.p1;
-            const SLOPE_FACTOR = 12.0;
-            return line + (pOver - 0.5) * SLOPE_FACTOR;
+            return line + (pOver - 0.5) * TOTAL_SLOPE_FACTOR;
         } catch (e) {
             return line;
         }
     }
 
     getImpliedSpread(pMatch) {
-        const SPREAD_FACTOR = 14.0;
         return SPREAD_FACTOR * (pMatch - 0.5);
     }
 
@@ -58,13 +65,11 @@ export class TennisMarkovEngine {
     }
 
     estimateSyntheticTotal(odds1, odds2, surface = 'Hard') {
-        const SURFACE_BASE = { 'Grass': 23.5, 'Hard': 22.5, 'Clay': 21.5, 'Indoor': 23.5 };
-        const baseTotal = SURFACE_BASE[surface] || 22.5;
+        const baseTotal = SURFACE_BASE_TOTALS[surface] ?? SURFACE_BASE_TOTALS.Hard;
 
         try {
             const fairProbs = this.removeVigorish(odds1, odds2);
             const pFavorite = Math.max(fairProbs.p1, fairProbs.p2);
-            const COMPETITIVENESS_FACTOR = 12.0;
             return Math.max(15.0, Math.min(28.0, baseTotal - (Math.abs(pFavorite - 0.5) * COMPETITIVENESS_FACTOR)));
         } catch (e) {
             return baseTotal;
@@ -244,14 +249,11 @@ export class TennisMarkovEngine {
     // ==========================================
 
     solveParameters(targetPMatch, targetTotalGames, surface = 'Hard', eloHoldProbs = null) {
-        const SURFACE_PRIORS = { 'Grass': 0.75, 'Hard': 0.68, 'Clay': 0.60, 'Indoor': 0.73 };
-        const basePrior = SURFACE_PRIORS[surface] || 0.68;
+        const basePrior = SURFACE_SERVE_PRIORS[surface] ?? SURFACE_SERVE_PRIORS.Hard;
 
         let pa;
         let pb;
         if (eloHoldProbs && eloHoldProbs.pa && eloHoldProbs.pb) {
-            const ELO_WEIGHT = 0.70;
-            const SURFACE_WEIGHT = 0.30;
             pa = ELO_WEIGHT * eloHoldProbs.pa + SURFACE_WEIGHT * (basePrior + (targetPMatch - 0.5) * 0.2);
             pb = ELO_WEIGHT * eloHoldProbs.pb + SURFACE_WEIGHT * (basePrior - (targetPMatch - 0.5) * 0.2);
         } else {
