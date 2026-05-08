@@ -20,9 +20,9 @@
 
             <!-- 1. MATCH SELECTION -->
             <div class="card mb-5" id="matchSelectionCard">
-                <div class="card-header" onclick="toggleCard('matchSelectionCard')">
+                <button class="card-header" onclick="toggleCard('matchSelectionCard')" aria-expanded="true" aria-controls="matchSelectionCard">
                     <h2>1. Select Match</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="flex-col gap-3">
                         <div>
@@ -39,10 +39,10 @@
 
             <!-- 2. MATCH WINNER (1X2) -->
             <div class="card" id="oddsInputCard">
-                <div class="card-header" onclick="toggleCard('oddsInputCard')">
+                <button class="card-header" onclick="toggleCard('oddsInputCard')" aria-expanded="true" aria-controls="oddsInputCard">
                     <h2>2. Match Winner Odds</h2>
                     <span id="matchWinnerMargin" class="margin-info">Margin: -</span>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="input-group">
                         <label>Home</label>
@@ -61,10 +61,10 @@
 
             <!-- 3. TOTAL GOALS (OPTIONAL) -->
             <div class="card" id="totalGoalsInputCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('totalGoalsInputCard')">
+                <button class="card-header" onclick="toggleCard('totalGoalsInputCard')" aria-expanded="true" aria-controls="totalGoalsInputCard">
                     <h2>3. Total Goals (Optional)</h2>
                     <span id="totalGoalsMargin" class="margin-info">Margin: -</span>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="input-group">
                         <label>Line</label>
@@ -86,9 +86,9 @@
 
             <!-- 4. MODEL PARAMETERS -->
             <div class="card hidden" id="modelParamsCard" style="margin-top: 20px;">
-                <div class="card-header" onclick="toggleCard('modelParamsCard')">
+                <button class="card-header" onclick="toggleCard('modelParamsCard')" aria-expanded="true" aria-controls="modelParamsCard">
                     <h2>4. Model Parameters</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div style="padding: 10px;">
                         <div style="margin-bottom: 10px;">

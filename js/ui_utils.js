@@ -2,7 +2,10 @@
 // UI Helper - Toggle card collapse/expand
 export function toggleCard(id) {
     const el = document.getElementById(id);
-    if (el) el.classList.toggle('collapsed');
+    if (!el) return;
+    const collapsed = el.classList.toggle('collapsed');
+    const header = el.querySelector('.card-header');
+    if (header) header.setAttribute('aria-expanded', String(!collapsed));
 }
 
 // Tab Navigation - Switch primary tabs
@@ -75,6 +78,8 @@ export function toggleAllCards() {
         } else {
             card.classList.remove('collapsed');
         }
+        const header = card.querySelector('.card-header');
+        if (header) header.setAttribute('aria-expanded', String(!isCollapsing));
     });
 
     btn.textContent = isCollapsing ? "Expand All" : "Collapse All";
