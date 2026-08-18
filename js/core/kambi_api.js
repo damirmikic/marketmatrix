@@ -3,6 +3,8 @@
 // Each sport supplies listViewUrl and an injectOdds(betOffers) function
 // that parses the response and populates DOM inputs.
 
+import { fetchJson } from './math_utils.js';
+
 const EVENT_URL_BASE = 'https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/';
 
 export function createKambiLoader({ listViewUrl, sportName, injectOdds }) {
@@ -75,8 +77,7 @@ export function createKambiLoader({ listViewUrl, sportName, injectOdds }) {
 
     async function initLoader() {
         try {
-            const response = await fetch(listViewUrl);
-            const data = await response.json();
+            const data = await fetchJson(listViewUrl);
 
             if (data.events && data.events.length > 0) {
                 buildHierarchy(data.events);
@@ -119,11 +120,10 @@ export function createKambiLoader({ listViewUrl, sportName, injectOdds }) {
     }
 
     async function fetchEventOdds(eventId) {
+        const ncid = Date.now();
+        const url = `${EVENT_URL_BASE}${eventId}.json?lang=en_GB&market=GB&client_id=200&channel_id=7&ncid=${ncid}&includeParticipants=true`;
         try {
-            const ncid = Date.now();
-            const url = `${EVENT_URL_BASE}${eventId}.json?lang=en_GB&market=GB&client_id=200&channel_id=7&ncid=${ncid}&includeParticipants=true`;
-            const response = await fetch(url);
-            return await response.json();
+            return await fetchJson(url);
         } catch (error) {
             console.error('Error fetching event odds:', error);
             return null;

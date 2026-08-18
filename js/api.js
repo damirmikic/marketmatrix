@@ -1,5 +1,6 @@
 
-import { escapeHtml } from './core/math_utils.js';
+import { escapeHtml, fetchJson } from './core/math_utils.js';
+import { showError } from './ui_utils.js';
 
 const GROUP_URL = "https://eu.offering-api.kambicdn.com/offering/v2018/kambi/group/1000093190.json";
 
@@ -15,8 +16,7 @@ export async function initApiLoader() {
     if (!countrySelect) return;
 
     try {
-        const response = await fetch(GROUP_URL);
-        const data = await response.json();
+        const data = await fetchJson(GROUP_URL);
 
         if (data.group && data.group.groups) {
             countriesData = data.group.groups;
@@ -90,8 +90,7 @@ export async function handleLeagueChange() {
 
         const url = `https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/football/${countryTerm}/${leagueTerm}/all/matches.json?channel_id=7&client_id=200&competitionId=undefined&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true`;
 
-        const response = await fetch(url);
-        const data = await response.json();
+        const data = await fetchJson(url);
 
         if (!data.events || data.events.length === 0) {
             matchSelect.innerHTML = '<option value="">No matches found</option>';
@@ -137,17 +136,16 @@ export async function loadEventDetails(eventId) {
         const ncid = Date.now();
         const url = `https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/${eventId}.json?lang=en_GB&market=GB&client_id=200&channel_id=7&ncid=${ncid}&includeParticipants=true`;
 
-        const response = await fetch(url);
-        const fullData = await response.json();
+        const fullData = await fetchJson(url);
 
         if (fullData && fullData.betOffers) {
             loadMatchData(fullData);
         } else {
-            alert("No detail odds available for this match.");
+            showError("No detail odds available for this match.");
         }
     } catch (e) {
         console.error("Failed to load event details:", e);
-        alert("Error fetching full match details.");
+        showError("Error fetching full match details.");
     }
 }
 
@@ -217,6 +215,6 @@ function loadMatchData(item) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
         console.error("Critical Processing Error:", e);
-        alert("Failed to inject match data into calculator.");
+        showError("Failed to inject match data into calculator.");
     }
 }

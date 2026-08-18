@@ -1,7 +1,8 @@
 // NFL (American Football) API Module
 // Fetches matches from Kambi and organizes them by Country > Competition > Events
 
-import { escapeHtml } from './core/math_utils.js';
+import { escapeHtml, fetchJson } from './core/math_utils.js';
+import { showError } from './ui_utils.js';
 
 // Using the user-provided endpoint for NFL matches
 const NFL_LIST_URL = "https://eu1.offering-api.kambicdn.com/offering/v2018/pivusinrl-law/listView/american_football/nfl/all/all/matches.json?lang=en_US&market=US&client_id=200&channel_id=7&useCombined=true&useCombinedLive=true";
@@ -130,8 +131,7 @@ export async function initNFLLoader() {
     try {
         countrySelect.innerHTML = '<option value="">Loading...</option>';
 
-        const response = await fetch(NFL_LIST_URL);
-        const data = await response.json();
+        const data = await fetchJson(NFL_LIST_URL);
 
         if (!data.events || data.events.length === 0) {
             countrySelect.innerHTML = '<option value="">No matches available</option>';
@@ -227,12 +227,11 @@ export async function handleMatchChange() {
         // Fetch detailed event data from the event-specific endpoint
         const eventUrl = `${NFL_EVENT_URL_BASE}${eventId}.json?lang=en_US&market=US&client_id=200&channel_id=7&includeParticipants=true`;
 
-        const response = await fetch(eventUrl);
-        const data = await response.json();
+        const data = await fetchJson(eventUrl);
 
         if (!data || !data.betOffers) {
             console.error("No bet offers found for event:", eventId);
-            alert("No betting markets available for this match.");
+            showError("No betting markets available for this match.");
             matchSelect.disabled = false;
             return;
         }
@@ -242,7 +241,7 @@ export async function handleMatchChange() {
 
     } catch (err) {
         console.error("Error loading NFL event details:", err);
-        alert("Failed to load match details. Please try again.");
+        showError("Failed to load match details. Please try again.");
         matchSelect.disabled = false;
     }
 }
@@ -375,6 +374,6 @@ function loadMatchData(data) {
 
     } catch (e) {
         console.error("Error loading NFL match:", e);
-        alert("Failed to load match data.");
+        showError("Failed to load match data.");
     }
 }
