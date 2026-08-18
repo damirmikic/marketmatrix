@@ -1,7 +1,6 @@
 import * as TennisAPI from './js/tennis_api.js';
 import { TennisMarkovEngine } from './js/tennis_markov_engine.js';
-import { tennisEloService } from './js/tennis_elo_service.js';
-import { tennisWtaEloService } from './js/tennis_wta_elo_service.js';
+import { tennisEloService, tennisWtaEloService } from './js/tennis_elo_service.js';
 import { BaseModel } from './js/base_model.js';
 import { isValidOdds } from './js/core/math_utils.js';
 
