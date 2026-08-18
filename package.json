@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Sports betting market analysis and odds calculation",
   "main": "index.html",
+  "type": "module",
   "scripts": {
-    "test": "node test_tennis_engine.js"
+    "test": "node --test"
   },
   "dependencies": {
     "node-fetch": "^2.7.0"
