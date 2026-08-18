@@ -63,3 +63,12 @@ export function probToOdds(p) {
 export function isValidOdds(v) {
     return Number.isFinite(v) && v >= 1.01 && v <= 1001;
 }
+
+export function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
