@@ -87,34 +87,63 @@ export function calculateDynamicOmega(probDraw) {
     return (probDraw - 0.20) * (0.20 / 0.15);
 }
 
+// Coarse matrix for the solver (10×10) — fast enough for 500 iterations on mobile
+function calculateCoarseMatrix(lambda, mu, omega) {
+    const limit = 10;
+    let matrix = [];
+    let sum = 0;
+    for (let x = 0; x <= limit; x++) {
+        matrix[x] = [];
+        for (let y = 0; y <= limit; y++) {
+            const p = getScoreProb(x, y, lambda, mu, omega);
+            matrix[x][y] = p;
+            sum += p;
+        }
+    }
+    if (sum > 0) {
+        for (let x = 0; x <= limit; x++)
+            for (let y = 0; y <= limit; y++)
+                matrix[x][y] /= sum;
+    }
+    return matrix;
+}
+
 // Solver
 export function solveParameters(targetHomeWin, targetOverProb, targetLine, targetDrawProb) {
     let lambda = 1.4;
     let mu = 1.0;
-    let lr = 0.1;
-    let maxIter = 500;
+    const lr = 0.1;
+    const maxIter = 500;
+    const tol = 0.0001;
 
-    // Calculate Omega once based on target draw probability
     const omega = calculateDynamicOmega(targetDrawProb);
 
+    let converged = false;
+    let iterations = 0;
+    let errHome = 0, errOver = 0;
+
     for (let i = 0; i < maxIter; i++) {
-        let probs = calculateMatrix(lambda, mu, omega);
+        iterations = i + 1;
+        // Use coarse 10×10 grid during solving for speed; caller uses full matrix
+        const probs = calculateCoarseMatrix(lambda, mu, omega);
 
         let currHome = 0;
         let currOver = 0;
-
-        for (let x = 0; x <= 20; x++) {
-            for (let y = 0; y <= 20; y++) {
-                let p = probs[x][y];
+        for (let x = 0; x <= 10; x++) {
+            for (let y = 0; y <= 10; y++) {
+                const p = probs[x][y];
                 if (x > y) currHome += p;
                 if (x + y > targetLine) currOver += p;
             }
         }
 
-        let errHome = targetHomeWin - currHome;
-        let errOver = targetOverProb - currOver;
+        errHome = targetHomeWin - currHome;
+        errOver = targetOverProb - currOver;
 
-        if (Math.abs(errHome) < 0.0001 && Math.abs(errOver) < 0.0001) break;
+        if (Math.abs(errHome) < tol && Math.abs(errOver) < tol) {
+            converged = true;
+            break;
+        }
 
         lambda += lr * (errHome + 0.5 * errOver);
         mu += lr * (-errHome + 0.5 * errOver);
@@ -123,5 +152,12 @@ export function solveParameters(targetHomeWin, targetOverProb, targetLine, targe
         if (mu < 0.01) mu = 0.01;
     }
 
-    return { lambda, mu, omega };
+    return {
+        lambda,
+        mu,
+        omega,
+        converged,
+        iterations,
+        residuals: { home: errHome, over: errOver },
+    };
 }

@@ -125,3 +125,28 @@ test('solveParameters: home-favoured input gives lambda > mu', () => {
     const { lambda, mu } = solveParameters(0.60, 0.55, 2.5, 0.20);
     assert.ok(lambda > mu, `expected lambda(${lambda}) > mu(${mu})`);
 });
+
+test('solveParameters: returns converged flag and iterations for typical input', () => {
+    const result = solveParameters(0.48, 0.52, 2.5, 0.27);
+    assert.ok(typeof result.converged === 'boolean', 'converged should be boolean');
+    assert.ok(typeof result.iterations === 'number' && result.iterations >= 1, 'iterations should be a positive number');
+    assert.ok(result.converged, 'should converge for typical odds');
+});
+
+test('solveParameters: residuals are small on convergence', () => {
+    const result = solveParameters(0.45, 0.58, 2.5, 0.28);
+    if (result.converged) {
+        assert.ok(Math.abs(result.residuals.home) < 0.001, `home residual: ${result.residuals.home}`);
+        assert.ok(Math.abs(result.residuals.over) < 0.001, `over residual: ${result.residuals.over}`);
+    }
+});
+
+test('solveShin: converged flag is true for normal odds', () => {
+    const fair = solveShin([2.10, 3.50, 3.20]);
+    assert.strictEqual(fair.converged, true);
+});
+
+test('solveShin: converged flag present on 2-way market', () => {
+    const fair = solveShin([1.90, 1.90]);
+    assert.ok(typeof fair.converged === 'boolean');
+});

@@ -67,6 +67,7 @@ class FootballModel extends BaseModel {
     // 1. Get True Probabilities (Shin Method)
     const true1x2 = solveShin([homeOdds, drawOdds, awayOdds]);
     const trueOU = solveShin([overOdds, underOdds]);
+    const shinConverged = true1x2.converged !== false && trueOU.converged !== false;
 
     // Display Shin 1x2 Probs
     document.getElementById('shinHome').textContent = (true1x2[0] * 100).toFixed(1) + "%";
@@ -89,6 +90,29 @@ class FootballModel extends BaseModel {
     document.getElementById('xgHome').textContent = params.lambda.toFixed(3);
     document.getElementById('xgAway').textContent = params.mu.toFixed(3);
     document.getElementById('zipOmega').textContent = params.omega.toFixed(2);
+
+    // Convergence warning badge
+    const solverOk = params.converged && shinConverged;
+    let warnEl = document.getElementById('solverConvergenceWarn');
+    if (!warnEl) {
+        warnEl = document.createElement('div');
+        warnEl.id = 'solverConvergenceWarn';
+        warnEl.style.cssText = 'margin-top:8px;padding:4px 8px;border-radius:4px;font-size:0.78rem;font-weight:600;display:none;';
+        const grid = document.querySelector('.stat-grid');
+        if (grid) grid.after(warnEl);
+    }
+    if (!solverOk) {
+        const who = !params.converged && !shinConverged ? 'Solver + Shin'
+                  : !params.converged ? 'Solver'
+                  : 'Shin';
+        warnEl.textContent = `⚠ ${who} did not converge — markets may be inaccurate`;
+        warnEl.style.display = 'block';
+        warnEl.style.background = 'rgba(251,191,36,0.15)';
+        warnEl.style.color = '#d97706';
+        warnEl.style.border = '1px solid rgba(251,191,36,0.4)';
+    } else {
+        warnEl.style.display = 'none';
+    }
 
     // Show markets tab container
     document.getElementById('marketsTabContainer').classList.remove('hidden');
