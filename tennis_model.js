@@ -2,7 +2,7 @@ import * as TennisAPI from './js/tennis_api.js';
 import { TennisMarkovEngine } from './js/tennis_markov_engine.js';
 import { tennisEloService, tennisWtaEloService } from './js/tennis_elo_service.js';
 import { BaseModel } from './js/base_model.js';
-import { isValidOdds } from './js/core/math_utils.js';
+import { isValidOdds, escapeHtml } from './js/core/math_utils.js';
 
 // Module-level variables used by standalone display functions
 let currentPlayer1 = null;
@@ -171,7 +171,7 @@ function displayEloRatings(eloHoldProbs) {
     const player2Data = eloService.getPlayerData(currentPlayer2);
 
     if (!player1Data || !player2Data) {
-        el.eloInfo.innerHTML = `<p class="text-sm text-yellow-600">⚠️ ${currentTour} Elo data not available for these players</p>`;
+        el.eloInfo.innerHTML = `<p class="text-sm text-yellow-600">⚠️ ${escapeHtml(currentTour)} Elo data not available for these players</p>`;
         return;
     }
 
@@ -187,19 +187,19 @@ function displayEloRatings(eloHoldProbs) {
     el.eloInfo.innerHTML = `
         <div class="space-y-2">
             <div class="flex justify-between items-center">
-                <h4 class="font-semibold text-sm">${currentTour} Elo Ratings (${currentSurface})</h4>
-                ${eloEnhanced ? '<span class="text-xs text-green-600 font-medium">' + eloEnhanced + '</span>' : ''}
+                <h4 class="font-semibold text-sm">${escapeHtml(currentTour)} Elo Ratings (${escapeHtml(currentSurface)})</h4>
+                ${eloEnhanced ? '<span class="text-xs text-green-600 font-medium">' + escapeHtml(eloEnhanced) + '</span>' : ''}
             </div>
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                    <div class="font-medium text-gray-700">${player1Data.name}</div>
+                    <div class="font-medium text-gray-700">${escapeHtml(player1Data.name)}</div>
                     <div class="text-gray-600">Elo: <span class="font-mono">${player1Elo.toFixed(0)}</span></div>
-                    <div class="text-gray-600">${rankLabel}: #${player1Rank || 'N/A'}</div>
+                    <div class="text-gray-600">${escapeHtml(rankLabel)}: #${escapeHtml(player1Rank || 'N/A')}</div>
                 </div>
                 <div>
-                    <div class="font-medium text-gray-700">${player2Data.name}</div>
+                    <div class="font-medium text-gray-700">${escapeHtml(player2Data.name)}</div>
                     <div class="text-gray-600">Elo: <span class="font-mono">${player2Elo.toFixed(0)}</span></div>
-                    <div class="text-gray-600">${rankLabel}: #${player2Rank || 'N/A'}</div>
+                    <div class="text-gray-600">${escapeHtml(rankLabel)}: #${escapeHtml(player2Rank || 'N/A')}</div>
                 </div>
             </div>
             ${eloWinProb ? `

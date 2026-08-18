@@ -1,6 +1,8 @@
 // Snooker API Module
 // Fetches matches from Kambi and organizes them by Country > Competition > Events
 
+import { escapeHtml } from './core/math_utils.js';
+
 const SNOOKER_LIST_URL = "https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/snooker/all/all/all/matches.json?lang=en_GB&market=GB&client_id=200&channel_id=7&ncid=1768261517594&lang=en_US&market=US&client_id=200&channel_id=7&ncid=1768261517594&competitionId=undefined&useCombined=true&useCombinedLive=true";
 
 const SNOOKER_EVENT_URL_BASE = "https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/";
@@ -140,7 +142,7 @@ export async function initSnookerLoader() {
         // Populate country dropdown
         let html = '<option value="">Select Country/Region</option>';
         snookerData.countries.forEach((country, idx) => {
-            html += `<option value="${idx}">${country.name}</option>`;
+            html += `<option value="${idx}">${escapeHtml(country.name)}</option>`;
         });
         countrySelect.innerHTML = html;
 
@@ -170,7 +172,7 @@ export function handleCountryChange() {
     if (country && country.competitions.length > 0) {
         let html = '<option value="">Select Competition</option>';
         country.competitions.forEach((comp, idx) => {
-            html += `<option value="${idx}">${comp.name} (${comp.events.length})</option>`;
+            html += `<option value="${idx}">${escapeHtml(comp.name)} (${comp.events.length})</option>`;
         });
         leagueSelect.innerHTML = html;
         leagueSelect.disabled = false;
@@ -199,7 +201,7 @@ export function handleLeagueChange() {
         competition.events.forEach((item) => {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const displayName = `${e.homeName} vs ${e.awayName}`;
+            const displayName = `${escapeHtml(e.homeName)} vs ${escapeHtml(e.awayName)}`;
             html += `<option value="${e.id}">${displayName} (${startTime})</option>`;
         });
         matchSelect.innerHTML = html;

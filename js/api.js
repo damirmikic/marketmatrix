@@ -1,4 +1,6 @@
 
+import { escapeHtml } from './core/math_utils.js';
+
 const GROUP_URL = "https://eu.offering-api.kambicdn.com/offering/v2018/kambi/group/1000093190.json";
 
 let countriesData = [];
@@ -21,7 +23,7 @@ export async function initApiLoader() {
             let html = '<option value="">Select Country/Region</option>';
             countriesData.forEach((country, idx) => {
                 if (country.eventCount > 0) {
-                    html += `<option value="${idx}">${country.name}</option>`;
+                    html += `<option value="${idx}">${escapeHtml(country.name)}</option>`;
                 }
             });
             countrySelect.innerHTML = html;
@@ -56,7 +58,7 @@ export function handleCountryChange() {
             const avgMarkets = evCount > 0 ? (boCount / evCount) : 0;
 
             if (evCount > 0 && avgMarkets >= 3) {
-                html += `<option value="${league.id}" data-term="${league.termKey || 'all'}">${league.name}</option>`;
+                html += `<option value="${league.id}" data-term="${escapeHtml(league.termKey || 'all')}">${escapeHtml(league.name)}</option>`;
             }
         });
         leagueSelect.innerHTML = html;
@@ -120,7 +122,7 @@ export async function handleLeagueChange() {
         validEvents.forEach((item) => {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            html += `<option value="${e.id}">${e.name} (${startTime})</option>`;
+            html += `<option value="${e.id}">${escapeHtml(e.name)} (${startTime})</option>`;
         });
         matchSelect.innerHTML = html;
         matchSelect.disabled = false;
