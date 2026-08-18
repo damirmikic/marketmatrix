@@ -1,4 +1,26 @@
 
+export function showError(msg) {
+    let el = document.getElementById('model-error');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'model-error';
+        Object.assign(el.style, {
+            position: 'fixed', top: '0', left: '0', right: '0',
+            background: '#dc2626', color: '#fff', padding: '10px 16px',
+            fontWeight: '600', zIndex: '9999', textAlign: 'center',
+            fontSize: '14px'
+        });
+        document.body.appendChild(el);
+    }
+    el.textContent = `Error: ${msg}`;
+    el.hidden = false;
+}
+
+export function clearError() {
+    const el = document.getElementById('model-error');
+    if (el) el.hidden = true;
+}
+
 // UI Helper - Toggle card collapse/expand
 export function toggleCard(id) {
     const el = document.getElementById(id);

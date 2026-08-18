@@ -1,7 +1,8 @@
 // Table Tennis API Module
 // Fetches matches from Kambi and organizes them by Country > Competition > Events
 
-import { escapeHtml } from './core/math_utils.js';
+import { escapeHtml, fetchJson } from './core/math_utils.js';
+import { showError } from './ui_utils.js';
 
 const TABLE_TENNIS_URL = "https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/table_tennis/all/all/all/matches.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true";
 
@@ -127,8 +128,7 @@ export async function initTableTennisLoader() {
     try {
         countrySelect.innerHTML = '<option value="">Loading...</option>';
 
-        const response = await fetch(TABLE_TENNIS_URL);
-        const data = await response.json();
+        const data = await fetchJson(TABLE_TENNIS_URL);
 
         if (!data.events || data.events.length === 0) {
             countrySelect.innerHTML = '<option value="">No matches available</option>';
@@ -262,6 +262,6 @@ function loadMatchData(item) {
 
     } catch (e) {
         console.error("Error loading table tennis match:", e);
-        alert("Failed to load match data.");
+        showError("Failed to load match data.");
     }
 }
