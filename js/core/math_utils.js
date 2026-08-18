@@ -27,6 +27,7 @@ export function solveShin(oddsArr) {
     if (m <= 0) return oddsArr.map(o => 1 / o);
 
     let z = 0.01;
+    let converged = false;
     for (let i = 0; i < SHIN_ITERATIONS; i++) {
         let sumProb = oddsArr.reduce((sum, o) => {
             const pImplied = 1 / o;
@@ -34,16 +35,18 @@ export function solveShin(oddsArr) {
             return sum + p;
         }, 0);
 
-        if (Math.abs(sumProb - 1) < 1e-7) break;
+        if (Math.abs(sumProb - 1) < 1e-7) { converged = true; break; }
         z += (sumProb - 1) * 0.5;
         if (z < 0) z = 0;
         if (z > 1) z = 0.99;
     }
 
-    return oddsArr.map(o => {
+    const probs = oddsArr.map(o => {
         const pImplied = 1 / o;
         return (Math.sqrt(z ** 2 + 4 * (1 - z) * (pImplied ** 2 / sumImplied)) - z) / (2 * (1 - z));
     });
+    probs.converged = converged;
+    return probs;
 }
 
 /**
