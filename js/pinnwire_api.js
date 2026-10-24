@@ -86,6 +86,17 @@ export function mainTotal(totals, { halfLinesOnly = false } = {}) {
     return best;
 }
 
+// First-half prices from a matched Pinnacle event: 1X2 + the most balanced half-goal total.
+// Returns null when the half lines are missing (some events only carry full-time prices).
+export function firstHalfPrices(event) {
+    const p1 = event && event.period1;
+    const ml = p1 && p1.money_line;
+    if (!ml || !(ml.home > 1) || !(ml.draw > 1) || !(ml.away > 1)) return null;
+    const total = mainTotal(p1.totals, { halfLinesOnly: true });
+    if (!total) return null;
+    return { home: ml.home, draw: ml.draw, away: ml.away, line: total.points, over: total.over, under: total.under };
+}
+
 export function mainSpread(spreads) {
     let best = null;
     Object.values(spreads || {}).forEach(s => {

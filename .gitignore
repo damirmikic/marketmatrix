@@ -5,3 +5,7 @@
 
 node_modules/
 .netlify/
+
+# Editor / tooling noise
+.vscode/
+deno.lock

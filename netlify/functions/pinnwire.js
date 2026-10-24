@@ -1,8 +1,8 @@
 /**
  * Netlify Serverless Function: PinnWire (Pinnacle odds) Proxy
  * Keeps the PinnWire API key server-side (PINNWIRE_API_KEY) and returns a
- * trimmed copy of /kit/v1/markets: full-match period only, no alt ladders
- * beyond what the model needs.
+ * trimmed copy of /kit/v1/markets: full-match period (num_0) plus the first-half
+ * moneyline and totals (num_1), without the alt ladders the model doesn't use.
  *
  * GET /.netlify/functions/pinnwire?sport_id=1&event_type=prematch
  */
@@ -42,7 +42,11 @@ function trim(data) {
                     money_line: e.periods.num_0.money_line || null,
                     spreads: e.periods.num_0.spreads || null,
                     totals: e.periods.num_0.totals || null
-                }
+                },
+                period1: e.periods.num_1 ? {
+                    money_line: e.periods.num_1.money_line || null,
+                    totals: e.periods.num_1.totals || null
+                } : null
             }))
     };
 }

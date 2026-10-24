@@ -1,4 +1,4 @@
-import { SPORT_IDS, getPinnacleEvents, findPinnacleEvent, mainTotal, showSourceBadge } from './pinnwire_api.js';
+import { SPORT_IDS, getPinnacleEvents, findPinnacleEvent, mainTotal, firstHalfPrices, showSourceBadge } from './pinnwire_api.js';
 
 const GROUP_URL = "https://eu.offering-api.kambicdn.com/offering/v2018/kambi/group/1000093190.json";
 
@@ -231,7 +231,10 @@ async function loadMatchData(item) {
     }
 }
 
+const FT_INPUT_IDS = ['homeOdds', 'drawOdds', 'awayOdds', 'goalLine', 'overOdds', 'underOdds'];
+
 async function applyPinnacleOdds(kambiEvent) {
+    window.pinnacleHalf = null;
     const fallback = { ok: false, text: 'Odds source: Kambi (no Pinnacle match)' };
     try {
         const events = await getPinnacleEvents(SPORT_IDS.soccer);
@@ -252,7 +255,17 @@ async function applyPinnacleOdds(kambiEvent) {
             document.getElementById('underOdds').value = total.under.toFixed(3);
         }
 
-        return { ok: true, text: `Odds source: Pinnacle (${match.home} vs ${match.away}${total ? '' : ', totals from Kambi'})` };
+        // First-half prices calibrate the half-time model. The snapshot of the full-time inputs lets
+        // the model drop them if the user edits those inputs afterwards.
+        const firstHalf = firstHalfPrices(match);
+        if (firstHalf && ml && total) {
+            const ft = {};
+            FT_INPUT_IDS.forEach(id => { ft[id] = parseFloat(document.getElementById(id).value); });
+            window.pinnacleHalf = { ...firstHalf, ft };
+        }
+
+        const halfNote = window.pinnacleHalf ? ', 1H calibrated' : '';
+        return { ok: true, text: `Odds source: Pinnacle (${match.home} vs ${match.away}${total ? '' : ', totals from Kambi'}${halfNote})` };
     } catch (err) {
         console.warn('Pinnacle odds unavailable, using Kambi:', err);
         return { ok: false, text: 'Odds source: Kambi (Pinnacle unavailable)' };

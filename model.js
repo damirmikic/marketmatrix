@@ -1,5 +1,5 @@
 import { solveShin, probToOdds } from './js/core/math_utils.js';
-import { solveParameters, calculateMatrix } from './js/math.js';
+import { solveParameters, matricesFromHalves, convolveMatrices } from './js/math.js';
 import {
     populateHalfDetailed,
     populateTeamMarkets,
@@ -22,6 +22,19 @@ import {
 import { updateBuilderMatrices } from './js/bet_builder.js';
 
 import { BaseModel } from './js/base_model.js';
+// First-half targets from Pinnacle (set by the match loader). Dropped when the full-time inputs
+// no longer match the loaded prices, so a manual edit never mixes in stale half-time data.
+function getFirstHalfTargets(ftInputs) {
+    const ph = window.pinnacleHalf;
+    if (!ph) return null;
+    const same = Object.keys(ph.ft).every(id => Math.abs(ph.ft[id] - ftInputs[id]) < 1e-9);
+    if (!same) return null;
+
+    const t1x2 = solveShin([ph.home, ph.draw, ph.away]);
+    const tOU = solveShin([ph.over, ph.under]);
+    return { home: t1x2[0], draw: t1x2[1], away: t1x2[2], over: tOU[0], under: tOU[1], line: ph.line };
+}
+
 // --- Main Controller ---
 class FootballModel extends BaseModel {
     constructor() {
@@ -74,24 +87,40 @@ class FootballModel extends BaseModel {
     document.getElementById('fairOddsDraw').textContent = (1 / true1x2[1]).toFixed(2);
     document.getElementById('fairOddsAway').textContent = (1 / true1x2[2]).toFixed(2);
 
+    const firstHalf = getFirstHalfTargets({ homeOdds: h, drawOdds: d, awayOdds: a, goalLine: line, overOdds: o, underOdds: u });
+
     // No-vig table (source: Pinnacle when loaded from PinnWire, otherwise Kambi / manual)
     const noVigRows = [
         ['Home', true1x2[0]], ['Draw', true1x2[1]], ['Away', true1x2[2]],
         [`Over ${line}`, trueOU[0]], [`Under ${line}`, trueOU[1]]
     ];
+    if (firstHalf) {
+        noVigRows.push(
+            ['1H Home', firstHalf.home], ['1H Draw', firstHalf.draw], ['1H Away', firstHalf.away],
+            [`1H Over ${firstHalf.line}`, firstHalf.over], [`1H Under ${firstHalf.line}`, firstHalf.under]
+        );
+    }
     document.getElementById('noVigTable').innerHTML = noVigRows.map(([label, p]) => `<tr>
         <td class="line-col">${label}</td>
         <td class="num-col">${(p * 100).toFixed(1)}%</td>
         <td class="num-col">${(1 / p).toFixed(3)}</td>
     </tr>`).join('');
-    document.getElementById('noVigSource').textContent = `(${window.oddsSource || 'manual input'}, Shin)`;
+    document.getElementById('noVigSource').textContent =
+        `(${window.oddsSource || 'manual input'}, Shin${firstHalf ? ', 1H calibrated' : ''})`;
 
     const targetHome = true1x2[0];
     const targetDraw = true1x2[1]; // Get Target Draw Prob
     const targetOver = trueOU[0];
 
-    // 2. Solve for xG (and Omega)
-    const params = solveParameters(targetHome, targetOver, line, targetDraw);
+    // Half-goal split from the inputs (default 45/55)
+    const ratio1HEl = document.getElementById('ratio1H');
+    const ratio2HEl = document.getElementById('ratio2H');
+    let ratio1H = ratio1HEl ? parseFloat(ratio1HEl.value) / 100 : 0.45;
+    let ratio2H = ratio2HEl ? parseFloat(ratio2HEl.value) / 100 : 0.55;
+    if (!(ratio1H > 0) || !(ratio2H > 0)) { ratio1H = 0.45; ratio2H = 0.55; }
+
+    // 2. Solve for xG (and Omega, and the 2H draw lever)
+    const params = solveParameters(targetHome, targetOver, line, targetDraw, ratio1H, ratio2H, firstHalf);
 
     // Display Parameters
     document.getElementById('xgHome').textContent = params.lambda.toFixed(3);
@@ -101,29 +130,9 @@ class FootballModel extends BaseModel {
     // Show markets tab container
     document.getElementById('marketsTabContainer').classList.remove('hidden');
 
-    // 3. Generate Matrices (Pass Omega)
-    // Read half ratios from input (default 45/55 if unavailable)
-    const ratio1HEl = document.getElementById('ratio1H');
-    const ratio2HEl = document.getElementById('ratio2H');
-    const ratio1H = ratio1HEl ? parseFloat(ratio1HEl.value) / 100 : 0.45;
-    const ratio2H = ratio2HEl ? parseFloat(ratio2HEl.value) / 100 : 0.55;
-
-    const matrixFT = calculateMatrix(params.lambda, params.mu, params.omega, params.diagInflation);
-
-    // First Half: Boost zero-inflation to account for "feeling out" process
-    // First halves have disproportionately more 0-0 scorelines than pure Poisson predicts
-    const matrixFH = calculateMatrix(
-        params.lambda * ratio1H,
-        params.mu * ratio1H,
-        params.omega * 1.5  // Boost zero-inflation for 1H
-    );
-
-    // Second Half: Use standard scaling
-    const matrixSH = calculateMatrix(
-        params.lambda * ratio2H,
-        params.mu * ratio2H,
-        params.omega * ratio2H
-    );
+    // 3. Generate Matrices: halves first, full time is their convolution so all markets agree
+    const { matrixFH, matrixSH } = matricesFromHalves(params.halves);
+    const matrixFT = convolveMatrices(matrixFH, matrixSH);
 
     // --- MARKET GENERATION ---
 
