@@ -74,6 +74,18 @@ class FootballModel extends BaseModel {
     document.getElementById('fairOddsDraw').textContent = (1 / true1x2[1]).toFixed(2);
     document.getElementById('fairOddsAway').textContent = (1 / true1x2[2]).toFixed(2);
 
+    // No-vig table (source: Pinnacle when loaded from PinnWire, otherwise Kambi / manual)
+    const noVigRows = [
+        ['Home', true1x2[0]], ['Draw', true1x2[1]], ['Away', true1x2[2]],
+        [`Over ${line}`, trueOU[0]], [`Under ${line}`, trueOU[1]]
+    ];
+    document.getElementById('noVigTable').innerHTML = noVigRows.map(([label, p]) => `<tr>
+        <td class="line-col">${label}</td>
+        <td class="num-col">${(p * 100).toFixed(1)}%</td>
+        <td class="num-col">${(1 / p).toFixed(3)}</td>
+    </tr>`).join('');
+    document.getElementById('noVigSource').textContent = `(${window.oddsSource || 'manual input'}, Shin)`;
+
     const targetHome = true1x2[0];
     const targetDraw = true1x2[1]; // Get Target Draw Prob
     const targetOver = trueOU[0];
@@ -96,7 +108,7 @@ class FootballModel extends BaseModel {
     const ratio1H = ratio1HEl ? parseFloat(ratio1HEl.value) / 100 : 0.45;
     const ratio2H = ratio2HEl ? parseFloat(ratio2HEl.value) / 100 : 0.55;
 
-    const matrixFT = calculateMatrix(params.lambda, params.mu, params.omega);
+    const matrixFT = calculateMatrix(params.lambda, params.mu, params.omega, params.diagInflation);
 
     // First Half: Boost zero-inflation to account for "feeling out" process
     // First halves have disproportionately more 0-0 scorelines than pure Poisson predicts
@@ -458,12 +470,7 @@ class FootballModel extends BaseModel {
     document.getElementById('awayGoalComboTable').innerHTML = calculateTeamGoalCombos(matrixFH, matrixSH, false);
 
     // FTS Combos
-    document.getElementById('ftsComboTable').innerHTML = calculateFtsCombos(
-        params.lambda, params.mu,
-        params.lambda * 0.45, params.mu * 0.45,
-        params.lambda * 0.55, params.mu * 0.55,
-        matrixFT, matrixFH, matrixSH
-    );
+    document.getElementById('ftsComboTable').innerHTML = calculateFtsCombos(matrixFT, matrixFH, matrixSH);
 
     // Multi-calc tables
     document.getElementById('drawComboTable').innerHTML = calculateJointCombos(matrixFH, matrixSH, 'draw');

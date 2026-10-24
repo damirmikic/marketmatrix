@@ -478,69 +478,59 @@ export function calculateJointCombos(matrix1H, matrix2H, type) {
     return html;
 }
 
-export function calculateFtsCombos(lamFT, muFT, lamFH, muFH, lamSH, muSH, matrixFT, matrixFH, matrixSH) {
-    const ratioFT_H = lamFT / (lamFT + muFT);
-    const ratioFT_A = muFT / (lamFT + muFT);
-
-    const ratioFH_H = lamFH / (lamFH + muFH);
-    const ratioFH_A = muFH / (lamFH + muFH);
-
-    const ratioSH_H = lamSH / (lamSH + muSH);
-    const ratioSH_A = muSH / (lamSH + muSH);
-
-    // Basic FT
-    const pFT_0_0 = matrixFT[0][0];
-    const pFT_AnyGoal = 1 - pFT_0_0;
-
-    // Basic FH
-    const pFH_0_0 = matrixFH[0][0];
-    const pFH_AnyGoal = 1 - pFH_0_0;
-
-    // Basic SH
-    const pSH_0_0 = matrixSH[0][0];
-    const pSH_AnyGoal = 1 - pSH_0_0;
-
-    // Result and Total helpers
-    let p1 = 0, pX = 0, p2 = 0, p2plus = 0, p3plus = 0;
+// First team to score, exact given the score matrix: for a final score x-y the order of
+// goals is exchangeable (constant scoring rates), so P(home scored first | x, y) = x / (x + y).
+// This keeps first-scorer markets correlated with result and goals, which a flat
+// P(result) * lambda/(lambda+mu) shortcut does not.
+function firstScorerProb(matrix, filter = () => true) {
+    let home = 0, away = 0;
     for (let x = 0; x <= 20; x++) {
         for (let y = 0; y <= 20; y++) {
-            let p = matrixFT[x][y];
-            if (x > y) p1 += p;
-            else if (x === y) pX += p;
-            else p2 += p;
-
-            if (x + y >= 2) p2plus += p;
-            if (x + y >= 3) p3plus += p;
+            if (x + y === 0 || !filter(x, y)) continue;
+            const p = matrix[x][y];
+            home += p * x / (x + y);
+            away += p * y / (x + y);
         }
     }
+    return { home, away };
+}
 
-    const pX_Strict = pX - pFT_0_0; // Draw with at least 1 goal
+export function calculateFtsCombos(matrixFT, matrixFH, matrixSH) {
+    const ft = firstScorerProb(matrixFT);
+    const fh = firstScorerProb(matrixFH);
+    const sh = firstScorerProb(matrixSH);
+
+    const res1 = firstScorerProb(matrixFT, (x, y) => x > y);
+    const resX = firstScorerProb(matrixFT, (x, y) => x === y);
+    const res2 = firstScorerProb(matrixFT, (x, y) => x < y);
+    const g2 = firstScorerProb(matrixFT, (x, y) => x + y >= 2);
+    const g3 = firstScorerProb(matrixFT, (x, y) => x + y >= 3);
 
     const combos = [
         // FT
-        { label: "T1", p: pFT_AnyGoal * ratioFT_H },
-        { label: "no", p: pFT_0_0 },
-        { label: "T2", p: pFT_AnyGoal * ratioFT_A },
+        { label: "T1", p: ft.home },
+        { label: "no", p: matrixFT[0][0] },
+        { label: "T2", p: ft.away },
         // 1H
-        { label: "T1 I", p: pFH_AnyGoal * ratioFH_H },
-        { label: "no I", p: pFH_0_0 },
-        { label: "T2 I", p: pFH_AnyGoal * ratioFH_A },
+        { label: "T1 I", p: fh.home },
+        { label: "no I", p: matrixFH[0][0] },
+        { label: "T2 I", p: fh.away },
         // 2H
-        { label: "T1 II", p: pSH_AnyGoal * ratioSH_H },
-        { label: "no II", p: pSH_0_0 },
-        { label: "T2 II", p: pSH_AnyGoal * ratioSH_A },
+        { label: "T1 II", p: sh.home },
+        { label: "no II", p: matrixSH[0][0] },
+        { label: "T2 II", p: sh.away },
         // Result & FTS
-        { label: "1 & T1", p: p1 * ratioFT_H },
-        { label: "1 & T2", p: p1 * ratioFT_A },
-        { label: "2 & T1", p: p2 * ratioFT_H },
-        { label: "2 & T2", p: p2 * ratioFT_A },
-        { label: "X & T1", p: pX_Strict * ratioFT_H },
-        { label: "X & T2", p: pX_Strict * ratioFT_A },
+        { label: "1 & T1", p: res1.home },
+        { label: "1 & T2", p: res1.away },
+        { label: "2 & T1", p: res2.home },
+        { label: "2 & T2", p: res2.away },
+        { label: "X & T1", p: resX.home },
+        { label: "X & T2", p: resX.away },
         // Goals & FTS
-        { label: "T1 & 2+", p: p2plus * ratioFT_H },
-        { label: "T2 & 2+", p: p2plus * ratioFT_A },
-        { label: "T1 & 3+", p: p3plus * ratioFT_H },
-        { label: "T2 & 3+", p: p3plus * ratioFT_A }
+        { label: "T1 & 2+", p: g2.home },
+        { label: "T2 & 2+", p: g2.away },
+        { label: "T1 & 3+", p: g3.home },
+        { label: "T2 & 3+", p: g3.away }
     ];
 
     let html = "";

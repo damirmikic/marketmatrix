@@ -61,15 +61,15 @@
                             -</span></h3>
                     <div class="input-group">
                         <label>Home</label>
-                        <input type="number" id="homeOdds" step="0.01" value="2.10" oninput="runModel()">
+                        <input type="number" id="homeOdds" step="0.001" value="2.10" oninput="runModel()">
                     </div>
                     <div class="input-group">
                         <label>Draw</label>
-                        <input type="number" id="drawOdds" step="0.01" value="3.40" oninput="runModel()">
+                        <input type="number" id="drawOdds" step="0.001" value="3.40" oninput="runModel()">
                     </div>
                     <div class="input-group">
                         <label>Away</label>
-                        <input type="number" id="awayOdds" step="0.01" value="3.50" oninput="runModel()">
+                        <input type="number" id="awayOdds" step="0.001" value="3.50" oninput="runModel()">
                     </div>
 
                     <h3>Goal Line <span id="goalsMargin" class="margin-info">Margin:
@@ -80,11 +80,11 @@
                     </div>
                     <div class="input-group">
                         <label id="overLabel">Over</label>
-                        <input type="number" id="overOdds" step="0.01" value="1.95" oninput="runModel()">
+                        <input type="number" id="overOdds" step="0.001" value="1.95" oninput="runModel()">
                     </div>
                     <div class="input-group">
                         <label id="underLabel">Under</label>
-                        <input type="number" id="underOdds" step="0.01" value="1.90" oninput="runModel()">
+                        <input type="number" id="underOdds" step="0.001" value="1.90" oninput="runModel()">
                     </div>
 
                     <h3 class="mt-4 text-xl">Half Goal Ratios</h3>
@@ -185,6 +185,12 @@
                     <!-- FT 1X2/DC Sub-tab -->
                     <div class="sub-tab-content active" data-subtab="ft-result">
                         <div class="tab-content active">
+                            <h3 class="text-lg">No-Vig Odds <span id="noVigSource" class="margin-info"></span></h3>
+                            <div class="table-wrapper"><table class="mb-5">
+                                <thead><tr><th></th><th class="num-col">Probability</th><th class="num-col">No-vig odds</th></tr></thead>
+                                <tbody id="noVigTable"></tbody>
+                            </table></div>
+
                             <h3 class="text-lg">Match Result / Double Chance</h3>
                             <div class="stat-grid grid-cols-3">
                                 <div class="stat-box">

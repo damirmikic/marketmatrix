@@ -1,3 +1,4 @@
+import { SPORT_IDS, getPinnacleEvents, findPinnacleEvent, mainTotal, showSourceBadge } from './pinnwire_api.js';
 
 const GROUP_URL = "https://eu.offering-api.kambicdn.com/offering/v2018/kambi/group/1000093190.json";
 
@@ -150,7 +151,7 @@ export async function loadEventDetails(eventId) {
     }
 }
 
-function loadMatchData(item) {
+async function loadMatchData(item) {
     try {
         const offers = item.betOffers || [];
         const event = item.event || {};
@@ -216,10 +217,44 @@ function loadMatchData(item) {
             }
         }
 
+        // Pinnacle is the primary source: overwrite the Kambi values when the event is found
+        // The betoffer endpoint returns the event under `events`, not `event`
+        const source = await applyPinnacleOdds((item.events && item.events[0]) || event);
+        window.oddsSource = source.ok ? 'Pinnacle' : 'Kambi';
+        showSourceBadge(source.text, source.ok);
+
         if (runModelCallback) runModelCallback();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
         console.error("Critical Processing Error:", e);
         alert("Failed to inject match data into calculator.");
+    }
+}
+
+async function applyPinnacleOdds(kambiEvent) {
+    const fallback = { ok: false, text: 'Odds source: Kambi (no Pinnacle match)' };
+    try {
+        const events = await getPinnacleEvents(SPORT_IDS.soccer);
+        const match = findPinnacleEvent(events, kambiEvent.homeName, kambiEvent.awayName, new Date(kambiEvent.start).getTime());
+        if (!match) return fallback;
+
+        const ml = match.period.money_line;
+        if (ml && ml.home && ml.draw && ml.away) {
+            document.getElementById('homeOdds').value = ml.home.toFixed(3);
+            document.getElementById('drawOdds').value = ml.draw.toFixed(3);
+            document.getElementById('awayOdds').value = ml.away.toFixed(3);
+        }
+
+        const total = mainTotal(match.period.totals, { halfLinesOnly: true });
+        if (total) {
+            document.getElementById('goalLine').value = total.points.toFixed(1);
+            document.getElementById('overOdds').value = total.over.toFixed(3);
+            document.getElementById('underOdds').value = total.under.toFixed(3);
+        }
+
+        return { ok: true, text: `Odds source: Pinnacle (${match.home} vs ${match.away}${total ? '' : ', totals from Kambi'})` };
+    } catch (err) {
+        console.warn('Pinnacle odds unavailable, using Kambi:', err);
+        return { ok: false, text: 'Odds source: Kambi (Pinnacle unavailable)' };
     }
 }
