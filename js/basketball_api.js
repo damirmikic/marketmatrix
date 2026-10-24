@@ -1,6 +1,9 @@
 // Basketball API Module
 // Fetches matches from Kambi and organizes them by Country > Competition > Events
 
+import { escapeHtml, fetchJson } from './core/math_utils.js';
+import { showError } from './ui_utils.js';
+
 const BASKETBALL_URL = "https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/basketball/all/all/all/matches.json?channel_id=7&client_id=200&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true";
 
 let basketballData = {
@@ -125,8 +128,7 @@ export async function initBasketballLoader() {
     try {
         countrySelect.innerHTML = '<option value="">Loading...</option>';
 
-        const response = await fetch(BASKETBALL_URL);
-        const data = await response.json();
+        const data = await fetchJson(BASKETBALL_URL);
 
         if (!data.events || data.events.length === 0) {
             countrySelect.innerHTML = '<option value="">No matches available</option>';
@@ -139,7 +141,7 @@ export async function initBasketballLoader() {
         // Populate country dropdown
         let html = '<option value="">Select Country/Region</option>';
         basketballData.countries.forEach((country, idx) => {
-            html += `<option value="${idx}">${country.name}</option>`;
+            html += `<option value="${idx}">${escapeHtml(country.name)}</option>`;
         });
         countrySelect.innerHTML = html;
 
@@ -169,7 +171,7 @@ export function handleCountryChange() {
     if (country && country.competitions.length > 0) {
         let html = '<option value="">Select Competition</option>';
         country.competitions.forEach((comp, idx) => {
-            html += `<option value="${idx}">${comp.name} (${comp.events.length})</option>`;
+            html += `<option value="${idx}">${escapeHtml(comp.name)} (${comp.events.length})</option>`;
         });
         leagueSelect.innerHTML = html;
         leagueSelect.disabled = false;
@@ -199,7 +201,7 @@ export function handleLeagueChange() {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             // Basketball display: Home vs Away format
-            const displayName = `${e.homeName} vs ${e.awayName}`;
+            const displayName = `${escapeHtml(e.homeName)} vs ${escapeHtml(e.awayName)}`;
             html += `<option value="${e.id}">${displayName} (${startTime})</option>`;
         });
         matchSelect.innerHTML = html;
@@ -296,6 +298,6 @@ function loadMatchData(item) {
 
     } catch (e) {
         console.error("Error loading basketball match:", e);
-        alert("Failed to load match data.");
+        showError("Failed to load match data.");
     }
 }

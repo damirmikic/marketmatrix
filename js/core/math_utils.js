@@ -1,6 +1,8 @@
 // js/core/math_utils.js
 // Core mathematical utility functions used across all sports models
 
+import { SHIN_ITERATIONS } from './constants.js';
+
 /**
  * Factorial function with caching for performance
  * Used in Poisson distributions and other statistical calculations
@@ -25,23 +27,26 @@ export function solveShin(oddsArr) {
     if (m <= 0) return oddsArr.map(o => 1 / o);
 
     let z = 0.01;
-    for (let i = 0; i < 50; i++) {
+    let converged = false;
+    for (let i = 0; i < SHIN_ITERATIONS; i++) {
         let sumProb = oddsArr.reduce((sum, o) => {
             const pImplied = 1 / o;
             const p = (Math.sqrt(z ** 2 + 4 * (1 - z) * (pImplied ** 2 / sumImplied)) - z) / (2 * (1 - z));
             return sum + p;
         }, 0);
 
-        if (Math.abs(sumProb - 1) < 1e-7) break;
+        if (Math.abs(sumProb - 1) < 1e-7) { converged = true; break; }
         z += (sumProb - 1) * 0.5;
         if (z < 0) z = 0;
         if (z > 1) z = 0.99;
     }
 
-    return oddsArr.map(o => {
+    const probs = oddsArr.map(o => {
         const pImplied = 1 / o;
         return (Math.sqrt(z ** 2 + 4 * (1 - z) * (pImplied ** 2 / sumImplied)) - z) / (2 * (1 - z));
     });
+    probs.converged = converged;
+    return probs;
 }
 
 /**
@@ -51,4 +56,34 @@ export function solveShin(oddsArr) {
  */
 export function probToOdds(p) {
     return p > 0 ? (1 / p).toFixed(2) : "∞";
+}
+
+/**
+ * Validate that a value is a legal decimal odds number (1.01–1001)
+ * @param {number} v
+ * @returns {boolean}
+ */
+export function isValidOdds(v) {
+    return Number.isFinite(v) && v >= 1.01 && v <= 1001;
+}
+
+export function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+export async function fetchJson(url, { timeoutMs = 10000 } = {}) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(url, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+        return await res.json();
+    } finally {
+        clearTimeout(t);
+    }
 }

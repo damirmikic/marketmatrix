@@ -3,6 +3,8 @@
  * Core Logic: Shin's Vigorish Removal + Solver + Derivatives (Raw Odds)
  */
 
+import { solveShin } from './js/core/math_utils.js';
+
 export class TennisEngine {
     constructor() {
         this.MAX_ITERATIONS = 50;
@@ -18,24 +20,8 @@ export class TennisEngine {
         if (!odds1 || !odds2 || odds1 <= 1 || odds2 <= 1) {
             throw new Error("Invalid odds input");
         }
-
-        let gamma = 1.0;
-        for (let i = 0; i < this.SHIN_ITERATIONS; i++) {
-            const sumP = Math.pow(1 / odds1, gamma) + Math.pow(1 / odds2, gamma);
-            const diff = sumP - 1.0;
-            if (Math.abs(diff) < 1e-6) break;
-            gamma += diff * 0.5;
-        }
-
-        const p1Fair = Math.pow(1 / odds1, gamma);
-        const p2Fair = Math.pow(1 / odds2, gamma);
-        const total = p1Fair + p2Fair;
-
-        return {
-            p1: p1Fair / total,
-            p2: p2Fair / total,
-            gamma: gamma
-        };
+        const [p1, p2] = solveShin([odds1, odds2]);
+        return { p1, p2 };
     }
 
     // ==========================================

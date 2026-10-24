@@ -35,6 +35,9 @@ function getFirstHalfTargets(ftInputs) {
     return { home: t1x2[0], draw: t1x2[1], away: t1x2[2], over: tOU[0], under: tOU[1], line: ph.line };
 }
 
+// Cached DOM element references — populated in DOMContentLoaded
+const el = {};
+
 // --- Main Controller ---
 class FootballModel extends BaseModel {
     constructor() {
@@ -42,22 +45,22 @@ class FootballModel extends BaseModel {
     }
     runModel() {
     // Get Inputs
-    const h = parseFloat(document.getElementById('homeOdds').value);
-    const d = parseFloat(document.getElementById('drawOdds').value);
-    const a = parseFloat(document.getElementById('awayOdds').value);
-    const line = parseFloat(document.getElementById('goalLine').value);
-    const o = parseFloat(document.getElementById('overOdds').value);
-    const u = parseFloat(document.getElementById('underOdds').value);
+    const homeOdds = parseFloat(el.homeOdds.value);
+    const drawOdds = parseFloat(el.drawOdds.value);
+    const awayOdds = parseFloat(el.awayOdds.value);
+    const goalLine = parseFloat(el.goalLine.value);
+    const overOdds = parseFloat(el.overOdds.value);
+    const underOdds = parseFloat(el.underOdds.value);
 
     // Basic validation
-    if ([h, d, a, line, o, u].some(isNaN)) return;
+    if ([homeOdds, drawOdds, awayOdds, goalLine, overOdds, underOdds].some(isNaN)) return;
 
     // Update Labels
-    document.getElementById('overLabel').textContent = `Over ${line} Odds`;
-    document.getElementById('underLabel').textContent = `Under ${line} Odds`;
+    document.getElementById('overLabel').textContent = `Over ${goalLine} Odds`;
+    document.getElementById('underLabel').textContent = `Under ${goalLine} Odds`;
 
     // Margin Calculation (1x2)
-    const margin = ((1 / h + 1 / d + 1 / a) - 1) * 100;
+    const margin = ((1 / homeOdds + 1 / drawOdds + 1 / awayOdds) - 1) * 100;
     const marginEl = document.getElementById('oneWtMargin');
     if (marginEl) {
         marginEl.textContent = `Margin: ${margin.toFixed(2)}%`;
@@ -66,7 +69,7 @@ class FootballModel extends BaseModel {
     }
 
     // Margin Calculation (Goals)
-    const marginGoals = ((1 / o + 1 / u) - 1) * 100;
+    const marginGoals = ((1 / overOdds + 1 / underOdds) - 1) * 100;
     const marginGoalsEl = document.getElementById('goalsMargin');
     if (marginGoalsEl) {
         marginGoalsEl.textContent = `Margin: ${marginGoals.toFixed(2)}%`;
@@ -74,8 +77,9 @@ class FootballModel extends BaseModel {
     }
 
     // 1. Get True Probabilities (Shin Method)
-    const true1x2 = solveShin([h, d, a]);
-    const trueOU = solveShin([o, u]);
+    const true1x2 = solveShin([homeOdds, drawOdds, awayOdds]);
+    const trueOU = solveShin([overOdds, underOdds]);
+    const shinConverged = true1x2.converged !== false && trueOU.converged !== false;
 
     // Display Shin 1x2 Probs
     document.getElementById('shinHome').textContent = (true1x2[0] * 100).toFixed(1) + "%";
@@ -87,12 +91,12 @@ class FootballModel extends BaseModel {
     document.getElementById('fairOddsDraw').textContent = (1 / true1x2[1]).toFixed(2);
     document.getElementById('fairOddsAway').textContent = (1 / true1x2[2]).toFixed(2);
 
-    const firstHalf = getFirstHalfTargets({ homeOdds: h, drawOdds: d, awayOdds: a, goalLine: line, overOdds: o, underOdds: u });
+    const firstHalf = getFirstHalfTargets({ homeOdds, drawOdds, awayOdds, goalLine, overOdds, underOdds });
 
     // No-vig table (source: Pinnacle when loaded from PinnWire, otherwise Kambi / manual)
     const noVigRows = [
         ['Home', true1x2[0]], ['Draw', true1x2[1]], ['Away', true1x2[2]],
-        [`Over ${line}`, trueOU[0]], [`Under ${line}`, trueOU[1]]
+        [`Over ${goalLine}`, trueOU[0]], [`Under ${goalLine}`, trueOU[1]]
     ];
     if (firstHalf) {
         noVigRows.push(
@@ -113,19 +117,40 @@ class FootballModel extends BaseModel {
     const targetOver = trueOU[0];
 
     // Half-goal split from the inputs (default 45/55)
-    const ratio1HEl = document.getElementById('ratio1H');
-    const ratio2HEl = document.getElementById('ratio2H');
-    let ratio1H = ratio1HEl ? parseFloat(ratio1HEl.value) / 100 : 0.45;
-    let ratio2H = ratio2HEl ? parseFloat(ratio2HEl.value) / 100 : 0.55;
+    let ratio1H = el.ratio1H ? parseFloat(el.ratio1H.value) / 100 : 0.45;
+    let ratio2H = el.ratio2H ? parseFloat(el.ratio2H.value) / 100 : 0.55;
     if (!(ratio1H > 0) || !(ratio2H > 0)) { ratio1H = 0.45; ratio2H = 0.55; }
 
     // 2. Solve for xG (and Omega, and the 2H draw lever)
-    const params = solveParameters(targetHome, targetOver, line, targetDraw, ratio1H, ratio2H, firstHalf);
+    const params = solveParameters(targetHome, targetOver, goalLine, targetDraw, ratio1H, ratio2H, firstHalf);
 
     // Display Parameters
     document.getElementById('xgHome').textContent = params.lambda.toFixed(3);
     document.getElementById('xgAway').textContent = params.mu.toFixed(3);
     document.getElementById('zipOmega').textContent = params.omega.toFixed(2);
+
+    // Convergence warning badge
+    const solverOk = params.converged && shinConverged;
+    let warnEl = document.getElementById('solverConvergenceWarn');
+    if (!warnEl) {
+        warnEl = document.createElement('div');
+        warnEl.id = 'solverConvergenceWarn';
+        warnEl.style.cssText = 'margin-top:8px;padding:4px 8px;border-radius:4px;font-size:0.78rem;font-weight:600;display:none;';
+        const grid = document.querySelector('.stat-grid');
+        if (grid) grid.after(warnEl);
+    }
+    if (!solverOk) {
+        const who = !params.converged && !shinConverged ? 'Solver + Shin'
+                  : !params.converged ? 'Solver'
+                  : 'Shin';
+        warnEl.textContent = `⚠ ${who} did not converge — markets may be inaccurate`;
+        warnEl.style.display = 'block';
+        warnEl.style.background = 'rgba(251,191,36,0.15)';
+        warnEl.style.color = '#d97706';
+        warnEl.style.border = '1px solid rgba(251,191,36,0.4)';
+    } else {
+        warnEl.style.display = 'none';
+    }
 
     // Show markets tab container
     document.getElementById('marketsTabContainer').classList.remove('hidden');
@@ -492,9 +517,18 @@ class FootballModel extends BaseModel {
 }
 
 const footballModel = new FootballModel();
-window.runModel = () => footballModel.runModel();
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Cache DOM elements
+    el.homeOdds = document.getElementById('homeOdds');
+    el.drawOdds = document.getElementById('drawOdds');
+    el.awayOdds = document.getElementById('awayOdds');
+    el.goalLine = document.getElementById('goalLine');
+    el.overOdds = document.getElementById('overOdds');
+    el.underOdds = document.getElementById('underOdds');
+    el.ratio1H = document.getElementById('ratio1H');
+    el.ratio2H = document.getElementById('ratio2H');
+
     // Inject API Styles
     const style = document.createElement('style');
     style.textContent = `

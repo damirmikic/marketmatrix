@@ -192,14 +192,16 @@ function fitLambdaMu(start, stats, targets) {
         }
         if (!moved) break;
     }
-    return { x, err: norm(r) };
+    return { x, err: norm(r), resid: r };
 }
 
 // For each lever value, (lambda, mu) are fixed by home win + over; the draw then moves
 // monotonically with the lever, so bisect the lever on the draw residual.
 // `makeStats(lever)` returns the stats(l, m) function for that lever value.
 function fitWithDrawLever(makeStats, targets, guess) {
+    let iterations = 0;
     const fitAt = lever => {
+        iterations++;
         const stats = makeStats(lever);
         const fit = fitLambdaMu(guess, stats, targets);
         guess = fit.x;
@@ -223,12 +225,21 @@ function fitWithDrawLever(makeStats, targets, guess) {
             best = edge;     // target draw is outside the reachable range: keep the closest
         }
     }
-    return { ...best, err: Math.max(best.fit.err, Math.abs(best.draw - targets.draw)) };
+    return { ...best, iterations, err: Math.max(best.fit.err, Math.abs(best.draw - targets.draw)) };
+}
+
+// Signed misses (target - model) of a finished fit, for convergence reporting
+function residualsOf(fit, targetDraw) {
+    return { home: fit.fit.resid[0], over: fit.fit.resid[1], draw: targetDraw - fit.draw };
 }
 
 // Default first-half zero-inflation boost ("feeling out" period) used when the first half is
 // not calibrated to market prices
 const FH_OMEGA_BOOST = 1.5;
+
+// Fit error (max abs probability miss on home / draw / over) above which the fit is reported
+// as not converged; the page shows a warning badge when that happens
+const CONVERGENCE_TOL = 5e-4;
 
 /**
  * Fit the model to full-time targets (home win, over line, draw).
@@ -272,10 +283,11 @@ export function solveParameters(targetHomeWin, targetOverProb, targetLine, targe
         fitError = Math.max(fitError, shFit.err);
         const sh = { lambda: shFit.fit.x[0], mu: shFit.fit.x[1], omega: omega2, diag: shFit.lever };
 
-        if (fitError > 5e-4) console.warn(`solveParameters: max fit error ${fitError.toFixed(4)}`);
         return {
             lambda: fh.lambda + sh.lambda, mu: fh.mu + sh.mu, omega, diagInflation: sh.diag,
-            halves: { fh, sh }, calibratedFirstHalf: true, fitError
+            halves: { fh, sh }, calibratedFirstHalf: true, fitError,
+            converged: fitError <= CONVERGENCE_TOL,
+            iterations: fhFit.iterations + shFit.iterations, residuals: residualsOf(shFit, targetDrawProb)
         };
     }
 
@@ -289,12 +301,10 @@ export function solveParameters(targetHomeWin, targetOverProb, targetLine, targe
         ftTargets, guess
     );
     fitError = shFit.err;
-    if (fitError > 5e-4) {
-        console.warn(`solveParameters: max fit error ${fitError.toFixed(4)} (draw price is outside the model's range)`);
-    }
     const [l, m] = shFit.fit.x;
     return {
-        lambda: l, mu: m, omega, diagInflation: shFit.lever,
+        lambda: l, mu: m, omega, diagInflation: shFit.lever, converged: fitError <= CONVERGENCE_TOL,
+        iterations: shFit.iterations, residuals: residualsOf(shFit, targetDrawProb),
         halves: {
             fh: { lambda: l * r1, mu: m * r1, omega: omega * FH_OMEGA_BOOST, diag: 0 },
             sh: { lambda: l * r2, mu: m * r2, omega: omega * r2, diag: shFit.lever }

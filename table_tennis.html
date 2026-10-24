@@ -22,9 +22,9 @@
 
             <!-- API MATCH LOADER -->
             <div class="card mb-5" id="apiMatchLoader">
-                <div class="card-header" onclick="toggleCard('apiMatchLoader')">
+                <button class="card-header" onclick="toggleCard('apiMatchLoader')" aria-expanded="true" aria-controls="apiMatchLoader">
                     <h2>0. Select Match</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <div class="flex-col gap-3">
                         <div>
@@ -51,9 +51,9 @@
 
             <!-- INPUT ODDS -->
             <div class="card" id="inputCard">
-                <div class="card-header" onclick="toggleCard('inputCard')">
+                <button class="card-header" onclick="toggleCard('inputCard')" aria-expanded="true" aria-controls="inputCard">
                     <h2>1. Input Odds</h2>
-                </div>
+                </button>
                 <div class="card-content">
                     <h3>Match Winner <span id="moneylineMargin" class="margin-info">Margin:
                             -</span></h3>
@@ -117,6 +117,10 @@
                     <button class="tab-btn active" data-tab="match" onclick="switchTab('marketsTabContainer', 'match')">Match</button>
                     <button class="tab-btn" data-tab="sets" onclick="switchTab('marketsTabContainer', 'sets')">Sets</button>
                     <button class="tab-btn" data-tab="specials" onclick="switchTab('marketsTabContainer', 'specials')">Specials</button>
+                    <div class="export-actions">
+                        <button class="btn-export" onclick="exportMarketsToClipboard()" title="Copy all markets to clipboard">Copy</button>
+                        <button class="btn-export" onclick="exportMarketsToCSV()" title="Download markets as CSV">CSV</button>
+                    </div>
                 </div>
 
                 <!-- MATCH TAB PANEL -->
@@ -356,11 +360,14 @@
 
     <script type="module">
         import { toggleCard, toggleAllCards, switchTab, switchSubTab } from './js/ui_utils.js';
+        import { exportMarketsToCSV, exportMarketsToClipboard } from './js/export_utils.js';
 
         window.toggleCard = toggleCard;
         window.toggleAllCards = toggleAllCards;
         window.switchTab = switchTab;
         window.switchSubTab = switchSubTab;
+        window.exportMarketsToCSV = exportMarketsToCSV;
+        window.exportMarketsToClipboard = exportMarketsToClipboard;
     </script>
     <script type="module" src="table_tennis_model.js"></script>
 

@@ -1,6 +1,9 @@
 // NFL (American Football) API Module
 // Fetches matches from Kambi and organizes them by Country > Competition > Events
 
+import { escapeHtml, fetchJson } from './core/math_utils.js';
+import { showError } from './ui_utils.js';
+
 // Using the user-provided endpoint for NFL matches
 const NFL_LIST_URL = "https://eu1.offering-api.kambicdn.com/offering/v2018/pivusinrl-law/listView/american_football/nfl/all/all/matches.json?lang=en_US&market=US&client_id=200&channel_id=7&useCombined=true&useCombinedLive=true";
 
@@ -128,8 +131,7 @@ export async function initNFLLoader() {
     try {
         countrySelect.innerHTML = '<option value="">Loading...</option>';
 
-        const response = await fetch(NFL_LIST_URL);
-        const data = await response.json();
+        const data = await fetchJson(NFL_LIST_URL);
 
         if (!data.events || data.events.length === 0) {
             countrySelect.innerHTML = '<option value="">No matches available</option>';
@@ -142,7 +144,7 @@ export async function initNFLLoader() {
         // Populate country dropdown
         let html = '<option value="">Select Country/Region</option>';
         nflData.countries.forEach((country, idx) => {
-            html += `<option value="${idx}">${country.name}</option>`;
+            html += `<option value="${idx}">${escapeHtml(country.name)}</option>`;
         });
         countrySelect.innerHTML = html;
 
@@ -172,7 +174,7 @@ export function handleCountryChange() {
     if (country && country.competitions.length > 0) {
         let html = '<option value="">Select Competition</option>';
         country.competitions.forEach((comp, idx) => {
-            html += `<option value="${idx}">${comp.name} (${comp.events.length})</option>`;
+            html += `<option value="${idx}">${escapeHtml(comp.name)} (${comp.events.length})</option>`;
         });
         leagueSelect.innerHTML = html;
         leagueSelect.disabled = false;
@@ -202,7 +204,7 @@ export function handleLeagueChange() {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             // NFL display: Home vs Away format (API sends as AWAY@HOME, we display HOME vs AWAY)
-            const displayName = `${e.homeName} vs ${e.awayName}`;
+            const displayName = `${escapeHtml(e.homeName)} vs ${escapeHtml(e.awayName)}`;
             html += `<option value="${e.id}">${displayName} (${startTime})</option>`;
         });
         matchSelect.innerHTML = html;
@@ -225,12 +227,11 @@ export async function handleMatchChange() {
         // Fetch detailed event data from the event-specific endpoint
         const eventUrl = `${NFL_EVENT_URL_BASE}${eventId}.json?lang=en_US&market=US&client_id=200&channel_id=7&includeParticipants=true`;
 
-        const response = await fetch(eventUrl);
-        const data = await response.json();
+        const data = await fetchJson(eventUrl);
 
         if (!data || !data.betOffers) {
             console.error("No bet offers found for event:", eventId);
-            alert("No betting markets available for this match.");
+            showError("No betting markets available for this match.");
             matchSelect.disabled = false;
             return;
         }
@@ -240,7 +241,7 @@ export async function handleMatchChange() {
 
     } catch (err) {
         console.error("Error loading NFL event details:", err);
-        alert("Failed to load match details. Please try again.");
+        showError("Failed to load match details. Please try again.");
         matchSelect.disabled = false;
     }
 }
@@ -373,6 +374,6 @@ function loadMatchData(data) {
 
     } catch (e) {
         console.error("Error loading NFL match:", e);
-        alert("Failed to load match data.");
+        showError("Failed to load match data.");
     }
 }

@@ -1,5 +1,8 @@
 import { SPORT_IDS, getPinnacleEvents, findPinnacleEvent, mainTotal, firstHalfPrices, showSourceBadge } from './pinnwire_api.js';
 
+import { escapeHtml, fetchJson } from './core/math_utils.js';
+import { showError } from './ui_utils.js';
+
 const GROUP_URL = "https://eu.offering-api.kambicdn.com/offering/v2018/kambi/group/1000093190.json";
 
 let countriesData = [];
@@ -14,15 +17,14 @@ export async function initApiLoader() {
     if (!countrySelect) return;
 
     try {
-        const response = await fetch(GROUP_URL);
-        const data = await response.json();
+        const data = await fetchJson(GROUP_URL);
 
         if (data.group && data.group.groups) {
             countriesData = data.group.groups;
             let html = '<option value="">Select Country/Region</option>';
             countriesData.forEach((country, idx) => {
                 if (country.eventCount > 0) {
-                    html += `<option value="${idx}">${country.name}</option>`;
+                    html += `<option value="${idx}">${escapeHtml(country.name)}</option>`;
                 }
             });
             countrySelect.innerHTML = html;
@@ -57,7 +59,7 @@ export function handleCountryChange() {
             const avgMarkets = evCount > 0 ? (boCount / evCount) : 0;
 
             if (evCount > 0 && avgMarkets >= 3) {
-                html += `<option value="${league.id}" data-term="${league.termKey || 'all'}">${league.name}</option>`;
+                html += `<option value="${league.id}" data-term="${escapeHtml(league.termKey || 'all')}">${escapeHtml(league.name)}</option>`;
             }
         });
         leagueSelect.innerHTML = html;
@@ -89,8 +91,7 @@ export async function handleLeagueChange() {
 
         const url = `https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/listView/football/${countryTerm}/${leagueTerm}/all/matches.json?channel_id=7&client_id=200&competitionId=undefined&lang=en_GB&market=GB&useCombined=true&useCombinedLive=true`;
 
-        const response = await fetch(url);
-        const data = await response.json();
+        const data = await fetchJson(url);
 
         if (!data.events || data.events.length === 0) {
             matchSelect.innerHTML = '<option value="">No matches found</option>';
@@ -121,7 +122,7 @@ export async function handleLeagueChange() {
         validEvents.forEach((item) => {
             const e = item.event;
             const startTime = new Date(e.start).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            html += `<option value="${e.id}">${e.name} (${startTime})</option>`;
+            html += `<option value="${e.id}">${escapeHtml(e.name)} (${startTime})</option>`;
         });
         matchSelect.innerHTML = html;
         matchSelect.disabled = false;
@@ -133,21 +134,19 @@ export async function handleLeagueChange() {
 
 export async function loadEventDetails(eventId) {
     try {
-        console.log(`Fetching full match-specific details for event ${eventId}...`);
         const ncid = Date.now();
         const url = `https://eu1.offering-api.kambicdn.com/offering/v2018/kambi/betoffer/event/${eventId}.json?lang=en_GB&market=GB&client_id=200&channel_id=7&ncid=${ncid}&includeParticipants=true`;
 
-        const response = await fetch(url);
-        const fullData = await response.json();
+        const fullData = await fetchJson(url);
 
         if (fullData && fullData.betOffers) {
             loadMatchData(fullData);
         } else {
-            alert("No detail odds available for this match.");
+            showError("No detail odds available for this match.");
         }
     } catch (e) {
         console.error("Failed to load event details:", e);
-        alert("Error fetching full match details.");
+        showError("Error fetching full match details.");
     }
 }
 
@@ -155,8 +154,6 @@ async function loadMatchData(item) {
     try {
         const offers = item.betOffers || [];
         const event = item.event || {};
-
-        console.log("Processing Detail Data for:", event.name);
 
         // 1. Find 1X2 Market
         const matchOffer = offers.find(bo => {
@@ -170,7 +167,6 @@ async function loadMatchData(item) {
         }) || offers.find(bo => bo.outcomes && bo.outcomes.length === 3 && bo.betOfferType && bo.betOfferType.id === 2);
 
         if (matchOffer) {
-            console.log("Selected 1X2 Market:", matchOffer.criterion.label, matchOffer.id);
             const h = matchOffer.outcomes.find(o => o.type === "OT_ONE" || o.label === "1" || (event.homeName && o.label === event.homeName));
             const d = matchOffer.outcomes.find(o => o.type === "OT_CROSS" || o.label === "X" || o.label === "Draw");
             const a = matchOffer.outcomes.find(o => o.type === "OT_TWO" || o.label === "2" || (event.awayName && o.label === event.awayName));
@@ -204,7 +200,6 @@ async function loadMatchData(item) {
             if (!selectedOffer) selectedOffer = goalOffers[0];
 
             if (selectedOffer) {
-                console.log("Selected Goals Market:", selectedOffer.criterion.label, "Line:", selectedOffer.outcomes[0].line);
                 const over = selectedOffer.outcomes.find(o => (o.type && o.type.includes("OVER")) || (o.label && o.label.toLowerCase().includes("over")));
                 const under = selectedOffer.outcomes.find(o => (o.type && o.type.includes("UNDER")) || (o.label && o.label.toLowerCase().includes("under")));
 
@@ -227,7 +222,7 @@ async function loadMatchData(item) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
         console.error("Critical Processing Error:", e);
-        alert("Failed to inject match data into calculator.");
+        showError("Failed to inject match data into calculator.");
     }
 }
 

@@ -1,6 +1,8 @@
 // Tennis API Module
 // Handles fetching tennis matches and odds from Kambi API
 
+import { fetchJson } from './core/math_utils.js';
+
 let tennisData = {
     tournaments: [],
     eventMap: {}
@@ -59,8 +61,7 @@ function buildHierarchy(events) {
 // Fetch tennis matches from group endpoint
 export async function initLoader() {
     try {
-        const response = await fetch(GROUP_URL);
-        const data = await response.json();
+        const data = await fetchJson(GROUP_URL);
 
         if (data.events && data.events.length > 0) {
             buildHierarchy(data.events);
@@ -151,11 +152,9 @@ export function handleTournamentChange() {
 
 // Fetch detailed odds for a specific event
 async function fetchEventOdds(eventId) {
+    const url = `${EVENT_URL_BASE}${eventId}.json?lang=en_US&market=US&client_id=200&channel_id=7&includeParticipants=true`;
     try {
-        const url = `${EVENT_URL_BASE}${eventId}.json?lang=en_US&market=US&client_id=200&channel_id=7&includeParticipants=true`;
-        const response = await fetch(url);
-        const data = await response.json();
-        return data;
+        return await fetchJson(url);
     } catch (error) {
         console.error('Error fetching event odds:', error);
         return null;
